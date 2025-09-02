@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Aspire.Azure.Storage.Blobs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UserManagement.Domain\LinaSys.UserManagement.Domain.csproj" />
+    <ProjectReference Include="..\UserManagement.Application\LinaSys.UserManagement.Application.csproj" />
+    <ProjectReference Include="..\Shared.Infrastructure\LinaSys.Shared.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

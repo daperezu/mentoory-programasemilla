@@ -1,0 +1,597 @@
+@{
+    ViewData["Title"] = "Revisión de Formularios";
+    Layout = "~/Views/Shared/_CoordinatorLayout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .review-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--phoenix-card-bg);
+            border: 1px solid var(--phoenix-border-color);
+            border-radius: 0.5rem;
+            padding: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: var(--phoenix-primary);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--phoenix-gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-pending { color: var(--phoenix-warning); }
+        .stat-approved { color: var(--phoenix-success); }
+        .stat-changes { color: var(--phoenix-info); }
+        .stat-flagged { color: var(--phoenix-danger); }
+
+        .submission-table {
+            background: var(--phoenix-card-bg);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .submission-row {
+            padding: 1rem;
+            border-bottom: 1px solid var(--phoenix-border-color);
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .submission-row:hover {
+            background-color: var(--phoenix-gray-100);
+        }
+
+        .submission-row:last-child {
+            border-bottom: none;
+        }
+
+        .participant-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .participant-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--phoenix-primary-bg-subtle);
+            color: var(--phoenix-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .participant-details h6 {
+            margin-bottom: 0.125rem;
+            color: var(--phoenix-gray-900);
+        }
+
+        .participant-details small {
+            color: var(--phoenix-gray-600);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.625rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-pending {
+            background-color: var(--phoenix-warning-bg-subtle);
+            color: var(--phoenix-warning);
+        }
+
+        .status-approved {
+            background-color: var(--phoenix-success-bg-subtle);
+            color: var(--phoenix-success);
+        }
+
+        .status-changes-requested {
+            background-color: var(--phoenix-info-bg-subtle);
+            color: var(--phoenix-info);
+        }
+
+        .status-flagged {
+            background-color: var(--phoenix-danger-bg-subtle);
+            color: var(--phoenix-danger);
+        }
+
+        .priority-indicator {
+            width: 4px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+        }
+
+        .priority-high { background-color: var(--phoenix-danger); }
+        .priority-medium { background-color: var(--phoenix-warning); }
+        .priority-low { background-color: var(--phoenix-success); }
+
+        .filter-pills {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-pill {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--phoenix-border-color);
+            border-radius: 2rem;
+            background: transparent;
+            color: var(--phoenix-gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-pill:hover {
+            border-color: var(--phoenix-primary);
+            color: var(--phoenix-primary);
+        }
+
+        .filter-pill.active {
+            background: var(--phoenix-primary);
+            border-color: var(--phoenix-primary);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--phoenix-gray-600);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--phoenix-gray-400);
+            margin-bottom: 1rem;
+        }
+
+        .submission-meta {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--phoenix-gray-600);
+        }
+
+        .submission-meta i {
+            width: 16px;
+            text-align: center;
+        }
+
+        .deadline-warning {
+            color: var(--phoenix-danger);
+            font-weight: 600;
+        }
+
+        .feedback-count {
+            background: var(--phoenix-gray-200);
+            color: var(--phoenix-gray-700);
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .feedback-count.has-feedback {
+            background: var(--phoenix-info-bg-subtle);
+            color: var(--phoenix-info);
+        }
+    </style>
+}
+
+<div class="content">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="@Url.Action("Index", "Dashboard")">Dashboard</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Revisión de Formularios</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Revisión de Formularios</h2>
+            <p class="text-muted mb-0">Revisa y proporciona retroalimentación a los participantes</p>
+        </div>
+        <button class="btn btn-falcon-default btn-sm" id="btnRefresh">
+            <i class="fas fa-sync-alt me-1"></i> Actualizar
+        </button>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="review-stats" id="statsContainer">
+        <div class="stat-card" data-filter="pending">
+            <div class="stat-value stat-pending" id="statPending">0</div>
+            <div class="stat-label">Pendientes</div>
+        </div>
+        <div class="stat-card" data-filter="approved">
+            <div class="stat-value stat-approved" id="statApproved">0</div>
+            <div class="stat-label">Aprobados</div>
+        </div>
+        <div class="stat-card" data-filter="changes">
+            <div class="stat-value stat-changes" id="statChanges">0</div>
+            <div class="stat-label">Con Cambios</div>
+        </div>
+        <div class="stat-card" data-filter="flagged">
+            <div class="stat-value stat-flagged" id="statFlagged">0</div>
+            <div class="stat-label">Marcados</div>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="filter-pills">
+        <button class="filter-pill active" data-filter="all">
+            <i class="fas fa-list me-1"></i> Todos
+        </button>
+        <button class="filter-pill" data-filter="pending">
+            <i class="fas fa-clock me-1"></i> Pendientes
+        </button>
+        <button class="filter-pill" data-filter="approved">
+            <i class="fas fa-check-circle me-1"></i> Aprobados
+        </button>
+        <button class="filter-pill" data-filter="changes">
+            <i class="fas fa-edit me-1"></i> Con Cambios
+        </button>
+        <button class="filter-pill" data-filter="flagged">
+            <i class="fas fa-flag me-1"></i> Marcados
+        </button>
+        <button class="filter-pill" data-filter="near-deadline">
+            <i class="fas fa-exclamation-triangle me-1"></i> Próximos a Vencer
+        </button>
+    </div>
+
+    <!-- Submissions List -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div id="submissionsContainer">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3">Cargando formularios para revisión...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // State management
+        let allSubmissions = [];
+        let currentFilter = 'all';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSubmissions();
+            setupEventHandlers();
+        });
+
+        // Setup event handlers
+        function setupEventHandlers() {
+            // Refresh button
+            document.getElementById('btnRefresh').addEventListener('click', loadSubmissions);
+
+            // Filter pills
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    renderSubmissions();
+                });
+            });
+
+            // Stat cards
+            document.querySelectorAll('.stat-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const filter = this.dataset.filter;
+                    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                    document.querySelector(`.filter-pill[data-filter="${filter}"]`).classList.add('active');
+                    currentFilter = filter;
+                    renderSubmissions();
+                });
+            });
+        }
+
+        // Load submissions
+        async function loadSubmissions() {
+            try {
+                const response = await fetch('/Coordination/FormReview/GetPendingReviews', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('[name="__RequestVerificationToken"]')?.value || ''
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    allSubmissions = data.submissions || [];
+                    updateStatistics();
+                    renderSubmissions();
+                } else {
+                    throw new Error('Error al cargar las revisiones');
+                }
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                toastr.error('Error al cargar los formularios para revisión', 'Error');
+                renderEmptyState('Error al cargar los datos. Por favor, intente nuevamente.');
+            }
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const stats = {
+                pending: 0,
+                approved: 0,
+                changes: 0,
+                flagged: 0
+            };
+
+            allSubmissions.forEach(submission => {
+                const status = submission.reviewStatus || 'Pending';
+                switch (status) {
+                    case 'Pending': stats.pending++; break;
+                    case 'Approved': stats.approved++; break;
+                    case 'ChangesRequested': stats.changes++; break;
+                    case 'Flagged': stats.flagged++; break;
+                }
+            });
+
+            document.getElementById('statPending').textContent = stats.pending;
+            document.getElementById('statApproved').textContent = stats.approved;
+            document.getElementById('statChanges').textContent = stats.changes;
+            document.getElementById('statFlagged').textContent = stats.flagged;
+        }
+
+        // Render submissions
+        function renderSubmissions() {
+            const container = document.getElementById('submissionsContainer');
+            let filteredSubmissions = filterSubmissions();
+
+            if (filteredSubmissions.length === 0) {
+                renderEmptyState();
+                return;
+            }
+
+            let html = '<div class="submission-table">';
+            filteredSubmissions.forEach((submission, index) => {
+                html += renderSubmissionRow(submission, index === filteredSubmissions.length - 1);
+            });
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        // Filter submissions
+        function filterSubmissions() {
+            if (currentFilter === 'all') {
+                return allSubmissions;
+            }
+
+            const now = new Date();
+            const threeDaysFromNow = new Date(now.getTime() + (3 * 24 * 60 * 60 * 1000));
+
+            return allSubmissions.filter(submission => {
+                const status = submission.reviewStatus || 'Pending';
+                
+                switch (currentFilter) {
+                    case 'pending': return status === 'Pending';
+                    case 'approved': return status === 'Approved';
+                    case 'changes': return status === 'ChangesRequested';
+                    case 'flagged': return status === 'Flagged';
+                    case 'near-deadline':
+                        if (submission.deadline) {
+                            const deadline = new Date(submission.deadline);
+                            return deadline <= threeDaysFromNow && status !== 'Approved';
+                        }
+                        return false;
+                    default: return true;
+                }
+            });
+        }
+
+        // Render submission row
+        function renderSubmissionRow(submission, isLast) {
+            const status = submission.reviewStatus || 'Pending';
+            const statusBadge = getStatusBadge(status);
+            const submittedDate = submission.submittedAt ? 
+                new Date(submission.submittedAt).toLocaleDateString('es-ES') : 'No enviado';
+            const priorityClass = getPriorityClass(submission);
+            const feedbackCount = submission.feedbackCount || 0;
+            const initials = getInitials(submission.userName);
+            const deadlineInfo = getDeadlineInfo(submission);
+
+            return `
+                <div class="submission-row position-relative" onclick="openReview(${submission.submissionId})">
+                    <div class="priority-indicator ${priorityClass}"></div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="participant-info">
+                            <div class="participant-avatar">
+                                ${initials}
+                            </div>
+                            <div class="participant-details">
+                                <h6>${submission.userName}</h6>
+                                <small>${submission.userEmail}</small>
+                            </div>
+                        </div>
+                        <div class="submission-meta">
+                            <span><i class="fas fa-calendar"></i> ${submittedDate}</span>
+                            ${deadlineInfo}
+                            <span><i class="fas fa-chart-pie"></i> ${submission.completionPercentage}%</span>
+                            ${feedbackCount > 0 ? `
+                                <span class="feedback-count has-feedback">
+                                    <i class="fas fa-comment"></i> ${feedbackCount}
+                                </span>
+                            ` : ''}
+                            ${statusBadge}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get status badge
+        function getStatusBadge(status) {
+            let badgeClass = '';
+            let text = '';
+            
+            switch (status) {
+                case 'Pending':
+                    badgeClass = 'status-pending';
+                    text = 'Pendiente';
+                    break;
+                case 'Approved':
+                    badgeClass = 'status-approved';
+                    text = 'Aprobado';
+                    break;
+                case 'ChangesRequested':
+                    badgeClass = 'status-changes-requested';
+                    text = 'Cambios Solicitados';
+                    break;
+                case 'Flagged':
+                    badgeClass = 'status-flagged';
+                    text = 'Marcado';
+                    break;
+                default:
+                    badgeClass = 'status-pending';
+                    text = 'Pendiente';
+            }
+
+            return `<span class="status-badge ${badgeClass}">${text}</span>`;
+        }
+
+        // Get priority class based on deadline
+        function getPriorityClass(submission) {
+            if (!submission.deadline) return '';
+            
+            const now = new Date();
+            const deadline = new Date(submission.deadline);
+            const daysUntilDeadline = Math.floor((deadline - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysUntilDeadline <= 1) return 'priority-high';
+            if (daysUntilDeadline <= 3) return 'priority-medium';
+            return 'priority-low';
+        }
+
+        // Get deadline info
+        function getDeadlineInfo(submission) {
+            if (!submission.deadline) return '';
+            
+            const now = new Date();
+            const deadline = new Date(submission.deadline);
+            const daysUntilDeadline = Math.floor((deadline - now) / (1000 * 60 * 60 * 24));
+            
+            if (daysUntilDeadline < 0) {
+                return `<span class="deadline-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Vencido hace ${Math.abs(daysUntilDeadline)} días
+                </span>`;
+            } else if (daysUntilDeadline <= 3) {
+                return `<span class="deadline-warning">
+                    <i class="fas fa-clock"></i> Vence en ${daysUntilDeadline} días
+                </span>`;
+            }
+            
+            return `<span><i class="fas fa-clock"></i> ${deadline.toLocaleDateString('es-ES')}</span>`;
+        }
+
+        // Get initials
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.split(' ');
+            if (parts.length >= 2) {
+                return parts[0][0] + parts[1][0];
+            }
+            return name.substring(0, 2).toUpperCase();
+        }
+
+        // Render empty state
+        function renderEmptyState(message) {
+            const container = document.getElementById('submissionsContainer');
+            const defaultMessage = getEmptyStateMessage();
+            
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h5>${message || defaultMessage.title}</h5>
+                    <p class="text-muted">${message ? '' : defaultMessage.description}</p>
+                </div>
+            `;
+        }
+
+        // Get empty state message
+        function getEmptyStateMessage() {
+            switch (currentFilter) {
+                case 'pending':
+                    return {
+                        title: 'No hay formularios pendientes',
+                        description: 'Todos los formularios han sido revisados.'
+                    };
+                case 'approved':
+                    return {
+                        title: 'No hay formularios aprobados',
+                        description: 'Aún no se han aprobado formularios.'
+                    };
+                case 'changes':
+                    return {
+                        title: 'No hay formularios con cambios solicitados',
+                        description: 'No se han solicitado cambios en ningún formulario.'
+                    };
+                case 'flagged':
+                    return {
+                        title: 'No hay formularios marcados',
+                        description: 'No se han marcado formularios para revisión especial.'
+                    };
+                case 'near-deadline':
+                    return {
+                        title: 'No hay formularios próximos a vencer',
+                        description: 'Todos los formularios están dentro del plazo establecido.'
+                    };
+                default:
+                    return {
+                        title: 'No hay formularios para revisar',
+                        description: 'Los formularios aparecerán aquí cuando los participantes los envíen.'
+                    };
+            }
+        }
+
+        // Open review
+        function openReview(submissionId) {
+            window.location.href = `/Coordination/FormReview/Review/${submissionId}`;
+        }
+    </script>
+}

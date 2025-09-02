@@ -1,0 +1,1 @@
+﻿CREATE UNIQUE NONCLUSTERED INDEX [IX_Projects_ExternalId] ON [businessincubators].[Projects] ([ExternalId])

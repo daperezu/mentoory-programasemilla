@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <UserSecretsId>aspnet-LinaSys.Web-0365f249-c226-43a5-9319-81146f12a0de</UserSecretsId>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <AssemblyVersion>0.0.9</AssemblyVersion>
+        <FileVersion>0.0.9</FileVersion>
+        <InformationalVersion>0.0.9+$(SourceRevisionId)</InformationalVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Aspire.ServiceDefaults\LinaSys.Aspire.ServiceDefaults.csproj" />
+        <ProjectReference Include="..\Auth.Infrastructure\LinaSys.Auth.Infrastructure.csproj" />
+        <ProjectReference Include="..\KnowledgeStructure.Infrastructure\LinaSys.KnowledgeStructure.Infrastructure.csproj" />
+        <ProjectReference Include="..\Orchestration.Application\LinaSys.Orchestration.Application.csproj" />
+        <ProjectReference Include="..\Notification.Infrastructure\LinaSys.Notification.Infrastructure.csproj" />
+        <ProjectReference Include="..\Permissions.Application\LinaSys.Permissions.Application.csproj" />
+        <ProjectReference Include="..\Permissions.Infrastructure\LinaSys.Permissions.Infrastructure.csproj" />
+        <ProjectReference Include="..\SystemFeatures.Infrastructure\LinaSys.SystemFeatures.Infrastructure.csproj" />
+        <ProjectReference Include="..\Core.Application\LinaSys.Core.Application.csproj" />
+        <ProjectReference Include="..\Core.Infrastructure\LinaSys.Core.Infrastructure.csproj" />
+        <ProjectReference Include="..\UserManagement.Application\LinaSys.UserManagement.Application.csproj" />
+        <ProjectReference Include="..\UserManagement.Infrastructure\LinaSys.UserManagement.Infrastructure.csproj" />
+        <ProjectReference Include="..\Shared.Infrastructure\LinaSys.Shared.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Resources\ErrorMessages.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>ErrorMessages.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Resources\ErrorMessages.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>ErrorMessages.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
+</Project>

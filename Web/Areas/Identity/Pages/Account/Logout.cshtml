@@ -1,0 +1,61 @@
+﻿@page
+@model LogoutModel
+@{
+    Layout = "_HeadlessLayout";
+    ViewData["Title"] = "Finalizar sesión";
+}
+
+<div class="px-3">
+    <div class="row min-vh-100 flex-center p-5">
+        <div class="col-12 col-xl-10 col-xxl-8">
+            <div class="row justify-content-center align-items-center g-5">
+                <div class="col-12 col-lg-6 text-center text-lg-start">
+                    <img class="img-fluid mb-6 w-50 w-lg-75 d-dark-none" src="~/assets/img/spot-illustrations/36.png" alt="" />
+                    <img class="img-fluid mb-6 w-50 w-lg-75 d-light-none" src="~/assets/img/spot-illustrations/36_2.png" alt="" />
+                    @{
+                        if (User.Identity?.IsAuthenticated ?? false)
+                        {
+                            <h2 class="text-body-secondary fw-bolder mb-3">Esperamos verte pronto de vuelta!</h2>
+                            <p class="text-body mb-5">Tus datos quedarán seguros mientras no estás.</p>
+                            <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                                <button type="submit" class="btn btn-lg btn-primary" id="logoutButton">
+                                    Haz click aquí para finalizar tu sesión <span id="logoutCountdown">(5)</span>
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <p>Listo! Tu sesión ha sido cerrada.</p>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const countdownSpan = document.getElementById('logoutCountdown');
+            const form = document.getElementById('logoutForm');
+            const button = document.getElementById('logoutButton');
+            let secondsLeft = 5;
+
+            const timer = setInterval(() => {
+                secondsLeft--;
+                countdownSpan.textContent = `(${secondsLeft})`;
+
+                if (secondsLeft <= 0) {
+                    clearInterval(timer);
+                    form.submit();
+                }
+            }, 1000);
+
+            // If user clicks early, stop countdown
+            button.addEventListener('click', () => {
+                clearInterval(timer);
+            });
+        })();
+    </script>
+}

@@ -1,0 +1,318 @@
+@{
+    ViewData["Title"] = "Constructor de Estructura de Conocimiento";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <style>
+        #knowledgeTree {
+            height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+        
+        .tree-panel {
+            border-right: 1px solid #dee2e6;
+        }
+        
+        .details-panel {
+            padding-left: 20px;
+        }
+        
+        .node-actions {
+            margin-top: 20px;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+    </style>
+}
+
+<page-header title="@ViewData["Title"]">
+    <breadcrumb>
+        <breadcrumb-item title="Inicio" asp-area="" asp-controller="Home" asp-action="Index"></breadcrumb-item>
+        <breadcrumb-item title="Estructura de Conocimiento"></breadcrumb-item>
+        <breadcrumb-item title="Constructor" active="true"></breadcrumb-item>
+    </breadcrumb>
+</page-header>
+
+<div class="row">
+    <div class="col-md-4 tree-panel">
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h5 class="card-title mb-0">Estructura de Conocimiento</h5>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-sm btn-primary" id="btnExpandAll" title="Expandir todo">
+                            <i class="fa fa-expand"></i>
+                        </button>
+                        <button class="btn btn-sm btn-primary" id="btnCollapseAll" title="Contraer todo">
+                            <i class="fa fa-compress"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body position-relative">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="treeSearch" placeholder="Buscar...">
+                </div>
+                <div id="knowledgeTree"></div>
+                <div class="loading-overlay d-none" id="treeLoading">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8 details-panel">
+        <div id="detailsPanel">
+            <div class="card">
+                <div class="card-body text-center text-muted">
+                    <i class="fa fa-info-circle fa-3x mb-3"></i>
+                    <p>Seleccione un elemento del árbol para ver sus detalles</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Context Menu Template -->
+<div id="contextMenu" class="dropdown-menu" style="display: none;">
+    <a class="dropdown-item" href="#" data-action="create"><i class="fa fa-plus"></i> Crear</a>
+    <a class="dropdown-item" href="#" data-action="edit"><i class="fa fa-edit"></i> Editar</a>
+    <a class="dropdown-item" href="#" data-action="delete"><i class="fa fa-trash"></i> Eliminar</a>
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="#" data-action="refresh"><i class="fa fa-refresh"></i> Actualizar</a>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let selectedNode = null;
+            
+            // Initialize jsTree
+            $('#knowledgeTree').jstree({
+                'core': {
+                    'data': {
+                        'url': '@Url.Action("GetTreeData", "KnowledgeStructure")',
+                        'data': function (node) {
+                            return { 'id': node.id };
+                        }
+                    },
+                    'check_callback': function(operation, node, parent, position, more) {
+                        if (operation === "move_node") {
+                            // Validate move operations
+                            const nodeType = node.data.type;
+                            const parentType = parent.data ? parent.data.type : 'root';
+                            
+                            // Define valid moves
+                            const validMoves = {
+                                'module': ['knowledgestructure'],
+                                'topic': ['module'],
+                                'subject': ['topic']
+                            };
+                            
+                            return validMoves[nodeType] && validMoves[nodeType].includes(parentType);
+                        }
+                        return true;
+                    },
+                    'themes': {
+                        'dots': true,
+                        'icons': true
+                    }
+                },
+                'plugins': ['dnd', 'search', 'contextmenu', 'types'],
+                'types': {
+                    'knowledgestructure': {
+                        'icon': 'fa fa-sitemap text-primary'
+                    },
+                    'module': {
+                        'icon': 'fa fa-book text-success'
+                    },
+                    'topic': {
+                        'icon': 'fa fa-file-text text-info'
+                    },
+                    'subject': {
+                        'icon': 'fa fa-graduation-cap text-warning'
+                    }
+                },
+                'contextmenu': {
+                    'items': function(node) {
+                        const type = node.data.type;
+                        const items = {};
+                        
+                        // Add create options based on node type
+                        if (type === 'knowledgestructure') {
+                            items.createModule = {
+                                'label': 'Crear Módulo',
+                                'icon': 'fa fa-plus',
+                                'action': function() {
+                                    window.location.href = '@Url.Action("Create", "Modules")?knowledgeStructureId=' + node.data.id;
+                                }
+                            };
+                        } else if (type === 'module') {
+                            items.createTopic = {
+                                'label': 'Crear Tema',
+                                'icon': 'fa fa-plus',
+                                'action': function() {
+                                    window.location.href = '@Url.Action("Create", "Topics")?structureModuleId=' + node.data.id;
+                                }
+                            };
+                        } else if (type === 'topic') {
+                            items.createSubject = {
+                                'label': 'Crear Asignatura',
+                                'icon': 'fa fa-plus',
+                                'action': function() {
+                                    window.location.href = '@Url.Action("Create", "Subjects")?structureTopicId=' + node.data.id;
+                                }
+                            };
+                        }
+                        
+                        // Add edit option (except for knowledge structure root nodes)
+                        if (type !== 'knowledgestructure') {
+                            items.edit = {
+                                'label': 'Editar',
+                                'icon': 'fa fa-edit',
+                                'action': function() {
+                                    const controller = type === 'module' ? 'Modules' :
+                                                     type === 'topic' ? 'Topics' : 'Subjects';
+                                    window.location.href = '@Url.Action("Edit", "")'.replace('Edit', 'Edit/' + node.data.id).replace('""', '"' + controller + '"');
+                                }
+                            };
+                        }
+                        
+                        // Add delete option (except for knowledge structure root nodes)
+                        if (type !== 'knowledgestructure') {
+                            items.delete = {
+                                'label': 'Eliminar',
+                                'icon': 'fa fa-trash',
+                                'action': function() {
+                                    if (confirm('¿Está seguro de eliminar este elemento?')) {
+                                        deleteNode(node);
+                                    }
+                                }
+                            };
+                        }
+                        
+                        return items;
+                    }
+                }
+            });
+            
+            // Search functionality
+            let searchTimeout = null;
+            $('#treeSearch').on('keyup', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    const searchValue = $('#treeSearch').val();
+                    $('#knowledgeTree').jstree(true).search(searchValue);
+                }, 250);
+            });
+            
+            // Expand/Collapse all
+            $('#btnExpandAll').on('click', function() {
+                $('#knowledgeTree').jstree('open_all');
+            });
+            
+            $('#btnCollapseAll').on('click', function() {
+                $('#knowledgeTree').jstree('close_all');
+            });
+            
+            // Node selection event
+            $('#knowledgeTree').on('select_node.jstree', function(e, data) {
+                selectedNode = data.node;
+                loadNodeDetails(data.node.id);
+            });
+            
+            // Node move event
+            $('#knowledgeTree').on('move_node.jstree', function(e, data) {
+                const moveData = {
+                    nodeId: data.node.id,
+                    newParentId: data.parent,
+                    position: data.position
+                };
+                
+                $.ajax({
+                    url: '@Url.Action("MoveNode", "KnowledgeStructure")',
+                    type: 'POST',
+                    data: moveData,
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('Elemento movido correctamente', 'success');
+                        } else {
+                            showToast(response.message || 'Error al mover el elemento', 'danger');
+                            // Revert the move
+                            $('#knowledgeTree').jstree('refresh');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al mover el elemento', 'danger');
+                        $('#knowledgeTree').jstree('refresh');
+                    }
+                });
+            });
+            
+            // Load node details
+            function loadNodeDetails(nodeId) {
+                $('#detailsPanel').html('<div class="text-center"><i class="fa fa-spinner fa-spin fa-3x"></i></div>');
+                
+                $.ajax({
+                    url: '@Url.Action("GetNodeDetails", "KnowledgeStructure")',
+                    type: 'GET',
+                    data: { nodeId: nodeId },
+                    success: function(html) {
+                        $('#detailsPanel').html(html);
+                    },
+                    error: function() {
+                        $('#detailsPanel').html('<div class="alert alert-danger">Error al cargar los detalles</div>');
+                    }
+                });
+            }
+            
+            // Delete node
+            function deleteNode(node) {
+                const type = node.data.type;
+                const id = node.data.id;
+                const controller = type === 'module' ? 'Modules' :
+                                 type === 'topic' ? 'Topics' : 'Subjects';
+                
+                $.ajax({
+                    url: '@Url.Action("Delete", "")'.replace('Delete', 'Delete').replace('""', '"' + controller + '"'),
+                    type: 'POST',
+                    data: { id: id },
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showToast('Elemento eliminado correctamente', 'success');
+                            $('#knowledgeTree').jstree('delete_node', node);
+                            $('#detailsPanel').html('<div class="card"><div class="card-body text-center text-muted"><i class="fa fa-info-circle fa-3x mb-3"></i><p>Seleccione un elemento del árbol para ver sus detalles</p></div></div>');
+                        } else {
+                            showToast(response.message || 'Error al eliminar el elemento', 'danger');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al eliminar el elemento', 'danger');
+                    }
+                });
+            }
+        });
+    </script>
+}

@@ -1,0 +1,41 @@
+﻿@using LinaSys.Auth.Domain.AggregatesModel.User
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<User> SignInManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link lh-1 pe-0" id="navbarDropdownUser" href="#!" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-haspopup="true" aria-expanded="false">
+            <div class="avatar avatar-l ">
+                <img class="rounded-circle " src="~/assets/img/team/40x40/avatar.webp" alt=""/>
+
+            </div>
+        </a>
+        <div class="dropdown-menu dropdown-menu-end navbar-dropdown-caret py-0 dropdown-profile shadow border" aria-labelledby="navbarDropdownUser">
+            <div class="card position-relative border-0">
+                <div class="card-body p-0">
+                    <div class="text-center pt-4 pb-3">
+                        <div class="avatar avatar-xl ">
+                            <img class="rounded-circle " src="~/assets/img/team/72x72/avatar.webp" alt=""/>
+
+                        </div>
+                        <h6 class="mt-2 text-body-emphasis">@User.Identity?.Name</h6>
+                    </div>
+                </div>
+                <div class="overflow-auto scrollbar" style="height: 10rem;">
+                    <ul class="nav d-flex flex-column mb-2 pb-1">
+                        <li class="nav-item"><a class="nav-link px-3 d-block" asp-area="Identity" asp-page="/Account/Manage/Index" > <span class="me-2 text-body align-bottom" data-feather="user"></span><span>Perfil</span></a></li>
+                        <li class="nav-item"><a class="nav-link px-3 d-block" asp-area="Identity" asp-page="/Account/Manage/EmailPreferences"> <span class="me-2 text-body align-bottom" data-feather="bell"></span><span>Notificaciones</span></a></li>
+                        <li class="nav-item"><a class="nav-link px-3 d-block" href="#!"> <span class="me-2 text-body align-bottom" data-feather="lock"></span>Historial de actividad</a></li>
+                        <li class="nav-item"><a class="nav-link px-3 d-block" href="#!"> <span class="me-2 text-body align-bottom" data-feather="settings"></span>Configuraciones</a></li>
+                        <li class="nav-item"><a class="nav-link px-3 d-block" href="#!"> <span class="me-2 text-body align-bottom" data-feather="help-circle"></span>Centro de ayuda</a></li>
+                    </ul>
+                </div>
+                <div class="card-footer p-0 border-top border-translucent">
+                    <div class="px-3 my-3"> <a class="btn btn-phoenix-secondary d-flex flex-center w-100" asp-area="Identity" asp-page="/Account/Logout"> <span class="me-2" data-feather="log-out"> </span>Cerrar sesión</a></div>
+                    <div class="my-2 text-center fw-bold fs-10 text-body-quaternary"><a class="text-body-quaternary me-1" href="#!">Política de privacidad</a>&bull;<a class="text-body-quaternary mx-1" href="#!">Términos y condiciones</a>&bull;<a class="text-body-quaternary ms-1" href="#!">Cookies</a></div>
+                </div>
+            </div>
+        </div>
+    </li>
+}

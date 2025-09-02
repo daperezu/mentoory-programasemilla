@@ -1,0 +1,214 @@
+@model ProtectedResourceDetailsViewModel
+@{
+    ViewData["Title"] = $"Protected Resource: {Model.Name}";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">Protected Resource Details</h3>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Success/Error Messages -->
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @TempData["SuccessMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @TempData["ErrorMessage"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Basic Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Name:</dt>
+                                <dd class="col-sm-8">
+                                    <form asp-action="UpdateName" method="post" class="d-inline">
+                                        <input type="hidden" asp-for="Id" />
+                                        <div class="input-group">
+                                            <input asp-for="Name" class="form-control" />
+                                            <button type="submit" class="btn btn-outline-primary btn-sm">Update</button>
+                                        </div>
+                                    </form>
+                                </dd>
+                                
+                                <dt class="col-sm-4">Type:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-primary">@Model.ResourceTypeName</span>
+                                </dd>
+                                
+                                <dt class="col-sm-4">External ID:</dt>
+                                <dd class="col-sm-8">
+                                    <small class="text-muted">@Model.ExternalId</small>
+                                </dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row">
+                                <dt class="col-sm-4">Created:</dt>
+                                <dd class="col-sm-8">
+                                    @Model.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")<br/>
+                                    <small class="text-muted">by @Model.CreatedBy</small>
+                                </dd>
+                                
+                                @if (Model.UpdatedAt.HasValue)
+                                {
+                                    <dt class="col-sm-4">Updated:</dt>
+                                    <dd class="col-sm-8">
+                                        @Model.UpdatedAt.Value.ToString("yyyy-MM-dd HH:mm:ss")<br/>
+                                        <small class="text-muted">by @Model.UpdatedBy</small>
+                                    </dd>
+                                }
+                            </dl>
+                        </div>
+                    </div>
+
+                    <!-- User Permissions -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">User Permissions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Add User Permission -->
+                                    <form asp-action="GrantUserAccess" method="post" class="mb-3">
+                                        <input type="hidden" asp-for="Id" />
+                                        <div class="input-group">
+                                            <input asp-for="NewUserId" class="form-control" placeholder="Enter User ID" />
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-plus"></i> Grant Access
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <!-- Current User Permissions -->
+                                    @if (Model.UserPermissions.Any())
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>User ID</th>
+                                                        <th>Granted</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var permission in Model.UserPermissions)
+                                                    {
+                                                        <tr>
+                                                            <td>@permission.UserId</td>
+                                                            <td>
+                                                                <small>
+                                                                    @permission.CreatedAt.ToString("yyyy-MM-dd")<br/>
+                                                                    <span class="text-muted">by @permission.CreatedBy</span>
+                                                                </small>
+                                                            </td>
+                                                            <td>
+                                                                <form asp-action="RevokeUserAccess" method="post" class="d-inline">
+                                                                    <input type="hidden" name="id" value="@Model.Id" />
+                                                                    <input type="hidden" name="userId" value="@permission.UserId" />
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                            onclick="return confirm('Are you sure you want to revoke access for this user?')">
+                                                                        <i class="fas fa-times"></i> Revoke
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted">No user permissions assigned.</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Role Permissions -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">Role Permissions</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Add Role Permission -->
+                                    <form asp-action="GrantRoleAccess" method="post" class="mb-3">
+                                        <input type="hidden" asp-for="Id" />
+                                        <div class="input-group">
+                                            <input asp-for="NewRole" class="form-control" placeholder="Enter Role ID" />
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-plus"></i> Grant Access
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    <!-- Current Role Permissions -->
+                                    @if (Model.RolePermissions.Any())
+                                    {
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Role ID</th>
+                                                        <th>Granted</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var permission in Model.RolePermissions)
+                                                    {
+                                                        <tr>
+                                                            <td>@permission.Role</td>
+                                                            <td>
+                                                                <small>
+                                                                    @permission.CreatedAt.ToString("yyyy-MM-dd")<br/>
+                                                                    <span class="text-muted">by @permission.CreatedBy</span>
+                                                                </small>
+                                                            </td>
+                                                            <td>
+                                                                <form asp-action="RevokeRoleAccess" method="post" class="d-inline">
+                                                                    <input type="hidden" name="id" value="@Model.Id" />
+                                                                    <input type="hidden" name="role" value="@permission.Role" />
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                                            onclick="return confirm('Are you sure you want to revoke access for this role?')">
+                                                                        <i class="fas fa-times"></i> Revoke
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-muted">No role permissions assigned.</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

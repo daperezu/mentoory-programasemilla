@@ -1,0 +1,267 @@
+@model LinaSys.Web.Areas.Coordination.Controllers.AuditLogViewModel
+@{
+    ViewData["Title"] = "Registro de Auditoría";
+    ViewData["PageHeader"] = "Registro de Auditoría";
+    ViewData["PageDescription"] = "Historial completo de actividades del sistema";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3 class="card-title">Filtros de Búsqueda</h3>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <a asp-action="Export" 
+                           asp-route-entityType="@Model.CurrentFilters.EntityType"
+                           asp-route-userId="@Model.CurrentFilters.UserId"
+                           asp-route-action="@Model.CurrentFilters.Action"
+                           asp-route-startDate="@Model.CurrentFilters.StartDate"
+                           asp-route-endDate="@Model.CurrentFilters.EndDate"
+                           class="btn btn-success">
+                            <i class="fas fa-download"></i> Exportar CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" asp-action="Index">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Tipo de Entidad</label>
+                                <select name="entityType" class="form-control">
+                                    <option value="">Todos</option>
+                                    @foreach (var type in Model.EntityTypes)
+                                    {
+                                        <option value="@type" selected="@(Model.CurrentFilters.EntityType == type)">@type</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label>Acción</label>
+                                <select name="action" class="form-control">
+                                    <option value="">Todas</option>
+                                    @foreach (var action in Model.Actions)
+                                    {
+                                        <option value="@action" selected="@(Model.CurrentFilters.Action == action)">@action</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Fecha Desde</label>
+                                <input type="date" name="startDate" class="form-control" value="@Model.CurrentFilters.StartDate?.ToString("yyyy-MM-dd")" />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>Fecha Hasta</label>
+                                <input type="date" name="endDate" class="form-control" value="@Model.CurrentFilters.EndDate?.ToString("yyyy-MM-dd")" />
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i> Buscar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">Registros de Auditoría (@Model.TotalCount registros)</h3>
+            </div>
+            <div class="card-body">
+                @if (!Model.Logs.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No se encontraron registros de auditoría con los filtros seleccionados.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th width="150">Fecha y Hora</th>
+                                    <th>Usuario</th>
+                                    <th>Acción</th>
+                                    <th>Entidad</th>
+                                    <th>ID Entidad</th>
+                                    <th>Detalles</th>
+                                    <th width="100">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in Model.Logs)
+                                {
+                                    <tr>
+                                        <td>
+                                            @log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(log.UserId))
+                                            {
+                                                <a asp-action="UserActivity" asp-route-userId="@log.UserId">
+                                                    @(log.UserName ?? log.UserId)
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sistema</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge @GetActionBadgeClass(log.Action)">
+                                                @log.Action
+                                            </span>
+                                        </td>
+                                        <td>@log.EntityType</td>
+                                        <td>
+                                            <a asp-action="EntityHistory" 
+                                               asp-route-entityType="@log.EntityType" 
+                                               asp-route-entityId="@log.EntityId">
+                                                @log.EntityId
+                                            </a>
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(log.IpAddress))
+                                            {
+                                                <small class="text-muted">IP: @log.IpAddress</small>
+                                            }
+                                            @if (!string.IsNullOrEmpty(log.AdditionalData))
+                                            {
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-link" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#detailsModal-@log.Id">
+                                                    Ver más
+                                                </button>
+                                            }
+                                        </td>
+                                        <td>
+                                            <button type="button" 
+                                                    class="btn btn-sm btn-outline-info" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#changesModal-@log.Id"
+                                                    title="Ver cambios">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if (Model.TotalPages > 1)
+                    {
+                        <nav aria-label="Paginación">
+                            <ul class="pagination justify-content-center">
+                                @for (int i = 1; i <= Model.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                        <a class="page-link" 
+                                           asp-action="Index" 
+                                           asp-route-page="@i"
+                                           asp-route-entityType="@Model.CurrentFilters.EntityType"
+                                           asp-route-userId="@Model.CurrentFilters.UserId"
+                                           asp-route-action="@Model.CurrentFilters.Action"
+                                           asp-route-startDate="@Model.CurrentFilters.StartDate"
+                                           asp-route-endDate="@Model.CurrentFilters.EndDate">
+                                            @i
+                                        </a>
+                                    </li>
+                                }
+                            </ul>
+                        </nav>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@foreach (var log in Model.Logs)
+{
+    <!-- Changes Modal -->
+    <div class="modal fade" id="changesModal-@log.Id" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambios Realizados</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    @if (log.OldValues != null && log.OldValues.Any())
+                    {
+                        <h6>Valores Anteriores:</h6>
+                        <pre class="bg-light p-2">@System.Text.Json.JsonSerializer.Serialize(log.OldValues, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                    }
+                    @if (log.NewValues != null && log.NewValues.Any())
+                    {
+                        <h6>Valores Nuevos:</h6>
+                        <pre class="bg-light p-2">@System.Text.Json.JsonSerializer.Serialize(log.NewValues, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                    }
+                    @if ((log.OldValues == null || !log.OldValues.Any()) && (log.NewValues == null || !log.NewValues.Any()))
+                    {
+                        <p class="text-muted">No hay detalles de cambios disponibles.</p>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(log.AdditionalData))
+    {
+        <!-- Additional Data Modal -->
+        <div class="modal fade" id="detailsModal-@log.Id" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Información Adicional</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <pre class="bg-light p-2">@log.AdditionalData</pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+@functions {
+    string GetActionBadgeClass(string action)
+    {
+        return action switch
+        {
+            "Create" => "bg-success",
+            "Update" => "bg-warning",
+            "Delete" => "bg-danger",
+            "Login" => "bg-info",
+            "Logout" => "bg-secondary",
+            "Approve" => "bg-success",
+            "Reject" => "bg-danger",
+            _ => "bg-primary"
+        };
+    }
+}

@@ -1,0 +1,120 @@
+@model LinaSys.Web.Areas.Coordination.Models.UserManagement.EditUserViewModel
+@{
+    ViewData["Title"] = "Editar Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Edit" asp-route-id="@Model.UserId" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="UserId" />
+                
+                <fieldset class="mb-4">
+                    <legend class="fs-5">Información Personal</legend>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend class="fs-5">Ubicación</legend>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Country" class="form-label"></label>
+                            <select asp-for="Country" class="form-control" id="country">
+                                <option value="">-- Seleccionar País --</option>
+                                <option value="Costa Rica">Costa Rica</option>
+                                <option value="Nicaragua">Nicaragua</option>
+                                <option value="Panama">Panamá</option>
+                                <option value="Guatemala">Guatemala</option>
+                                <option value="Honduras">Honduras</option>
+                                <option value="El Salvador">El Salvador</option>
+                            </select>
+                            <span asp-validation-for="Country" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Province" class="form-label"></label>
+                            <input asp-for="Province" class="form-control" id="province" />
+                            <span asp-validation-for="Province" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Canton" class="form-label"></label>
+                            <input asp-for="Canton" class="form-control" id="canton" />
+                            <span asp-validation-for="Canton" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="District" class="form-label"></label>
+                            <input asp-for="District" class="form-control" id="district" />
+                            <span asp-validation-for="District" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullAddress" class="form-label"></label>
+                        <textarea asp-for="FullAddress" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="FullAddress" class="text-danger"></span>
+                    </div>
+                </fieldset>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Details" asp-route-id="@Model.UserId" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const countrySelect = document.getElementById('country');
+            const provinceInput = document.getElementById('province');
+            const cantonInput = document.getElementById('canton');
+            const districtInput = document.getElementById('district');
+            
+            // Check initial value
+            checkCountryRequirements();
+            
+            countrySelect.addEventListener('change', checkCountryRequirements);
+            
+            function checkCountryRequirements() {
+                if (countrySelect.value === 'Costa Rica') {
+                    provinceInput.setAttribute('required', 'required');
+                    cantonInput.setAttribute('required', 'required');
+                    districtInput.setAttribute('required', 'required');
+                } else {
+                    provinceInput.removeAttribute('required');
+                    cantonInput.removeAttribute('required');
+                    districtInput.removeAttribute('required');
+                }
+            }
+        });
+    </script>
+}

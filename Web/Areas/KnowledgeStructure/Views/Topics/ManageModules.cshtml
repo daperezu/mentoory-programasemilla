@@ -1,0 +1,132 @@
+@model LinaSys.Web.Areas.KnowledgeStructure.Models.Topic.ManageTopicModulesViewModel
+
+@{
+    ViewData["Title"] = "Gestionar Módulos del Tema";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-action="Index">Temas</a></li>
+                    <li class="breadcrumb-item active">Gestionar Módulos</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3">@ViewData["Title"]</h1>
+            <p class="text-muted">Tema: <strong>@Model.TopicName</strong></p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Módulos Asignados</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.AssignedModules.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Módulo</th>
+                                        <th>Estructura de Conocimiento</th>
+                                        <th>Orden</th>
+                                        <th>Materias</th>
+                                        <th style="width: 100px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var module in Model.AssignedModules)
+                                    {
+                                        <tr>
+                                            <td>@module.ModuleName</td>
+                                            <td>@module.KnowledgeStructureName</td>
+                                            <td>@module.Order</td>
+                                            <td>
+                                                <span class="badge bg-info">@module.SubjectCount materias</span>
+                                            </td>
+                                            <td>
+                                                <form asp-action="RemoveFromModule" method="post" class="d-inline" 
+                                                      onsubmit="return confirm('¿Está seguro de que desea remover este tema del módulo? Esta acción solo es posible si el tema no tiene materias asignadas.');">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="topicId" value="@Model.TopicId" />
+                                                    <input type="hidden" name="structureTopicId" value="@module.StructureTopicId" />
+                                                    <input type="hidden" name="structureModuleId" value="@module.StructureModuleId" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                            @(module.SubjectCount > 0 ? "disabled" : "") 
+                                                            title="@(module.SubjectCount > 0 ? "No se puede remover porque tiene materias asignadas" : "Remover del módulo")">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Este tema no está asignado a ningún módulo.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Asignar a Módulo</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.AvailableModules.Any())
+                    {
+                        <form asp-action="AddToModule" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="topicId" value="@Model.TopicId" />
+                            
+                            <div class="mb-3">
+                                <label for="structureModuleId" class="form-label">Seleccionar Módulo</label>
+                                <select name="structureModuleId" id="structureModuleId" class="form-select" required>
+                                    <option value="">-- Seleccione un módulo --</option>
+                                    @foreach (var module in Model.AvailableModules)
+                                    {
+                                        <option value="@module.Value">@module.Text</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle me-2"></i>Asignar
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No hay módulos disponibles para asignar.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Volver a la lista
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

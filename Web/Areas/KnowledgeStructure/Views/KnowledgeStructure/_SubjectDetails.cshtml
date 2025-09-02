@@ -1,0 +1,71 @@
+@model LinaSys.KnowledgeStructure.Application.Subject.DTOs.SubjectDetailDto
+
+<div class="card">
+    <div class="card-header bg-warning">
+        <h5 class="mb-0">
+            <i class="fa fa-graduation-cap"></i> Asignatura
+        </h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-4">Título:</dt>
+            <dd class="col-sm-8">@Model.Title</dd>
+            
+            <dt class="col-sm-4">Contenido:</dt>
+            <dd class="col-sm-8">@(Model.Content ?? "Sin contenido")</dd>
+            
+            <dt class="col-sm-4">Tema:</dt>
+            <dd class="col-sm-8">@Model.TopicName</dd>
+            
+            <dt class="col-sm-4">Módulo:</dt>
+            <dd class="col-sm-8">@Model.ModuleName</dd>
+            
+            <dt class="col-sm-4">Estructura:</dt>
+            <dd class="col-sm-8">@Model.KnowledgeStructureName</dd>
+        </dl>
+        
+        @if (Model.Resources.Any())
+        {
+            <h6 class="mt-3">Recursos (@Model.Resources.Count)</h6>
+            <div class="list-group">
+                @foreach (var resource in Model.Resources.OrderBy(r => r.Order))
+                {
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">@resource.Title</h6>
+                                <p class="mb-1 text-muted">
+                                    <i class="fa fa-link"></i> <a href="@resource.Url" target="_blank">@resource.Url</a>
+                                </p>
+                                <small>
+                                    Tipo: @resource.Type
+                                    @if (resource.EstimatedMinutes.HasValue)
+                                    {
+                                        <span class="ms-2">| Duración: @resource.EstimatedMinutes min</span>
+                                    }
+                                </small>
+                            </div>
+                            <span class="badge bg-secondary">@resource.Order</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-muted mt-3">No hay recursos asociados</p>
+        }
+        
+        <div class="node-actions">
+            <a href="@Url.Action("Edit", "Subjects", new { id = Model.Id })" class="btn btn-primary">
+                <i class="fa fa-edit"></i> Editar
+            </a>
+            <a href="@Url.Action("Resources", "Subjects", new { subjectId = Model.Id })" class="btn btn-success">
+                <i class="fa fa-link"></i> Gestionar Recursos
+            </a>
+            <button type="button" class="btn btn-danger" onclick="deleteSubject(@Model.Id)">
+                <i class="fa fa-trash"></i> Eliminar
+            </button>
+        </div>
+    </div>
+</div>

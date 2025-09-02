@@ -1,0 +1,1 @@
+CREATE INDEX IX_RoleProtectedResourcePermissions_ProtectedResourceId ON [permissions].RoleProtectedResourcePermissions ([Role], ProtectedResourceId);

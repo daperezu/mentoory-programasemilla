@@ -1,0 +1,13 @@
+﻿@{
+    var toastJson = TempData["ToastMessage"] as string;
+}
+
+@if (!string.IsNullOrEmpty(toastJson))
+{
+    <script>
+        window._toastMessages = window._toastMessages || [];
+        window._toastMessages.push(JSON.parse('@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(toastJson))'));
+    </script>
+}
+
+<div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1080;"></div>

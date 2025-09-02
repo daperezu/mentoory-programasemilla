@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" />
+    <PackageReference Include="EPPlus" />
+    <PackageReference Include="MediatR" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Auth.Application\LinaSys.Auth.Application.csproj" />
+    <ProjectReference Include="..\BusinessIncubator.Domain\LinaSys.BusinessIncubator.Domain.csproj" />
+    <ProjectReference Include="..\BusinessIncubator.Infrastructure\LinaSys.BusinessIncubator.Infrastructure.csproj" />
+    <ProjectReference Include="..\Core.Application\LinaSys.Core.Application.csproj" />
+    <ProjectReference Include="..\Shared.Application\LinaSys.Shared.Application.csproj" />
+    <ProjectReference Include="..\Permissions.Application\LinaSys.Permissions.Application.csproj" />
+    <ProjectReference Include="..\KnowledgeStructure.Application\LinaSys.KnowledgeStructure.Application.csproj" />
+    <ProjectReference Include="..\Diagnostics.Application\LinaSys.Diagnostics.Application.csproj" />
+    <ProjectReference Include="..\Notification.Application\LinaSys.Notification.Application.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,168 @@
+@model IEnumerable<LinaSys.Core.Domain.AggregatesModel.AuditAggregate.AuditLog>
+@{
+    ViewData["Title"] = "Actividad del Usuario";
+    ViewData["PageHeader"] = "Actividad del Usuario";
+    ViewData["PageDescription"] = ViewBag.UserId;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3 class="card-title">
+                            Historial de Actividades
+                            <small class="text-muted">Usuario: @ViewBag.UserId</small>
+                        </h3>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No se encontraron actividades para este usuario.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th width="150">Fecha y Hora</th>
+                                    <th>Acción</th>
+                                    <th>Entidad</th>
+                                    <th>ID Entidad</th>
+                                    <th>IP</th>
+                                    <th>Detalles</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var log in Model.OrderByDescending(l => l.Timestamp))
+                                {
+                                    <tr>
+                                        <td>@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                        <td>
+                                            <span class="badge @GetActionBadgeClass(log.Action)">
+                                                @log.Action
+                                            </span>
+                                        </td>
+                                        <td>@log.EntityType</td>
+                                        <td>
+                                            <a asp-action="EntityHistory" 
+                                               asp-route-entityType="@log.EntityType" 
+                                               asp-route-entityId="@log.EntityId">
+                                                @log.EntityId
+                                            </a>
+                                        </td>
+                                        <td>
+                                            @(log.IpAddress ?? "-")
+                                        </td>
+                                        <td>
+                                            @if (log.OldValues != null || log.NewValues != null)
+                                            {
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-outline-info" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#changesModal-@log.Id">
+                                                    <i class="fas fa-eye"></i> Ver cambios
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Activity Summary -->
+                    <div class="row mt-4">
+                        <div class="col-md-12">
+                            <h5>Resumen de Actividades</h5>
+                            <div class="row">
+                                @{
+                                    var actionGroups = Model.GroupBy(l => l.Action);
+                                }
+                                @foreach (var group in actionGroups)
+                                {
+                                    <div class="col-md-3 mb-3">
+                                        <div class="card text-center">
+                                            <div class="card-body">
+                                                <h4 class="card-title">@group.Count()</h4>
+                                                <p class="card-text">@group.Key</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@foreach (var log in Model.Where(l => l.OldValues != null || l.NewValues != null))
+{
+    <!-- Changes Modal -->
+    <div class="modal fade" id="changesModal-@log.Id" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cambios Realizados - @log.Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">
+                        <strong>Entidad:</strong> @log.EntityType (@log.EntityId)<br />
+                        <strong>Fecha:</strong> @log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")
+                    </p>
+                    
+                    @if (log.OldValues != null && log.OldValues.Any())
+                    {
+                        <h6>Valores Anteriores:</h6>
+                        <pre class="bg-light p-2">@System.Text.Json.JsonSerializer.Serialize(log.OldValues, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                    }
+                    @if (log.NewValues != null && log.NewValues.Any())
+                    {
+                        <h6>Valores Nuevos:</h6>
+                        <pre class="bg-light p-2">@System.Text.Json.JsonSerializer.Serialize(log.NewValues, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@functions {
+    string GetActionBadgeClass(string action)
+    {
+        return action switch
+        {
+            "Create" => "bg-success",
+            "Update" => "bg-warning",
+            "Delete" => "bg-danger",
+            "Login" => "bg-info",
+            "Logout" => "bg-secondary",
+            "Approve" => "bg-success",
+            "Reject" => "bg-danger",
+            "Submit" => "bg-primary",
+            _ => "bg-primary"
+        };
+    }
+}

@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\KnowledgeStructure.Domain\LinaSys.KnowledgeStructure.Domain.csproj" />
+    <ProjectReference Include="..\KnowledgeStructure.Infrastructure\LinaSys.KnowledgeStructure.Infrastructure.csproj" />
+    <ProjectReference Include="..\Shared.Application\LinaSys.Shared.Application.csproj" />
+  </ItemGroup>
+</Project>

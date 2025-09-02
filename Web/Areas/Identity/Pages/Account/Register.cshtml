@@ -1,0 +1,82 @@
+﻿@page
+@model RegisterModel
+
+@{
+    Layout = "_HeadlessLayout";
+    ViewData["Title"] = "Registra tu cuenta";
+}
+
+<div class="row vh-100 g-0">
+    <div class="col-lg-6 position-relative d-none d-lg-block">
+        <div class="bg-holder" style="background-image:url(/assets/img/layout/register.png);">
+        </div>
+        <!--/.bg-holder-->
+
+    </div>
+    <div class="col-lg-6">
+        <div class="row flex-center h-100 g-0 px-4 px-sm-0">
+            <div class="col col-sm-6 col-lg-7 col-xl-6">
+                <a class="d-flex flex-center text-decoration-none mb-4" href="~/">
+                    <div class="d-flex align-items-center fw-bolder fs-3 d-inline-block">
+                        <img src="~/img/logo-full-color-120.png" alt="mentoory" width="120" />
+                    </div>
+                </a>
+                <div class="text-center mb-7">
+                    <h3 class="text-body-highlight">Registro</h3>
+                    <p class="text-body-tertiary">Crea tu cuenta</p>
+                </div>
+                <form asp-route-returnUrl="@Model.ReturnUrl" asp-antiforgery="true" method="post" class="needs-validation" novalidate="">
+                    <div class="mb-3 text-start">
+                        <label class="form-label" for="name">Identificación</label>
+                        <input asp-for="Input.Username" class="form-control" id="identification" type="text" placeholder="Identificación" required="required" />
+                        <span asp-validation-for="Input.Username"></span>
+                    </div>
+                    <div class="mb-3 text-start">
+                        <label class="form-label" for="name">Nombre</label>
+                        <input asp-for="Input.Name" class="form-control" id="name" type="text" placeholder="Nombre completo" required="required" />
+                        <span asp-validation-for="Input.Name"></span>
+                    </div>
+                    <div class="mb-3 text-start">
+                        <label class="form-label" for="email">Correo electrónico</label>
+                        <input asp-for="Input.Email" class="form-control" id="email" type="email" placeholder="nombre@micorreo.com" required="required" />
+                        <span asp-validation-for="Input.Username"></span>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <label class="form-label" for="password">Contraseña</label>
+                            <div class="position-relative" data-password="data-password">
+                                <input asp-for="Input.Password" class="form-control form-icon-input pe-6" id="password" type="password" placeholder="Contraseña" data-password-input="data-password-input" required="required" />
+                                <button type="button" class="btn px-3 py-0 h-100 position-absolute top-0 end-0 fs-7 text-body-tertiary" data-password-toggle="data-password-toggle"><span class="uil uil-eye show"></span><span class="uil uil-eye-slash hide"></span></button>
+                            </div>
+                            <span asp-validation-for="Input.Password"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label" for="confirmPassword">Confirmar contraseña</label>
+                            <div class="position-relative" data-password="data-password">
+                                <input asp-for="Input.ConfirmPassword" class="form-control form-icon-input pe-6" id="confirmPassword" type="password" placeholder="Confirmar contraseña" data-password-input="data-password-input" required="required" />
+                                <button type="button" class="btn px-3 py-0 h-100 position-absolute top-0 end-0 fs-7 text-body-tertiary" data-password-toggle="data-password-toggle"><span class="uil uil-eye show"></span><span class="uil uil-eye-slash hide"></span></button>
+                            </div>
+                            <span asp-validation-for="Input.ConfirmPassword"></span>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" id="termsService" type="checkbox" required="required" />
+                        <label class="form-label fs-9 text-transform-none" for="termsService">Acepto <a href="#!">términos </a>y <a href="#!">política de privacidad</a></label>
+                    </div>
+                    <button class="btn btn-primary w-100 mb-3">Sign up</button>
+                    <div class="text-center">
+                        <a class="fs-9 fw-bold" asp-page="/Account/Login" asp-area="Identity">Ya tengo cuenta</a>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="invalid-feedback d-block">
+                            @Html.ValidationSummary()
+                        </div>
+                    }
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,71 @@
+@{
+    var pageTitle = "Asignaturas";
+    
+    var pageHeaderActions = new List<PageHeaderDropdownItem>
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-plus me-2",
+            Text = "Nueva asignatura",
+            Url = Url.Action("Create", "Subjects", new { area = "KnowledgeStructure" })!
+        }
+    };
+
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Título", 
+            Data = "title"
+        },
+        new()
+        {
+            Header = "Tema", 
+            Data = "topicName"
+        },
+        new()
+        {
+            Header = "Módulo", 
+            Data = "moduleName"
+        },
+        new()
+        {
+            Header = "Estructura", 
+            Data = "knowledgeStructureName"
+        },
+        new()
+        {
+            Header = "Recursos", 
+            Data = "resourceCount"
+        }
+    };
+
+    var dataTablesHoverActions = new List<HoverAction>
+    {
+        new() { 
+            Url = Url.Action("Edit", "Subjects", new { area = "KnowledgeStructure", id = "{id}" })!, 
+            IconClass = "fas fa-edit",
+            Text = "Editar"
+        },
+        new() { 
+            Url = Url.Action("ManageTopics", "Subjects", new { area = "KnowledgeStructure", id = "{id}" })!, 
+            IconClass = "fas fa-sitemap",
+            Text = "Gestionar Temas"
+        },
+        new() { 
+            Url = Url.Action("Delete", "Subjects", new { area = "KnowledgeStructure", id = "{id}" })!, 
+            IconClass = "fas fa-trash",
+            Text = "Eliminar"
+        }
+    };
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-graduation-cap" dropdown-items="@pageHeaderActions"></page-header>
+
+<div class="card">
+    <div class="card-body">
+        <datatable ajax-url="@Url.Action("List", "Subjects", new { area = "KnowledgeStructure" })"
+                   columns="@dataTablesColumns"
+                   hover-actions="@dataTablesHoverActions"></datatable>
+    </div>
+</div>

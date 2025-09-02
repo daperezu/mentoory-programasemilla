@@ -1,0 +1,322 @@
+@model LinaSys.Web.Areas.Coordination.Models.UserManagement.CreateUserViewModel
+@{
+    ViewData["Title"] = "Crear Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form asp-action="Create" method="post">
+                @Html.AntiForgeryToken()
+                
+                <fieldset class="mb-4">
+                    <legend class="fs-5">Información Personal</legend>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Identification" class="form-label"></label>
+                            <input asp-for="Identification" class="form-control" />
+                            <span asp-validation-for="Identification" class="text-danger"></span>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend class="fs-5">Seguridad</legend>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" type="password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <div class="form-text">La contraseña debe contener al menos: una minúscula, una mayúscula, un número y un carácter especial.</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input asp-for="EmailConfirmed" class="form-check-input" type="checkbox" />
+                                <label asp-for="EmailConfirmed" class="form-check-label">
+                                    Confirmar email automáticamente
+                                </label>
+                                <div class="form-text">Si no está marcado, el usuario recibirá un enlace para confirmar su email.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input asp-for="GenerateTemporaryPassword" class="form-check-input" type="checkbox" id="generateTempPassword" />
+                                <label asp-for="GenerateTemporaryPassword" class="form-check-label">
+                                    Generar contraseña temporal
+                                </label>
+                                <div class="form-text">El sistema generará una contraseña temporal y la enviará por email.</div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend class="fs-5">Ubicación (Opcional)</legend>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Country" class="form-label"></label>
+                            <select asp-for="Country" class="form-control" id="country">
+                                <option value="">-- Seleccionar País --</option>
+                                <option value="Costa Rica">Costa Rica</option>
+                                <option value="Nicaragua">Nicaragua</option>
+                                <option value="Panama">Panamá</option>
+                                <option value="Guatemala">Guatemala</option>
+                                <option value="Honduras">Honduras</option>
+                                <option value="El Salvador">El Salvador</option>
+                            </select>
+                            <span asp-validation-for="Country" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Province" class="form-label"></label>
+                            <input asp-for="Province" class="form-control" id="province" />
+                            <span asp-validation-for="Province" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Canton" class="form-label"></label>
+                            <input asp-for="Canton" class="form-control" id="canton" />
+                            <span asp-validation-for="Canton" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="District" class="form-label"></label>
+                            <input asp-for="District" class="form-control" id="district" />
+                            <span asp-validation-for="District" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullAddress" class="form-label"></label>
+                        <textarea asp-for="FullAddress" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="FullAddress" class="text-danger"></span>
+                    </div>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend class="fs-5">Preferencias de Notificaciones</legend>
+                    <p class="text-muted">Configure qué notificaciones por correo electrónico recibirá el usuario. Todas las preferencias se pueden cambiar más tarde.</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.SystemWelcome" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.SystemWelcome" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.ProjectWelcome" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.ProjectWelcome" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.Approvals" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.Approvals" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.Rejections" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.Rejections" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.Reminders" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.Reminders" class="form-check-label"></label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.Announcements" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.Announcements" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.TaskAssignments" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.TaskAssignments" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.FormDeadlines" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.FormDeadlines" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.MentorMessages" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.MentorMessages" class="form-check-label"></label>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="EmailPreferences.Digest" class="form-check-input" type="checkbox" role="switch" />
+                                    <label asp-for="EmailPreferences.Digest" class="form-check-label"></label>
+                                    <small class="form-text text-muted">Recibir un resumen diario de toda la actividad</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllPreferences">
+                            <i class="bi bi-check-all"></i> Seleccionar todas
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllPreferences">
+                            <i class="bi bi-x-lg"></i> Deseleccionar todas
+                        </button>
+                    </div>
+                </fieldset>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Crear Usuario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const countrySelect = document.getElementById('country');
+            const provinceInput = document.getElementById('province');
+            const cantonInput = document.getElementById('canton');
+            const districtInput = document.getElementById('district');
+            const generateTempPasswordCheckbox = document.getElementById('generateTempPassword');
+            const passwordInput = document.querySelector('input[name="Password"]');
+            const confirmPasswordInput = document.querySelector('input[name="ConfirmPassword"]');
+            const passwordFields = [passwordInput, confirmPasswordInput];
+            
+            // Handle temporary password checkbox
+            generateTempPasswordCheckbox.addEventListener('change', function() {
+                passwordFields.forEach(field => {
+                    if (this.checked) {
+                        field.value = '';
+                        field.disabled = true;
+                        field.removeAttribute('required');
+                        field.removeAttribute('data-val-required');
+                        field.removeAttribute('data-val');
+                        field.setAttribute('data-val', 'false');
+                        field.closest('.mb-3').style.opacity = '0.5';
+                        
+                        // Clear validation messages
+                        const validationSpan = field.parentElement.querySelector('.text-danger');
+                        if (validationSpan) {
+                            validationSpan.textContent = '';
+                        }
+                        
+                        // Update jQuery validation if present
+                        if ($.validator && $.validator.unobtrusive) {
+                            const form = field.closest('form');
+                            $(form).removeData('validator').removeData('unobtrusiveValidation');
+                            $.validator.unobtrusive.parse(form);
+                        }
+                    } else {
+                        field.disabled = false;
+                        field.setAttribute('data-val', 'true');
+                        field.setAttribute('data-val-required', 'La contraseña es requerida');
+                        field.closest('.mb-3').style.opacity = '1';
+                        
+                        // Re-parse validation if present
+                        if ($.validator && $.validator.unobtrusive) {
+                            const form = field.closest('form');
+                            $(form).removeData('validator').removeData('unobtrusiveValidation');
+                            $.validator.unobtrusive.parse(form);
+                        }
+                    }
+                });
+            });
+            
+            countrySelect.addEventListener('change', function() {
+                if (this.value === 'Costa Rica') {
+                    provinceInput.setAttribute('required', 'required');
+                    cantonInput.setAttribute('required', 'required');
+                    districtInput.setAttribute('required', 'required');
+                } else {
+                    provinceInput.removeAttribute('required');
+                    cantonInput.removeAttribute('required');
+                    districtInput.removeAttribute('required');
+                }
+            });
+            
+            // Email preferences select/deselect all functionality
+            const selectAllBtn = document.getElementById('selectAllPreferences');
+            const deselectAllBtn = document.getElementById('deselectAllPreferences');
+            const preferenceSwitches = document.querySelectorAll('fieldset:has(legend:contains("Preferencias")) .form-check-input');
+            
+            if (selectAllBtn) {
+                selectAllBtn.addEventListener('click', function() {
+                    document.querySelectorAll('[id^="EmailPreferences_"]').forEach(function(checkbox) {
+                        checkbox.checked = true;
+                    });
+                });
+            }
+            
+            if (deselectAllBtn) {
+                deselectAllBtn.addEventListener('click', function() {
+                    document.querySelectorAll('[id^="EmailPreferences_"]').forEach(function(checkbox) {
+                        checkbox.checked = false;
+                    });
+                });
+            }
+        });
+    </script>
+}

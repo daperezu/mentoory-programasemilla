@@ -1,0 +1,118 @@
+@model IEnumerable<dynamic>
+@{
+    var notifications = Model ?? Enumerable.Empty<dynamic>();
+    var showHeader = ViewData["ShowHeader"] ?? true;
+    var maxItems = ViewData["MaxItems"] ?? 5;
+}
+
+<div class="card h-100">
+    @if ((bool)showHeader)
+    {
+        <div class="card-header bg-body-tertiary">
+            <div class="row align-items-center g-2">
+                <div class="col">
+                    <h6 class="mb-0">Notificaciones</h6>
+                </div>
+                <div class="col-auto">
+                    @{
+                        var unreadCount = notifications.Count(n => !n.IsRead);
+                    }
+                    @if (unreadCount > 0)
+                    {
+                        <span class="badge badge-phoenix badge-phoenix-primary">@unreadCount nuevo(s)</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    
+    <div class="card-body scrollbar" style="max-height: 400px;">
+        @{
+            int count = 0;
+            foreach (var notification in notifications)
+            {
+                if (count >= (int)maxItems) break;
+                count++;
+                
+                var iconClass = notification.Type switch
+                {
+                    "success" => "fa-check-circle text-success",
+                    "warning" => "fa-exclamation-triangle text-warning",
+                    "error" => "fa-times-circle text-danger",
+                    "info" => "fa-info-circle text-info",
+                    _ => "fa-bell text-primary"
+                };
+                
+                var bgClass = !notification.IsRead ? "bg-primary-subtle" : "";
+                
+                <div class="d-flex align-items-start mb-3 notification-item @bgClass rounded-2 p-2" 
+                     data-notification-id="@notification.Id">
+                    <div class="me-3">
+                        <div class="avatar avatar-m">
+                            <div class="avatar-name rounded-circle">
+                                <span class="fas @iconClass"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <p class="mb-1 @(!notification.IsRead ? "fw-bold" : "") text-900">
+                                    @notification.Title
+                                </p>
+                                <p class="mb-1 text-700 fs-9">@notification.Message</p>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-500 fs-10">
+                                        <span class="far fa-clock me-1"></span>
+                                        @notification.CreatedAt.ToString("dd MMM HH:mm")
+                                    </span>
+                                    @if (notification.ActionUrl != null)
+                                    {
+                                        <a href="@notification.ActionUrl" class="btn btn-link btn-sm p-0 fs-10">
+                                            Ver más <span class="fas fa-chevron-right ms-1"></span>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                            @if (!notification.IsRead)
+                            {
+                                <button class="btn btn-phoenix-secondary btn-icon btn-sm mark-notification-read" 
+                                        data-notification-id="@notification.Id"
+                                        data-bs-toggle="tooltip" 
+                                        title="Marcar como leída">
+                                    <span class="fas fa-check fs-10"></span>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            
+            if (count == 0)
+            {
+                <div class="text-center py-4">
+                    <span class="far fa-bell-slash fa-3x text-300 mb-3"></span>
+                    <p class="text-700">No tienes notificaciones</p>
+                </div>
+            }
+        }
+    </div>
+    
+    @if (count > 0)
+    {
+        <div class="card-footer bg-body-tertiary">
+            <div class="row g-2">
+                <div class="col">
+                    <button class="btn btn-phoenix-secondary btn-sm w-100 mark-all-read">
+                        <span class="fas fa-check-double me-1"></span> Marcar todas como leídas
+                    </button>
+                </div>
+                <div class="col-auto">
+                    <a href="@Url.Action("Notifications", "StarterDashboard")" class="btn btn-phoenix-primary btn-sm">
+                        Ver todas
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

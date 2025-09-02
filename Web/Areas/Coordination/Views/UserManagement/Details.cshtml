@@ -1,0 +1,217 @@
+@model LinaSys.Web.Areas.Coordination.Models.UserManagement.UserDetailsViewModel
+@{
+    ViewData["Title"] = "Detalles del Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h3 mb-0">@ViewData["Title"]</h1>
+        </div>
+        <div class="col-auto">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <!-- Avatar Card -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    @if (!string.IsNullOrEmpty(Model.AvatarUrl))
+                    {
+                        <img src="@Model.AvatarUrl" alt="Avatar" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;" />
+                    }
+                    else
+                    {
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                            <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+                        </div>
+                    }
+                    <h5 class="card-title">@Model.FullName</h5>
+                    <p class="text-muted">@Model.Email</p>
+                    
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge bg-success mb-3">Activo</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger mb-3">Inactivo</span>
+                    }
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#avatarModal">
+                            <i class="bi bi-camera"></i> Cambiar Avatar
+                        </button>
+                        
+                        @if (User.IsInRole(LinaSys.Shared.Domain.Constants.Roles.Administrator) || 
+                            User.IsInRole(LinaSys.Shared.Domain.Constants.Roles.GlobalAdministrator))
+                        {
+                            <a href="@Url.Action("ManageRoles", "UserManagement", new { area = "Coordination", userId = Model.UserId })" class="btn btn-outline-warning">
+                                <i class="bi bi-shield-check"></i> Gestionar Roles
+                            </a>
+                        }
+                        
+                        @if (Model.IsActive)
+                        {
+                            <form asp-action="Deactivate" asp-route-id="@Model.UserId" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('¿Está seguro que desea desactivar este usuario?')">
+                                    <i class="bi bi-x-circle"></i> Desactivar Usuario
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <form asp-action="Reactivate" asp-route-id="@Model.UserId" method="post">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-success w-100">
+                                    <i class="bi bi-check-circle"></i> Reactivar Usuario
+                                </button>
+                            </form>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <!-- Personal Information Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Información Personal</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Nombre</label>
+                            <p class="fw-semibold">@Model.FirstName</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">Apellido</label>
+                            <p class="fw-semibold">@Model.LastName</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="text-muted">Identificación</label>
+                            <p class="fw-semibold">@Model.Identification</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">ID de Usuario</label>
+                            <p class="fw-semibold font-monospace">@Model.UserId</p>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <a asp-action="Edit" asp-route-id="@Model.UserId" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Editar Información
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Ubicación</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.Country))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted">País</label>
+                                <p class="fw-semibold">@(Model.Country ?? "No especificado")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted">Provincia</label>
+                                <p class="fw-semibold">@(Model.Province ?? "No especificado")</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="text-muted">Cantón</label>
+                                <p class="fw-semibold">@(Model.Canton ?? "No especificado")</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="text-muted">Distrito</label>
+                                <p class="fw-semibold">@(Model.District ?? "No especificado")</p>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(Model.FullAddress))
+                        {
+                            <div class="row">
+                                <div class="col-12">
+                                    <label class="text-muted">Dirección Completa</label>
+                                    <p class="fw-semibold">@Model.FullAddress</p>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No se ha especificado ubicación</p>
+                    }
+                </div>
+            </div>
+
+            <!-- System Information Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Información del Sistema</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="text-muted">Fecha de Creación</label>
+                            <p class="fw-semibold">@Model.CreatedDate.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted">Última Actualización</label>
+                            <p class="fw-semibold">
+                                @if (Model.UpdatedDate.HasValue)
+                                {
+                                    @Model.UpdatedDate.Value.ToString("dd/MM/yyyy HH:mm")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Nunca</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Avatar Upload Modal -->
+<div class="modal fade" id="avatarModal" tabindex="-1" aria-labelledby="avatarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="UpdateAvatar" asp-route-id="@Model.UserId" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="avatarModalLabel">Cambiar Avatar</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="avatarFile" class="form-label">Seleccionar imagen</label>
+                        <input type="file" class="form-control" id="avatarFile" name="avatarFile" accept="image/*" required>
+                        <div class="form-text">Formatos permitidos: JPEG, PNG, GIF. Tamaño máximo: 5MB</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Subir Avatar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

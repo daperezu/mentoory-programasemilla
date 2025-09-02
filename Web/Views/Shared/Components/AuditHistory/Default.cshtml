@@ -1,0 +1,223 @@
+@model LinaSys.Web.ViewComponents.AuditHistoryViewModel
+
+<div class="audit-history-timeline">
+    @if (!Model.Activities.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-clock-history fs-1 text-muted"></i>
+            <p class="text-muted mt-3">No hay actividades registradas</p>
+        </div>
+    }
+    else
+    {
+        <!-- Timeline Container -->
+        <div class="timeline position-relative">
+            @{
+                var groupedActivities = Model.Activities
+                    .GroupBy(a => a.CreatedDate.Date)
+                    .OrderByDescending(g => g.Key);
+            }
+            
+            @foreach (var dayGroup in groupedActivities)
+            {
+                <!-- Date Header -->
+                <div class="timeline-date mb-3">
+                    <span class="badge bg-secondary rounded-pill">
+                        @if (dayGroup.Key.Date == DateTime.Today)
+                        {
+                            <text>Hoy</text>
+                        }
+                        else if (dayGroup.Key.Date == DateTime.Today.AddDays(-1))
+                        {
+                            <text>Ayer</text>
+                        }
+                        else
+                        {
+                            @dayGroup.Key.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))
+                        }
+                    </span>
+                </div>
+                
+                @foreach (var activity in dayGroup.OrderByDescending(a => a.CreatedDate))
+                {
+                    <!-- Timeline Item -->
+                    <div class="timeline-item d-flex mb-3" data-activity-id="@activity.Id">
+                        <!-- Icon -->
+                        <div class="timeline-icon flex-shrink-0">
+                            <div class="avatar avatar-sm bg-@activity.Color-subtle text-@activity.Color">
+                                <i class="@activity.Icon"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="timeline-content ms-3 flex-grow-1">
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-body py-2 px-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">@activity.Description</h6>
+                                            <div class="small text-muted">
+                                                <span class="badge bg-light text-secondary me-2">@activity.Category</span>
+                                                <i class="bi bi-clock me-1"></i>
+                                                @activity.CreatedDate.ToString("HH:mm") - @activity.RelativeTime
+                                            </div>
+                                            
+                                            @if (activity.EntityType != null && activity.EntityId != null)
+                                            {
+                                                <div class="mt-1">
+                                                    <span class="badge bg-info-subtle text-info">
+                                                        @activity.EntityType: #@activity.EntityId
+                                                    </span>
+                                                </div>
+                                            }
+                                            
+                                            @if (activity.Metadata.Any(m => m.Key != "raw"))
+                                            {
+                                                <!-- Metadata Display -->
+                                                <div class="mt-2">
+                                                    <a class="text-primary small" data-bs-toggle="collapse" 
+                                                       href="#metadata-@activity.Id" role="button">
+                                                        <i class="bi bi-info-circle me-1"></i>Ver detalles
+                                                    </a>
+                                                    <div class="collapse mt-2" id="metadata-@activity.Id">
+                                                        <div class="bg-light rounded p-2">
+                                                            @foreach (var meta in activity.Metadata.Where(m => m.Key != "raw"))
+                                                            {
+                                                                <div class="small">
+                                                                    <strong>@FormatMetadataKey(meta.Key):</strong> 
+                                                                    <span class="text-muted">@meta.Value</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                        
+                                        <!-- Activity Type Badge -->
+                                        <div>
+                                            <span class="badge bg-@activity.Color-subtle text-@activity.Color">
+                                                @activity.ActivityType.Replace("_", " ")
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            
+            @if (Model.HasMore)
+            {
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                            onclick="loadMoreAuditHistory()" id="load-more-audit">
+                        <i class="bi bi-arrow-down-circle me-2"></i>Cargar más actividades
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@functions {
+    string FormatMetadataKey(string key)
+    {
+        return key switch
+        {
+            "ip_address" => "Dirección IP",
+            "user_agent" => "Navegador",
+            "old_value" => "Valor Anterior",
+            "new_value" => "Nuevo Valor",
+            "role" => "Rol",
+            "project" => "Proyecto",
+            "incubator" => "Incubadora",
+            "reason" => "Motivo",
+            "error" => "Error",
+            _ => key.Replace("_", " ")
+        };
+    }
+}
+
+<style>
+    .timeline {
+        padding-left: 30px;
+    }
+    
+    .timeline::before {
+        content: "";
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, #e9ecef 0%, transparent 100%);
+    }
+    
+    .timeline-item {
+        position: relative;
+    }
+    
+    .timeline-icon {
+        position: relative;
+        z-index: 1;
+        margin-left: -30px;
+    }
+    
+    .timeline-icon .avatar {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .timeline-date {
+        margin-left: -30px;
+        padding-left: 45px;
+    }
+    
+    .timeline-content {
+        animation: slideInFromRight 0.3s ease-out;
+    }
+    
+    @@keyframes slideInFromRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .timeline-item:hover .timeline-content {
+        transform: translateX(2px);
+        transition: transform 0.2s ease;
+    }
+</style>
+
+<script>
+    let currentPage = 1;
+    
+    function loadMoreAuditHistory() {
+        currentPage++;
+        const button = document.getElementById('load-more-audit');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cargando...';
+        button.disabled = true;
+        
+        // TODO: Implement AJAX call to load more activities
+        // This would call a new endpoint that returns paginated activities
+        
+        // For now, just restore button after delay
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 1000);
+    }
+</script>

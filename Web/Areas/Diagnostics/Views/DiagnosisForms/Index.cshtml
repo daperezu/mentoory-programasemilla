@@ -1,0 +1,223 @@
+﻿@model DiagnosisFormViewModel
+
+<div class="card theme-wizard mb-5" data-theme-wizard="data-theme-wizard">
+    <div class="card-header bg-body-highlight pt-3 pb-2 border-bottom-0">
+        <ul class="nav justify-content-between nav-wizard nav-wizard-success" role="tablist">
+            @for (var i = 0; i < Model.QuestionBlocks.Count; i++)
+            {
+                var block = Model.QuestionBlocks[i];
+                <li class="nav-item" role="presentation">
+                    <a class="nav-link @(i == 0 ? "active" : "") fw-semibold" href="#wizard-tab-@i" data-bs-toggle="tab" data-wizard-step="@(i + 1)" aria-selected="@(i == 0 ? "true" : "false")" role="tab">
+                        <div class="text-center d-inline-block">
+                            <span class="nav-item-circle-parent"><span class="nav-item-circle">@((i + 1).ToString())</span></span>
+                            <span class="d-none d-md-block mt-1 fs-9">@block.Title</span>
+                        </div>
+                    </a>
+                </li>
+            }
+
+            <li class="nav-item" role="presentation">
+                <a class="nav-link fw-semibold" href="#wizard-tab-final" data-bs-toggle="tab" data-wizard-step="@(Model.QuestionBlocks.Count + 1)" aria-selected="false" role="tab">
+                    <div class="text-center d-inline-block">
+                        <span class="nav-item-circle-parent"><span class="nav-item-circle"><i class="fas fa-check"></i></span></span>
+                        <span class="d-none d-md-block mt-1 fs-9">Finish</span>
+                    </div>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card-body pt-4 pb-0">
+        <form id="diagnosisForm" method="post" asp-route-id="@ViewBag.FormId" asp-route-phase="@ViewBag.Phase">
+        <div class="tab-content">
+                @for (var b = 0; b < Model.QuestionBlocks.Count; b++)
+                {
+                    var block = Model.QuestionBlocks[b];
+                    <div class="tab-pane @(b == 0 ? "active" : "")" role="tabpanel" id="wizard-tab-@b">
+                        <form id="fake_form_@b" onsubmit="return false;" novalidate="novalidate"></form>
+                        @for (var q = 0; q < block.Questions.Count; q++)
+                        {
+                            var question = block.Questions[q];
+                            var questionIndex = Model.QuestionBlocks.Take(b).Sum(bl => bl.Questions.Count) + q;
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">
+                                    @question.Text
+                                    @if (question.IsRequired)
+                                    {
+                                        <span class="text-danger">*</span>
+                                    }
+                                </label>
+
+                                <input type="hidden" name="answers[@questionIndex].QuestionId" value="@question.Id" />
+
+                                @switch (question.AnswerType)
+                                {
+                                    case AnswerTypeViewModel.SingleChoice:
+                                        @for (var o = 0; o < question.Options.Count; o++)
+                                        {
+                                            var option = question.Options[o];
+                                            <div class="form-check">
+                                                <input class="form-check-input answer-radio"
+                                                       type="radio"
+                                                       name="answers[@questionIndex].AnswerOptionId"
+                                                       value="@option.Id"
+                                                       data-target="#followup_@(questionIndex)_@(option.Id)"
+                                                       required="@question.IsRequired"/>
+                                                <label class="form-check-label">@option.Text</label>
+                                            </div>
+
+                                            if (!string.IsNullOrWhiteSpace(option.FollowUpQuestionText))
+                                            {
+                                                <div class="mt-2 ms-4 d-none" id="followup_@(questionIndex)_@(option.Id)">
+                                                    <label class="form-label fw-semibold">@option.FollowUpQuestionText</label>
+                                                    <input type="text" name="answers[@questionIndex].FollowUpUserInput" class="form-control" />
+                                                </div>
+                                            }
+                                        }
+
+                                        break;
+
+                                    case AnswerTypeViewModel.MultiChoice:
+                                        @for (var o = 0; o < question.Options.Count; o++)
+                                        {
+                                            var option = question.Options[o];
+                                            <div class="form-check">
+                                                <input class="form-check-input answer-checkbox"
+                                                       type="checkbox"
+                                                       name="answers[@questionIndex].AnswerOptionId"
+                                                       value="@option.Id"
+                                                       data-target="#followup_@(questionIndex)_@(option.Id)"/>
+                                                <label class="form-check-label">@option.Text</label>
+                                            </div>
+
+                                            if (!string.IsNullOrWhiteSpace(option.FollowUpQuestionText))
+                                            {
+                                                <div class="mt-2 ms-4 d-none" id="followup_@(questionIndex)_@(option.Id)">
+                                                    <label class="form-label fw-semibold">@option.FollowUpQuestionText</label>
+                                                    <input type="text" name="answers[@questionIndex].FollowUpUserInput" class="form-control" />
+                                                </div>
+                                            }
+                                        }
+
+                                        break;
+
+                                    default:
+
+                                        var inputType = question.AnswerType switch
+                                        {
+                                            AnswerTypeViewModel.Numeric => "number",
+                                            AnswerTypeViewModel.Date => "date",
+                                            _ => "text"
+                                        };
+
+                                        if (question.AnswerType
+                                            is AnswerTypeViewModel.IdType
+                                            or AnswerTypeViewModel.Gender
+                                            or AnswerTypeViewModel.MaritalStatus)
+                                        {
+                                            <select class="form-select" name="answers[@questionIndex].UserInput">
+                                                <option value="">Select...</option>
+                                                @switch (question.AnswerType)
+                                                {
+                                                    case AnswerTypeViewModel.IdType:
+                                                        <option value="cedula">Cédula</option>
+                                                        <option value="passport">Passport</option>
+                                                        <option value="dimex">DIMEX</option>
+                                                        break;
+                                                    case AnswerTypeViewModel.Gender:
+                                                        <option value="M">Male</option>
+                                                        <option value="F">Female</option>
+                                                        <option value="O">Other</option>
+                                                        break;
+                                                    default:
+                                                        <option value="single">Single</option>
+                                                        <option value="married">Married</option>
+                                                        <option value="divorced">Divorced</option>
+                                                        <option value="widowed">Widowed</option>
+                                                        break;
+                                                }
+                                            </select>
+                                        }
+                                        else
+                                        {
+                                            <input type="@inputType" class="form-control" name="answers[@questionIndex].UserInput"/>
+                                        }
+
+                                        break;
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Final Tab -->
+                <div class="tab-pane" role="tabpanel" id="wizard-tab-final">
+                    <div class="text-center p-4">
+                        <h5 class="mb-3">You're all set!</h5>
+                        <p class="text-body-emphasis fs-9">Click the button below to submit your answers.</p>
+                        <button class="btn btn-success px-5" type="submit">Submit Form</button>
+                    </div>
+                </div>
+        </div>
+        </form>
+    </div>
+
+    <div class="card-footer border-top-0" data-wizard-footer="data-wizard-footer">
+        <div class="d-flex pager wizard list-inline mb-0">
+            <button class="d-none btn btn-link ps-0" type="button" data-wizard-prev-btn="data-wizard-prev-btn">
+                <i class="fas fa-chevron-left me-1"></i> Previous
+            </button>
+            <div class="flex-1 text-end">
+                <button class="btn btn-primary px-6" type="button" data-wizard-next-btn="data-wizard-next-btn">
+                    Next <i class="fas fa-chevron-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // SINGLE CHOICE
+            document.querySelectorAll('.answer-radio').forEach(input => {
+                input.addEventListener('change', function () {
+                    const groupName = this.name;
+
+                    // Hide all follow-up fields in the group
+                    document.querySelectorAll(`input[name='${groupName}']`).forEach(el => {
+                        const target = el.dataset.target;
+                        if (target) {
+                            const followup = document.querySelector(target);
+                            if (followup) followup.classList.add('d-none');
+                        }
+                    });
+
+                    // Show the follow-up of selected option
+                    const selectedTarget = this.dataset.target;
+                    if (selectedTarget) {
+                        const selectedEl = document.querySelector(selectedTarget);
+                        if (selectedEl) selectedEl.classList.remove('d-none');
+                    }
+                });
+            });
+
+            // MULTICHOICE
+            document.querySelectorAll('.answer-checkbox').forEach(input => {
+                input.addEventListener('change', function () {
+                    const targetId = this.dataset.target;
+                    if (!targetId) return;
+                    const el = document.querySelector(targetId);
+                    if (!el) return;
+
+                    if (this.checked) {
+                        el.classList.remove('d-none');
+                    } else {
+                        el.classList.add('d-none');
+                    }
+                });
+            });
+        });
+    </script>
+}

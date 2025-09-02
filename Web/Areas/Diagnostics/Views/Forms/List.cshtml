@@ -1,0 +1,36 @@
+﻿@{
+    var pageTitle = "Gestión de formularios";
+    ViewData["Title"] = pageTitle;
+
+    var pageHeaderActions = new List<PageHeaderDropdownItem>()
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-plus me-2",
+            Text = "Nuevo formulario",
+            Url = Url.Action("Create", "Forms", new { area = "Diagnostics" })!
+        }
+    };
+
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Nombre", Data = "name",
+            RenderType = ColRenderType.Link,
+            LinkUrl = Url.Action("Landing", "Forms", new { area = "Diagnostics", id = "{id}" })!
+        }
+    };
+
+    var dataTablesHoverActions = new List<HoverAction>
+    {
+        new() { Url = Url.Action("Edit", "Forms", new { area = "Diagnostics", id = "{id}" })!, IconClass = "fas fa-edit" },
+        new() { Url = "/Diagnostics/Questions/Form/{id}/", IconClass = "fas fa-layer-group" },
+    };
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-wrench" dropdown-items="@pageHeaderActions"></page-header>
+
+<datatable ajax-url="@Url.Action("List", "Forms", new { area = "Diagnostics" })"
+           columns="@dataTablesColumns"
+           hover-actions="@dataTablesHoverActions"></datatable>

@@ -1,0 +1,112 @@
+@model LinaSys.Web.Areas.Coordination.Models.UserManagement.BulkImportViewModel
+@{
+    ViewData["Title"] = "Importación Masiva de Usuarios";
+}
+
+<link rel="stylesheet" href="~/lib/phoenix-admin/vendors/dropzone/dropzone.css" />
+
+<h1 class="h3 mb-4">
+    <i class="fas fa-file-import"></i> @ViewData["Title"]
+</h1>
+
+<div class="row">
+    <div class="col-xl-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Cargar Archivo de Usuarios</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="BulkImport" method="post" enctype="multipart/form-data" id="bulkImportForm">
+                    @Html.AntiForgeryToken()
+                    
+                    <div class="mb-4">
+                        <label asp-for="ImportFile" class="form-label"></label>
+                        <input asp-for="ImportFile" type="file" class="form-control" accept=".csv,.xlsx,.xls" required />
+                        <span asp-validation-for="ImportFile" class="text-danger"></span>
+                        <div class="form-text">
+                            Formatos aceptados: CSV, Excel (.xlsx, .xls)
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-check form-switch">
+                            <input asp-for="SendWelcomeEmails" type="checkbox" class="form-check-input" />
+                            <label asp-for="SendWelcomeEmails" class="form-check-label"></label>
+                        </div>
+                        <div class="form-text">
+                            Si está activado, se enviará un correo de bienvenida con credenciales temporales a cada usuario.
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="DefaultRole" class="form-label"></label>
+                        <select asp-for="DefaultRole" class="form-select">
+                            <option value="Starter">Emprendedor</option>
+                            <option value="Mentor">Mentor</option>
+                            <option value="Reviewer">Revisor</option>
+                        </select>
+                        <span asp-validation-for="DefaultRole" class="text-danger"></span>
+                        <div class="form-text">
+                            Este rol se aplicará a usuarios que no tengan un rol especificado en el archivo.
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary" id="importButton">
+                            <i class="fas fa-upload"></i> Iniciar Importación
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Instrucciones</h5>
+            </div>
+            <div class="card-body">
+                <h6>Formato del Archivo</h6>
+                <p>El archivo debe contener las siguientes columnas:</p>
+                <ul class="small">
+                    <li><strong>Email</strong> (Requerido): Dirección de correo electrónico</li>
+                    <li><strong>FirstName/Nombre</strong> (Requerido): Nombre del usuario</li>
+                    <li><strong>LastName/Apellido</strong> (Requerido): Apellido del usuario</li>
+                    <li><strong>Identification/Identificacion</strong> (Opcional): Número de identificación</li>
+                    <li><strong>PhoneNumber/Telefono</strong> (Opcional): Número de teléfono</li>
+                    <li><strong>Role/Rol</strong> (Opcional): Rol del usuario</li>
+                </ul>
+
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i> Los nombres de columna no distinguen mayúsculas/minúsculas y pueden estar en inglés o español.
+                </div>
+
+                <h6 class="mt-4">Plantillas de Ejemplo</h6>
+                <div class="d-grid gap-2">
+                    <a href="@Url.Action("DownloadTemplate", new { format = "csv" })" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download"></i> Descargar Plantilla CSV
+                    </a>
+                    <a href="@Url.Action("DownloadTemplate", new { format = "xlsx" })" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-download"></i> Descargar Plantilla Excel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.getElementById('bulkImportForm').addEventListener('submit', function(e) {
+            const button = document.getElementById('importButton');
+            button.disabled = true;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Procesando...';
+        });
+    </script>
+}

@@ -1,0 +1,46 @@
+/**
+ * Navigation Active State Styles
+ */
+
+/* Active menu item */
+.navbar-vertical .nav-link.active {
+    background-color: rgba(var(--phoenix-primary-rgb), 0.1);
+    color: var(--phoenix-primary);
+    font-weight: 600;
+    position: relative;
+}
+
+/* Active indicator bar */
+.navbar-vertical .nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--phoenix-primary);
+    border-radius: 0 3px 3px 0;
+}
+
+/* Active parent menu */
+.navbar-vertical .nav-link.active-parent {
+    color: var(--phoenix-primary);
+    font-weight: 500;
+}
+
+/* Hover state for navigation items */
+.navbar-vertical .nav-link:hover {
+    background-color: rgba(var(--phoenix-primary-rgb), 0.05);
+    transition: background-color 0.2s ease;
+}
+
+/* Expanded menu indicator rotation */
+.navbar-vertical .dropdown-indicator-icon.rotate-90 {
+    transform: rotate(90deg);
+    transition: transform 0.2s ease;
+}
+
+/* Coordination menu specific styling */
+#CoordinacionMenu .nav-link.active {
+    padding-left: 2.5rem;
+}

@@ -1,0 +1,188 @@
+@model LinaSys.Web.Areas.Diagnostics.Models.Questions.EditQuestionViewModel
+
+@{
+    ViewData["Title"] = "Editar Pregunta";
+}
+
+<div class="container-small">
+    <div class="row">
+        <div class="col-12">
+            <form asp-action="Edit" asp-route-id="@Model.Id" asp-antiforgery="true" class="needs-validation" novalidate="">
+                <h3 class="mb-5">
+                    <span class="fa-solid fa-edit"></span>
+                    @ViewData["Title"]
+                </h3>
+                
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="row g-4">
+                    <!-- Pregunta -->
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Text">Pregunta</label>
+                        <textarea asp-for="Text" class="form-control" rows="3" placeholder="Ingrese el texto de la pregunta" required></textarea>
+                        <span asp-validation-for="Text" class="text-danger"></span>
+                    </div>
+
+                    <!-- Tipo de respuesta y Fase -->
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="AnswerType">Tipo de respuesta</label>
+                        <select asp-for="AnswerType" class="form-select" required>
+                            <option value="">Seleccione un tipo</option>
+                            @foreach (var type in Model.AnswerTypes)
+                            {
+                                <option value="@type.Key">@type.Value</option>
+                            }
+                        </select>
+                        <span asp-validation-for="AnswerType" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="AppliesToPhase">Fase a aplicar</label>
+                        <select asp-for="AppliesToPhase" class="form-select" required>
+                            <option value="">Seleccione una fase</option>
+                            @foreach (var phase in Model.QuestionPhases)
+                            {
+                                <option value="@phase.Key">@phase.Value</option>
+                            }
+                        </select>
+                        <span asp-validation-for="AppliesToPhase" class="text-danger"></span>
+                    </div>
+
+                    <!-- Bloque y Tema -->
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="BlockId">Bloque</label>
+                        <select asp-for="BlockId" class="form-select">
+                            <option value="">Seleccione un bloque (opcional)</option>
+                            @foreach (var block in Model.Blocks)
+                            {
+                                <option value="@block.Key">@block.Value</option>
+                            }
+                        </select>
+                        <span asp-validation-for="BlockId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="TopicId">Tema</label>
+                        <select asp-for="TopicId" class="form-select">
+                            <option value="">Seleccione un tema (opcional)</option>
+                            @foreach (var topic in Model.Topics)
+                            {
+                                <option value="@topic.Key">@topic.Value.KnowledgeStructure - @topic.Value.Module - @topic.Value.Topic</option>
+                            }
+                        </select>
+                        <span asp-validation-for="TopicId" class="text-danger"></span>
+                    </div>
+
+                    <!-- Checkboxes -->
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input asp-for="IsUsedForMentoringPlan" class="form-check-input" type="checkbox">
+                            <label class="form-check-label" asp-for="IsUsedForMentoringPlan">
+                                ¿Se utiliza para el plan de mentoría?
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input asp-for="IsUsedForDiagnosis" class="form-check-input" type="checkbox">
+                            <label class="form-check-label" asp-for="IsUsedForDiagnosis">
+                                ¿Se utiliza para diagnóstico?
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Opciones de respuesta -->
+                    <div class="col-12" id="answerOptionsSection" style="display: none;">
+                        <h5 class="mt-3 mb-3">Opciones de respuesta</h5>
+                        <div id="answerOptionsContainer">
+                            @if (Model.AnswerOptions != null && Model.AnswerOptions.Any())
+                            {
+                                @for (int i = 0; i < Model.AnswerOptions.Count; i++)
+                                {
+                                    <div class="answer-option-item border rounded p-3 mb-2" data-index="@i">
+                                        <input type="hidden" name="AnswerOptions[@i].Id" value="@Model.AnswerOptions[i].Id" />
+                                        <div class="row g-2">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Texto de la opción</label>
+                                                <input type="text" name="AnswerOptions[@i].Text" value="@Model.AnswerOptions[i].Text" class="form-control" required />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Puntaje</label>
+                                                <input type="number" name="AnswerOptions[@i].Score" value="@Model.AnswerOptions[i].Score" class="form-control" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Orden</label>
+                                                <input type="number" name="AnswerOptions[@i].Order" value="@Model.AnswerOptions[i].Order" class="form-control" />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Tipo FODA</label>
+                                                <select name="AnswerOptions[@i].Foda" class="form-select">
+                                                    <option value="0" selected="@(Model.AnswerOptions[i].Foda == 0)">None</option>
+                                                    <option value="1" selected="@(Model.AnswerOptions[i].Foda == (LinaSys.Diagnostics.Domain.Enums.FodaType)1)">Fortaleza</option>
+                                                    <option value="2" selected="@(Model.AnswerOptions[i].Foda == (LinaSys.Diagnostics.Domain.Enums.FodaType)2)">Oportunidad</option>
+                                                    <option value="3" selected="@(Model.AnswerOptions[i].Foda == (LinaSys.Diagnostics.Domain.Enums.FodaType)3)">Debilidad</option>
+                                                    <option value="4" selected="@(Model.AnswerOptions[i].Foda == (LinaSys.Diagnostics.Domain.Enums.FodaType)4)">Amenaza</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Explicación FODA</label>
+                                                <input type="text" name="AnswerOptions[@i].FodaExplanation" value="@Model.AnswerOptions[i].FodaExplanation" class="form-control" required />
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Tipo ODSR</label>
+                                                <select name="AnswerOptions[@i].Odsr" class="form-select">
+                                                    <option value="0" selected="@(Model.AnswerOptions[i].Odsr == 0)">None</option>
+                                                    <option value="1" selected="@(Model.AnswerOptions[i].Odsr == (LinaSys.Diagnostics.Domain.Enums.OdsrType)1)">Objetivos</option>
+                                                    <option value="2" selected="@(Model.AnswerOptions[i].Odsr == (LinaSys.Diagnostics.Domain.Enums.OdsrType)2)">DiseñosYActuaciones</option>
+                                                    <option value="3" selected="@(Model.AnswerOptions[i].Odsr == (LinaSys.Diagnostics.Domain.Enums.OdsrType)3)">SeguimientoYReevaluación</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">Explicación ODSR</label>
+                                                <input type="text" name="AnswerOptions[@i].OdsrExplanation" value="@Model.AnswerOptions[i].OdsrExplanation" class="form-control" required />
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label">Pregunta de seguimiento (opcional)</label>
+                                                <input type="text" name="AnswerOptions[@i].FollowupQuestionText" value="@Model.AnswerOptions[i].FollowupQuestionText" class="form-control" />
+                                            </div>
+                                            <div class="col-12">
+                                                <button type="button" class="btn btn-danger btn-sm remove-answer-option">
+                                                    <i class="fa-solid fa-trash"></i> Eliminar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm mt-2" id="addAnswerOption">
+                            <i class="fa-solid fa-plus"></i> Agregar opción
+                        </button>
+                    </div>
+
+                    <!-- Botones de acción -->
+                    <div class="col-12">
+                        <button class="btn btn-primary px-8 px-sm-11 me-2" type="submit">Actualizar</button>
+                        <a href="/Diagnostics/Questions/List" class="btn btn-link btn-sm">Cancelar</a>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="invalid-feedback" style="display:block">
+                            @Html.ValidationSummary()
+                        </div>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/diagnostics/questions-form.js"></script>
+    <script>
+        // Initialize with existing answer type
+        window.initialAnswerType = @((int)Model.AnswerType);
+    </script>
+}

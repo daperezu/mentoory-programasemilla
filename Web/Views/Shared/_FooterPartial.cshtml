@@ -1,0 +1,13 @@
+﻿@using LinaSys.Web.Services
+@inject IVersionProvider VersionProvider
+
+<footer class="footer position-absolute">
+    <div class="row g-0 justify-content-between align-items-center h-100">
+        <div class="col-12 col-sm-auto text-center">
+            <p class="mb-0 mt-2 mt-sm-0 text-body">Un producto de Programa<b>Semilla</b><span class="d-none d-sm-inline-block"></span><span class="d-none d-sm-inline-block mx-1">|</span><br class="d-sm-none" />@DateTime.Now.Year &copy;<a class="mx-1" href="https://www.programasemilla.com">Programa Semilla</a></p>
+        </div>
+        <div class="col-12 col-sm-auto text-center">
+            <p class="mb-0 text-body-tertiary text-opacity-85">v@(VersionProvider.Version)</p>
+        </div>
+    </div>
+</footer>

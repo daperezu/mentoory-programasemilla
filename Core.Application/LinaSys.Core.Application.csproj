@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" />
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core.Domain\LinaSys.Core.Domain.csproj" />
+    <ProjectReference Include="..\Shared.Application\LinaSys.Shared.Application.csproj" />
+  </ItemGroup>
+
+</Project>

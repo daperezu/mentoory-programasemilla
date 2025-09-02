@@ -1,0 +1,38 @@
+﻿@model LoadCSVViewModel
+
+@{
+    var pageTitle = "Carga de Formularios";
+    ViewData["Title"] = pageTitle;
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-wrench"></page-header>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow rounded-3">
+                <div class="card-body">
+                    <form asp-action="LoadCSV" asp-controller="Forms" method="post" enctype="multipart/form-data" asp-antiforgery="true" class="needs-validation" novalidate="">
+                        <div class="mb-3">
+                            <label asp-for="FormName" class="form-label">Nombre del formulario</label>
+                            <input type="text" class="form-control" name="formName" required />
+                            <span asp-validation-for="FormName" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Archivo CSV</label>
+                            <input type="file" class="form-control" name="file" accept=".csv" required />
+                            <span asp-validation-for="File" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="upload" class="me-1"></i> Cargar archivo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

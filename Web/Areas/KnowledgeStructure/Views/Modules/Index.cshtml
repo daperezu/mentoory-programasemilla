@@ -1,0 +1,62 @@
+@{
+    var pageTitle = "Gestión de Módulos";
+    ViewData["Title"] = pageTitle;
+
+    var pageHeaderActions = new List<PageHeaderDropdownItem>()
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-plus me-2",
+            Text = "Nuevo módulo",
+            Url = Url.Action("Create", "Modules", new { area = "KnowledgeStructure" })!
+        }
+    };
+
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Nombre", 
+            Data = "name"
+        },
+        new()
+        {
+            Header = "Estructura de Conocimiento", 
+            Data = "knowledgeStructureName"
+        },
+        new()
+        {
+            Header = "Orden", 
+            Data = "order"
+        },
+        new()
+        {
+            Header = "Cantidad de Temas", 
+            Data = "topicCount"
+        }
+    };
+
+    var dataTablesHoverActions = new List<HoverAction>
+    {
+        new() { 
+            Url = Url.Action("Edit", "Modules", new { area = "KnowledgeStructure", id = "{id}" })!, 
+            IconClass = "fas fa-edit",
+            Text = "Editar"
+        },
+        new() { 
+            Url = Url.Action("ManageKnowledgeStructures", "Modules", new { area = "KnowledgeStructure", id = "{id}" })!, 
+            IconClass = "fas fa-sitemap",
+            Text = "Gestionar Estructuras"
+        }
+    };
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-layer-group" dropdown-items="@pageHeaderActions"></page-header>
+
+<div class="card">
+    <div class="card-body">
+        <datatable ajax-url="@Url.Action("List", "Modules", new { area = "KnowledgeStructure" })"
+                   columns="@dataTablesColumns"
+                   hover-actions="@dataTablesHoverActions"></datatable>
+    </div>
+</div>

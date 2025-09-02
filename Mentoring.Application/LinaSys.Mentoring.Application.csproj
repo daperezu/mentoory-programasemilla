@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <ProjectReference Include="..\Mentoring.Domain\LinaSys.Mentoring.Domain.csproj" />
+        <ProjectReference Include="..\Shared.Application\LinaSys.Shared.Application.csproj" />
+    </ItemGroup>
+</Project>

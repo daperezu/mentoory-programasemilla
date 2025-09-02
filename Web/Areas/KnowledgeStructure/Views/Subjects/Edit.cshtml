@@ -1,0 +1,82 @@
+@model LinaSys.Web.Areas.KnowledgeStructure.Models.Subject.EditSubjectViewModel
+
+@{
+    ViewData["Title"] = "Editar Tema";
+}
+
+<div class="page-header">
+    <div class="row">
+        <div class="col-sm-12">
+            <h3 class="page-title">@ViewData["Title"]</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index">Inicio</a></li>
+                <li class="breadcrumb-item">Estructura de Conocimiento</li>
+                <li class="breadcrumb-item"><a asp-action="Index">Temas</a></li>
+                <li class="breadcrumb-item active">Editar</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Editar Tema</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Edit" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="StructureTopicId" />
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Estructura de Conocimiento</label>
+                                <input type="text" class="form-control" value="@Model.KnowledgeStructureName" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Módulo</label>
+                                <input type="text" class="form-control" value="@Model.ModuleName" readonly />
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label>Tema</label>
+                                <input type="text" class="form-control" value="@Model.TopicName" readonly />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Title"></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Content"></label>
+                        <textarea asp-for="Content" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Guardar Cambios
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fa fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

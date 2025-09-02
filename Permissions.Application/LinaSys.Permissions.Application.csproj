@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\Permissions.Domain\LinaSys.Permissions.Domain.csproj" />
+        <ProjectReference Include="..\Permissions.Infrastructure\LinaSys.Permissions.Infrastructure.csproj" />
+        <ProjectReference Include="..\Shared.Application\LinaSys.Shared.Application.csproj" />
+    </ItemGroup>
+
+</Project>

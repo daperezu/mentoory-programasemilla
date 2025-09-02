@@ -1,0 +1,26 @@
+CREATE TABLE [businessincubators].[ProjectInvitations] (
+    [Id]                 BIGINT IDENTITY (1, 1) NOT NULL,
+    [ExternalId]         UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
+    [ProjectId]          BIGINT NOT NULL,
+    [Email]              NVARCHAR(256) NOT NULL,
+    [FullName]           NVARCHAR(255) NOT NULL,
+    [IdentificationNumber] NVARCHAR(50) NOT NULL,
+    [Role]               NVARCHAR(256) NOT NULL,
+    [InvitationToken]    NVARCHAR(255) NOT NULL,
+    [Status]             INT NOT NULL DEFAULT 0, -- 0=Pending, 1=Accepted, 2=Expired, 3=Revoked
+    [ExpiresAt]          DATETIME2 NOT NULL,
+    [AcceptedAt]         DATETIME2 NULL,
+    [CreatedAt]          DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+    [CreatedBy]          NVARCHAR(450) NULL,
+    [UpdatedAt]          DATETIME2 NULL,
+    [UpdatedBy]          NVARCHAR(450) NULL,
+    [IsDeleted]          BIT NOT NULL DEFAULT 0,
+    [DeletedAt]          DATETIME2 NULL,
+    [DeletedBy]          NVARCHAR(450) NULL,
+    [RestoredAt]         DATETIME2 NULL,
+    [RestoredBy]         NVARCHAR(450) NULL,
+    CONSTRAINT [PK_ProjectInvitations] PRIMARY KEY CLUSTERED ([Id]),
+    CONSTRAINT [FK_ProjectInvitations_Projects] FOREIGN KEY ([ProjectId]) REFERENCES [businessincubators].[Projects] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [UQ_ProjectInvitations_ExternalId] UNIQUE ([ExternalId]),
+    CONSTRAINT [UQ_ProjectInvitations_Token] UNIQUE ([InvitationToken])
+);

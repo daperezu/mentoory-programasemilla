@@ -1,0 +1,176 @@
+@model LinaSys.Web.Areas.Coordination.Controllers.CreateEmailTemplateViewModel
+@{
+    ViewData["Title"] = "Crear Plantilla de Correo";
+    ViewData["PageHeader"] = "Nueva Plantilla de Correo";
+    ViewData["PageDescription"] = "Crear una nueva plantilla de correo electrónico";
+}
+
+<div class="row">
+    <div class="col-12">
+        <form asp-action="Create" method="post">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Información de la Plantilla</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Key" class="control-label">Clave Única <span class="text-danger">*</span></label>
+                                <input asp-for="Key" class="form-control" placeholder="ej: welcome_email" />
+                                <span asp-validation-for="Key" class="text-danger"></span>
+                                <small class="form-text text-muted">Identificador único de la plantilla (sin espacios)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Name" class="control-label">Nombre <span class="text-danger">*</span></label>
+                                <input asp-for="Name" class="form-control" placeholder="ej: Correo de Bienvenida" />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Category" class="control-label">Categoría</label>
+                                <select asp-for="Category" class="form-control">
+                                    <option value="">Sin categoría</option>
+                                    <option value="Usuario">Usuario</option>
+                                    <option value="Proyecto">Proyecto</option>
+                                    <option value="Formulario">Formulario</option>
+                                    <option value="Sistema">Sistema</option>
+                                </select>
+                                <span asp-validation-for="Category" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Description" class="control-label">Descripción</label>
+                                <input asp-for="Description" class="form-control" placeholder="Descripción breve de la plantilla" />
+                                <span asp-validation-for="Description" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Subject" class="control-label">Asunto del Correo <span class="text-danger">*</span></label>
+                        <input asp-for="Subject" class="form-control" placeholder="ej: Bienvenido a {{ProjectName}}" />
+                        <span asp-validation-for="Subject" class="text-danger"></span>
+                        <small class="form-text text-muted">Puede usar variables como {{UserName}}, {{ProjectName}}, etc.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="BodyHtml" class="control-label">Cuerpo HTML <span class="text-danger">*</span></label>
+                        <textarea asp-for="BodyHtml" class="form-control" rows="10" id="bodyHtml"></textarea>
+                        <span asp-validation-for="BodyHtml" class="text-danger"></span>
+                        <small class="form-text text-muted">Contenido HTML del correo. Use {{NombreVariable}} para variables dinámicas.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="BodyText" class="control-label">Cuerpo Texto Plano</label>
+                        <textarea asp-for="BodyText" class="form-control" rows="6"></textarea>
+                        <span asp-validation-for="BodyText" class="text-danger"></span>
+                        <small class="form-text text-muted">Versión en texto plano del correo (opcional)</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h3 class="card-title">Variables de la Plantilla</h3>
+                </div>
+                <div class="card-body">
+                    <div id="variablesContainer">
+                        <p class="text-muted">Defina las variables que se pueden usar en esta plantilla.</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" id="addVariable">
+                        <i class="fas fa-plus"></i> Agregar Variable
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Crear Plantilla
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let variableIndex = 0;
+
+            $('#addVariable').click(function() {
+                const html = `
+                    <div class="row variable-row mb-2">
+                        <div class="col-md-4">
+                            <input type="text" name="Variables[${variableIndex}].Name" class="form-control" placeholder="Nombre de variable" />
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" name="Variables[${variableIndex}].Description" class="form-control" placeholder="Descripción" />
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-check">
+                                <input type="checkbox" name="Variables[${variableIndex}].IsRequired" value="true" class="form-check-input" />
+                                <input type="hidden" name="Variables[${variableIndex}].IsRequired" value="false" />
+                                <label class="form-check-label">Requerida</label>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-sm btn-danger remove-variable">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                $('#variablesContainer').append(html);
+                variableIndex++;
+            });
+
+            $(document).on('click', '.remove-variable', function() {
+                $(this).closest('.variable-row').remove();
+            });
+
+            // Add some common variables by default
+            const commonVariables = [
+                { name: 'UserName', description: 'Nombre del usuario', required: true },
+                { name: 'ProjectName', description: 'Nombre del proyecto', required: false }
+            ];
+
+            commonVariables.forEach(v => {
+                const html = `
+                    <div class="row variable-row mb-2">
+                        <div class="col-md-4">
+                            <input type="text" name="Variables[${variableIndex}].Name" class="form-control" value="${v.name}" />
+                        </div>
+                        <div class="col-md-5">
+                            <input type="text" name="Variables[${variableIndex}].Description" class="form-control" value="${v.description}" />
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-check">
+                                <input type="checkbox" name="Variables[${variableIndex}].IsRequired" value="true" class="form-check-input" ${v.required ? 'checked' : ''} />
+                                <input type="hidden" name="Variables[${variableIndex}].IsRequired" value="false" />
+                                <label class="form-check-label">Requerida</label>
+                            </div>
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-sm btn-danger remove-variable">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                $('#variablesContainer').append(html);
+                variableIndex++;
+            });
+        });
+    </script>
+}

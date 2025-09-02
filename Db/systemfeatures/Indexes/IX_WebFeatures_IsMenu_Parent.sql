@@ -1,0 +1,1 @@
+CREATE INDEX IX_WebFeatures_IsMenu_Parent ON [systemfeatures].WebFeatures (IsMenu, ParentId);

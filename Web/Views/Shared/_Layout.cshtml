@@ -1,0 +1,60 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+<!DOCTYPE html>
+<html lang="en-US" dir="ltr" data-navigation-type="default" data-navbar-horizontal-shape="default">
+
+<head>
+    <partial name="_HeadPartial" />
+
+    <title>@ViewData["Title"] - Mentoory</title>
+
+    @await RenderSectionAsync("Styles", required: false)
+
+</head>
+<body>
+
+    <main class="main" id="top">
+        @await Component.InvokeAsync("NavigationMenu")
+        <partial name="_NavbarTopPartial" />
+        <div class="content">
+
+            @RenderBody()
+
+            <partial name="_FooterPartial" />
+        </div>
+        
+        <script>
+            var navbarTopStyle = window.config.config.phoenixNavbarTopStyle;
+            var navbarTop = document.querySelector('.navbar-top');
+            if (navbarTopStyle === 'darker') {
+              navbarTop.setAttribute('data-navbar-appearance', 'darker');
+            }
+
+            var navbarVerticalStyle = window.config.config.phoenixNavbarVerticalStyle;
+            var navbarVertical = document.querySelector('.navbar-vertical');
+            if (navbarVertical && navbarVerticalStyle === 'darker') {
+              navbarVertical.setAttribute('data-navbar-appearance', 'darker');
+            }
+        </script>
+
+    </main>
+
+    <partial name="_BottomPartial" />
+    
+    @{
+        const string sectionKey = "__DataTableScripts";
+        if (ViewData[sectionKey] is List<string> scriptSnippets)
+        {
+            foreach (var script in scriptSnippets)
+            {
+                @Html.Raw(script)
+            }
+        }
+    }
+
+    @await RenderSectionAsync("Scripts", required: false)
+    
+    @await Html.PartialAsync("_ToastContainerPartial")
+
+    @await Html.PartialAsync("_SessionTimeoutPrompt", (300, 10, "/Identity/Account/Logout"))
+    </body>
+</html>

@@ -1,0 +1,272 @@
+@page
+@model EmailPreferencesModel
+@{
+    ViewData["Title"] = "Preferencias de Notificaciones";
+    ViewData["ActivePage"] = ManageNavPages.EmailPreferences;
+}
+
+<div class="container-fluid px-0">
+    <div class="row g-0">
+        <div class="col-12">
+            <div class="mb-4">
+                <h3 class="mb-1">@ViewData["Title"]</h3>
+                <p class="text-body-secondary">Personaliza qué notificaciones deseas recibir por correo electrónico</p>
+            </div>
+            
+            <partial name="_StatusMessage" model="Model.StatusMessage" />
+            
+            <form id="preferences-form" method="post">
+                <div class="card mb-4">
+                    <div class="card-header bg-body-tertiary">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="mb-0">
+                                    <span class="fas fa-bell me-2"></span>
+                                    Notificaciones del Sistema
+                                </h5>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-phoenix-secondary" id="toggle-system">
+                                    <span class="fas fa-toggle-on me-1"></span>
+                                    Activar todas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.SystemWelcome" class="form-check-input flex-shrink-0 system-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.SystemWelcome" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Recibe un correo de bienvenida cuando te registres en el sistema</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.Announcements" class="form-check-input flex-shrink-0 system-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.Announcements" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Mantente informado sobre actualizaciones importantes del sistema</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-body-tertiary">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="mb-0">
+                                    <span class="fas fa-project-diagram me-2"></span>
+                                    Notificaciones de Proyectos
+                                </h5>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-phoenix-secondary" id="toggle-project">
+                                    <span class="fas fa-toggle-on me-1"></span>
+                                    Activar todas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.ProjectWelcome" class="form-check-input flex-shrink-0 project-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.ProjectWelcome" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Recibe información cuando seas agregado a un nuevo proyecto</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.TaskAssignments" class="form-check-input flex-shrink-0 project-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.TaskAssignments" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Notificaciones cuando se te asignen nuevas tareas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.MentorMessages" class="form-check-input flex-shrink-0 project-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.MentorMessages" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Recibe mensajes y actualizaciones de tu mentor asignado</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-body-tertiary">
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <h5 class="mb-0">
+                                    <span class="fas fa-file-alt me-2"></span>
+                                    Notificaciones de Formularios
+                                </h5>
+                            </div>
+                            <div class="col-auto">
+                                <button type="button" class="btn btn-sm btn-phoenix-secondary" id="toggle-forms">
+                                    <span class="fas fa-toggle-on me-1"></span>
+                                    Activar todas
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.Approvals" class="form-check-input flex-shrink-0 form-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.Approvals" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Notificaciones cuando tus formularios sean aprobados</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.Rejections" class="form-check-input flex-shrink-0 form-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.Rejections" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Notificaciones cuando tus formularios requieran cambios</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.FormDeadlines" class="form-check-input flex-shrink-0 form-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.FormDeadlines" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Recordatorios sobre fechas límite próximas</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check form-switch d-flex align-items-start">
+                                    <input asp-for="Input.Reminders" class="form-check-input flex-shrink-0 form-notification" type="checkbox" role="switch" />
+                                    <div class="ms-3 flex-grow-1">
+                                        <label asp-for="Input.Reminders" class="form-check-label fw-medium text-900 mb-1"></label>
+                                        <p class="text-body-secondary fs-9 mb-0">Recordatorios generales sobre tareas pendientes</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-body-tertiary">
+                        <h5 class="mb-0">
+                            <span class="fas fa-envelope-open-text me-2"></span>
+                            Resumen de Actividad
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check form-switch d-flex align-items-start">
+                            <input asp-for="Input.Digest" class="form-check-input flex-shrink-0" type="checkbox" role="switch" />
+                            <div class="ms-3 flex-grow-1">
+                                <label asp-for="Input.Digest" class="form-check-label fw-medium text-900 mb-1"></label>
+                                <p class="text-body-secondary fs-9 mb-0">Recibe un resumen diario con toda la actividad relevante de tus proyectos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-phoenix-primary">
+                            <span class="fas fa-save me-2"></span>
+                            Guardar Preferencias
+                        </button>
+                    </div>
+                    <div class="col-auto">
+                        <button type="button" class="btn btn-phoenix-secondary" id="reset-defaults">
+                            <span class="fas fa-undo me-2"></span>
+                            Restaurar Predeterminados
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle all system notifications
+            document.getElementById('toggle-system').addEventListener('click', function() {
+                const isActivating = this.textContent.includes('Activar');
+                document.querySelectorAll('.system-notification').forEach(checkbox => {
+                    checkbox.checked = isActivating;
+                });
+                this.innerHTML = isActivating ? 
+                    '<span class="fas fa-toggle-off me-1"></span> Desactivar todas' : 
+                    '<span class="fas fa-toggle-on me-1"></span> Activar todas';
+            });
+
+            // Toggle all project notifications
+            document.getElementById('toggle-project').addEventListener('click', function() {
+                const isActivating = this.textContent.includes('Activar');
+                document.querySelectorAll('.project-notification').forEach(checkbox => {
+                    checkbox.checked = isActivating;
+                });
+                this.innerHTML = isActivating ? 
+                    '<span class="fas fa-toggle-off me-1"></span> Desactivar todas' : 
+                    '<span class="fas fa-toggle-on me-1"></span> Activar todas';
+            });
+
+            // Toggle all form notifications
+            document.getElementById('toggle-forms').addEventListener('click', function() {
+                const isActivating = this.textContent.includes('Activar');
+                document.querySelectorAll('.form-notification').forEach(checkbox => {
+                    checkbox.checked = isActivating;
+                });
+                this.innerHTML = isActivating ? 
+                    '<span class="fas fa-toggle-off me-1"></span> Desactivar todas' : 
+                    '<span class="fas fa-toggle-on me-1"></span> Activar todas';
+            });
+
+            // Reset to defaults
+            document.getElementById('reset-defaults').addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que deseas restaurar las preferencias predeterminadas?')) {
+                    // Set default values
+                    document.getElementById('Input_SystemWelcome').checked = true;
+                    document.getElementById('Input_ProjectWelcome').checked = true;
+                    document.getElementById('Input_Approvals').checked = true;
+                    document.getElementById('Input_Rejections').checked = true;
+                    document.getElementById('Input_Reminders').checked = true;
+                    document.getElementById('Input_Announcements').checked = true;
+                    document.getElementById('Input_TaskAssignments').checked = true;
+                    document.getElementById('Input_FormDeadlines').checked = true;
+                    document.getElementById('Input_MentorMessages').checked = true;
+                    document.getElementById('Input_Digest').checked = false;
+                }
+            });
+
+            // Visual feedback on change
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const card = this.closest('.card');
+                    if (card) {
+                        card.classList.add('border-primary');
+                        setTimeout(() => card.classList.remove('border-primary'), 1000);
+                    }
+                });
+            });
+        });
+    </script>
+}

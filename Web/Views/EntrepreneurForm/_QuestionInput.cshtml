@@ -1,0 +1,102 @@
+@model LinaSys.Web.Models.EntrepreneurForm.QuestionViewModel
+
+<div class="question-container mb-4" 
+     data-question-id="@Model.QuestionId"
+     data-answer-type="@((int)Model.AnswerType)">
+    
+    <label class="form-label fw-semibold">
+        @Model.QuestionText
+        @if (Model.IsRequired)
+        {
+            <span class="text-danger required-indicator">*</span>
+        }
+    </label>
+    
+    @if (!string.IsNullOrEmpty(Model.HelpText))
+    {
+        <small class="form-text text-muted d-block mb-2">
+            <i class="fas fa-info-circle me-1"></i>@Model.HelpText
+        </small>
+    }
+    
+    @switch (Model.AnswerType)
+    {
+        case LinaSys.Web.Models.EntrepreneurForm.AnswerType.SingleChoice:
+            <div class="answer-options">
+                @foreach (var option in Model.Options)
+                {
+                    <div class="form-check mb-2">
+                        <input class="form-check-input question-input" 
+                               type="radio" 
+                               name="question-@Model.QuestionId"
+                               id="option-@option.OptionId"
+                               value="@option.OptionId"
+                               data-answer-type="@((int)Model.AnswerType)"
+                               @(Model.CurrentAnswer == option.OptionId.ToString() ? "checked" : "")
+                               @(Model.IsRequired ? "required" : "")>
+                        <label class="form-check-label" for="option-@option.OptionId">
+                            @option.OptionText
+                        </label>
+                    </div>
+                }
+            </div>
+            break;
+            
+        case LinaSys.Web.Models.EntrepreneurForm.AnswerType.MultiChoice:
+            <div class="answer-options">
+                @foreach (var option in Model.Options)
+                {
+                    <div class="form-check mb-2">
+                        <input class="form-check-input question-input" 
+                               type="checkbox" 
+                               name="question-@Model.QuestionId"
+                               id="option-@option.OptionId"
+                               value="@option.OptionId"
+                               data-answer-type="@((int)Model.AnswerType)"
+                               @(Model.CurrentAnswer?.Contains(option.OptionId.ToString()) == true ? "checked" : "")>
+                        <label class="form-check-label" for="option-@option.OptionId">
+                            @option.OptionText
+                        </label>
+                    </div>
+                }
+            </div>
+            break;
+            
+        case LinaSys.Web.Models.EntrepreneurForm.AnswerType.Text:
+        case LinaSys.Web.Models.EntrepreneurForm.AnswerType.Email:
+        case LinaSys.Web.Models.EntrepreneurForm.AnswerType.Number:
+        case LinaSys.Web.Models.EntrepreneurForm.AnswerType.Date:
+            <input type="@Model.InputType" 
+                   class="form-control question-input"
+                   id="question-@Model.QuestionId"
+                   name="question-@Model.QuestionId"
+                   value="@Model.CurrentAnswer"
+                   data-answer-type="@((int)Model.AnswerType)"
+                   @(Model.IsRequired ? "required" : "")
+                   @(Model.Validation?.MaxLength > 0 ? $"maxlength=\"{Model.Validation.MaxLength}\"" : "")
+                   @(Model.Validation?.MinValue != null ? $"min=\"{Model.Validation.MinValue}\"" : "")
+                   @(Model.Validation?.MaxValue != null ? $"max=\"{Model.Validation.MaxValue}\"" : "")>
+            break;
+            
+        case LinaSys.Web.Models.EntrepreneurForm.AnswerType.TextArea:
+            <textarea class="form-control question-input"
+                      id="question-@Model.QuestionId"
+                      name="question-@Model.QuestionId"
+                      rows="4"
+                      data-answer-type="@((int)Model.AnswerType)"
+                      @(Model.IsRequired ? "required" : "")
+                      @(Model.Validation?.MaxLength > 0 ? $"maxlength=\"{Model.Validation.MaxLength}\"" : "")>@Model.CurrentAnswer</textarea>
+            break;
+    }
+    
+    <div class="invalid-feedback">
+        @if (Model.IsRequired)
+        {
+            @:Esta pregunta es requerida
+        }
+        else
+        {
+            @:Por favor ingrese un valor válido
+        }
+    </div>
+</div>

@@ -1,0 +1,201 @@
+@model ProjectInvitationsViewModel
+
+@{
+    var pageTitle = "Gestión de invitaciones";
+    ViewData["Title"] = pageTitle;
+
+    var pageHeaderActions = new List<PageHeaderDropdownItem>()
+    {
+        new()
+        {
+            IconClass = "fas fa-plus me-1",
+            Text = "Registro masivo",
+            Url = Url.Action("BulkInvite", "Participant", new { area = "Coordination", projectId = Model.ProjectId })!
+        }
+    };
+
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new() { Header = "Email", Data = "email" },
+        new() { Header = "Nombre completo", Data = "fullName" },
+        new() { Header = "Rol", Data = "role" },
+        new() 
+        {
+            Header = "Estado", 
+            Data = "status",
+            RenderType = ColRenderType.Badge,
+            FilterType = ColFilterType.Select,
+            FilterOptions = new Dictionary<string, string> 
+            {
+                { "", "Todos" },
+                { "Pending", "Pendiente" },
+                { "Accepted", "Aceptada" },
+                { "Declined", "Rechazada" },
+                { "Revoked", "Revocada" },
+                { "Expired", "Expirada" }
+            },
+            BadgeMap = new Dictionary<string, string> 
+            {
+                { "Pending", "Pendiente" },
+                { "Accepted", "Aceptada" },
+                { "Declined", "Rechazada" },
+                { "Revoked", "Revocada" },
+                { "Expired", "Expirada" }
+            },
+            BadgeClassMap = new Dictionary<string, string> 
+            {
+                { "Pending", "warning" },
+                { "Accepted", "success" },
+                { "Declined", "danger" },
+                { "Revoked", "secondary" },
+                { "Expired", "dark" }
+            }
+        },
+        new() 
+        { 
+            Header = "Fecha de invitación", 
+            Data = "createdAt",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "function(data, type, row) { if (type === 'display' && data) { return new Date(data).toLocaleDateString('es-ES'); } return data; }"
+        },
+        new() 
+        { 
+            Header = "Fecha de expiración", 
+            Data = "expiresAt",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "function(data, type, row) { if (type === 'display' && data) { return new Date(data).toLocaleDateString('es-ES'); } return data; }"
+        },
+        new()
+        {
+            Header = "Acciones",
+            Data = "id",
+            Orderable = false,
+            Searchable = false,
+            RenderType = ColRenderType.Custom,
+            RenderJs = @"function(data, type, row) {
+                if (type === 'display') {
+                    let actions = '<div class=""btn-group btn-group-sm"" role=""group"">';
+                    
+                    if (row.status === 'Pending') {
+                        actions += '<button type=""button"" class=""btn btn-outline-primary btn-sm"" onclick=""resendInvitation(\'' + data + '\', \'' + row.email + '\')"" title=""Reenviar invitación"">' +
+                                  '<i class=""fas fa-paper-plane""></i></button>';
+                        actions += '<button type=""button"" class=""btn btn-outline-danger btn-sm"" onclick=""revokeInvitation(\'' + data + '\', \'' + row.email + '\')"" title=""Revocar invitación"">' +
+                                  '<i class=""fas fa-times""></i></button>';
+                    }
+                    
+                    actions += '</div>';
+                    return actions;
+                }
+                return data;
+            }"
+        }
+    };
+}
+
+<page-header title="@pageTitle" 
+             icon-class="fas fa-envelope" 
+             dropdown-items="@pageHeaderActions"
+             breadcrumb-url="@Url.Action("Index", "Projects", new { businessIncubatorId = Model.BusinessIncubatorId })"
+             breadcrumb-text="Proyectos"></page-header>
+
+<datatable ajax-url="@Url.Action("ListInvitations", "Projects", new { businessIncubatorId = Model.BusinessIncubatorId, projectId = Model.ProjectId })"
+           columns="@dataTablesColumns"></datatable>
+
+@Html.AntiForgeryToken()
+
+<!-- Modal for confirming actions -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-labelledby="confirmActionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmActionModalLabel">Confirmar acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="confirmActionModalBody">
+                <!-- Dynamic content will be inserted here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmActionButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let actionUrl = '';
+        let actionData = {};
+
+        function resendInvitation(invitationId, email) {
+            $('#confirmActionModalLabel').text('Reenviar invitación');
+            $('#confirmActionModalBody').html(
+                '<p>¿Está seguro que desea reenviar la invitación a <strong>' + email + '</strong>?</p>' +
+                '<p class="text-muted">Se enviará un nuevo email de invitación al usuario.</p>'
+            );
+            $('#confirmActionButton').removeClass('btn-danger').addClass('btn-primary').text('Reenviar');
+            
+            actionUrl = '/BusinessIncubators/@Model.BusinessIncubatorId/Projects/@Model.ProjectId/Invitations/' + invitationId;
+            actionData = { action: 'resend' };
+            
+            $('#confirmActionModal').modal('show');
+        }
+
+        function revokeInvitation(invitationId, email) {
+            $('#confirmActionModalLabel').text('Revocar invitación');
+            $('#confirmActionModalBody').html(
+                '<p>¿Está seguro que desea revocar la invitación a <strong>' + email + '</strong>?</p>' +
+                '<p class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i>Esta acción no se puede deshacer. El usuario no podrá acceder al proyecto con esta invitación.</p>'
+            );
+            $('#confirmActionButton').removeClass('btn-primary').addClass('btn-danger').text('Revocar');
+            
+            actionUrl = '/BusinessIncubators/@Model.BusinessIncubatorId/Projects/@Model.ProjectId/Invitations/' + invitationId;
+            actionData = { action: 'revoke' };
+            
+            $('#confirmActionModal').modal('show');
+        }
+
+        $('#confirmActionButton').on('click', function() {
+            const button = $(this);
+            const originalText = button.text();
+            
+            button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Procesando...');
+            
+            console.log('Action URL:', actionUrl);
+            console.log('Action Data:', actionData);
+            console.log('CSRF Token:', $('input[name="__RequestVerificationToken"]').val());
+            
+            // Create form and submit
+            const form = $('<form>', {
+                method: 'POST',
+                action: actionUrl
+            });
+            
+            // Add CSRF token
+            form.append($('<input>', {
+                type: 'hidden',
+                name: '__RequestVerificationToken',
+                value: $('input[name="__RequestVerificationToken"]').val()
+            }));
+            
+            // Add action data
+            Object.keys(actionData).forEach(key => {
+                form.append($('<input>', {
+                    type: 'hidden',
+                    name: key,
+                    value: actionData[key]
+                }));
+            });
+            
+            $('body').append(form);
+            form.submit();
+        });
+
+        // Reset modal state when closed
+        $('#confirmActionModal').on('hidden.bs.modal', function() {
+            $('#confirmActionButton').prop('disabled', false);
+            actionUrl = '';
+            actionData = {};
+        });
+    </script>
+}

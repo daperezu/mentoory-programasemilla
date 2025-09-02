@@ -1,0 +1,223 @@
+@{
+    Layout = "_Layout";
+}
+
+<div class="pb-9">
+    <div class="row g-6 mb-6">
+        @* Phoenix Template Header with Actions *@
+        <div class="col-12">
+            <div class="d-flex flex-between-center">
+                <div>
+                    <div class="d-flex align-items-center">
+                        <h2 class="mb-0">@ViewBag.Title</h2>
+                        @if (ViewBag.ProjectBadge != null)
+                        {
+                            <span class="badge badge-phoenix badge-phoenix-primary ms-2">@ViewBag.ProjectBadge</span>
+                        }
+                    </div>
+                    @if (ViewBag.Subtitle != null)
+                    {
+                        <p class="text-700 fs-9 mb-0 mt-1">@ViewBag.Subtitle</p>
+                    }
+                </div>
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        @if (ViewBag.ShowProjectSelector == true)
+                        {
+                            <div class="dropdown">
+                                <button class="btn btn-phoenix-secondary btn-sm dropdown-toggle" type="button" id="projectDropdown" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false">
+                                    <span class="fa-solid fa-briefcase me-2"></span>
+                                    <span id="current-project-name">@ViewBag.CurrentProjectName</span>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end py-2">
+                                    @if (ViewBag.UserProjects != null)
+                                    {
+                                        @foreach (var project in ViewBag.UserProjects)
+                                        {
+                                            <a class="dropdown-item @(project.Id == ViewBag.ProjectId ? "active" : "")" 
+                                               href="@Url.Action("Index", new { projectId = project.Id })">
+                                                <span class="fa-solid fa-diagram-project me-2 text-700"></span>
+                                                @project.Name
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        }
+                        @if (ViewBag.ShowRefreshButton == true)
+                        {
+                            <button type="button" class="btn btn-phoenix-primary btn-sm" id="dashboard-refresh">
+                                <span class="fa-solid fa-rotate me-2"></span>
+                                Actualizar
+                            </button>
+                        }
+                        @if (ViewBag.ShowSettingsButton == true)
+                        {
+                            <button type="button" class="btn btn-phoenix-secondary btn-icon btn-sm" id="dashboard-settings" data-bs-toggle="modal" data-bs-target="#dashboardSettingsModal">
+                                <span class="fa-solid fa-cog"></span>
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Phoenix Breadcrumb if needed *@
+    @if (ViewBag.Breadcrumbs != null)
+    {
+        <nav class="mb-3" aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                @foreach (var item in ViewBag.Breadcrumbs)
+                {
+                    <li class="breadcrumb-item @(item.IsActive ? "active" : "")">
+                        @if (item.IsActive)
+                        {
+                            @item.Text
+                        }
+                        else
+                        {
+                            <a href="@item.Url">@item.Text</a>
+                        }
+                    </li>
+                }
+            </ol>
+        </nav>
+    }
+
+    @* Dashboard Content Grid *@
+    <div id="dashboard-container">
+        @RenderBody()
+    </div>
+</div>
+
+@* Phoenix Dashboard Settings Modal *@
+@if (ViewBag.ShowSettingsButton == true)
+{
+    <div class="modal fade" id="dashboardSettingsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Configuración del Dashboard</h5>
+                    <button type="button" class="btn p-1" data-bs-dismiss="modal" aria-label="Close">
+                        <span class="fas fa-times fs-9"></span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-900">Intervalo de actualización</label>
+                        <select class="form-select" id="refresh-interval">
+                            <option value="0">Desactivado</option>
+                            <option value="30000">30 segundos</option>
+                            <option value="60000" selected>1 minuto</option>
+                            <option value="300000">5 minutos</option>
+                            <option value="600000">10 minutos</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-900">Tema del dashboard</label>
+                        <select class="form-select" id="dashboard-theme">
+                            <option value="light">Claro</option>
+                            <option value="dark">Oscuro</option>
+                            <option value="auto" selected>Automático</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="show-notifications" checked>
+                            <label class="form-check-label text-900" for="show-notifications">
+                                Mostrar notificaciones
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-phoenix-secondary btn-sm" data-bs-dismiss="modal">
+                        <span class="fas fa-times me-1"></span>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-phoenix-primary btn-sm" id="save-dashboard-settings">
+                        <span class="fas fa-save me-1"></span>Guardar cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+    
+    <script>
+        // Dashboard layout initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize feather icons
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+            
+            // Handle dashboard refresh
+            const refreshBtn = document.getElementById('dashboard-refresh');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    if (typeof window.refreshDashboard === 'function') {
+                        window.refreshDashboard();
+                    } else {
+                        location.reload();
+                    }
+                });
+            }
+            
+            // Handle settings save
+            const saveSettingsBtn = document.getElementById('save-dashboard-settings');
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', function() {
+                    const settings = {
+                        refreshInterval: document.getElementById('refresh-interval').value,
+                        theme: document.getElementById('dashboard-theme').value,
+                        showNotifications: document.getElementById('show-notifications').checked
+                    };
+                    
+                    // Save to localStorage
+                    localStorage.setItem('dashboardSettings', JSON.stringify(settings));
+                    
+                    // Apply settings
+                    if (typeof window.applyDashboardSettings === 'function') {
+                        window.applyDashboardSettings(settings);
+                    }
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('dashboardSettingsModal'));
+                    modal.hide();
+                    
+                    // Show success message
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('success', 'Configuración guardada correctamente');
+                    }
+                });
+            }
+            
+            // Load saved settings
+            const savedSettings = localStorage.getItem('dashboardSettings');
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    if (document.getElementById('refresh-interval')) {
+                        document.getElementById('refresh-interval').value = settings.refreshInterval || '60000';
+                    }
+                    if (document.getElementById('dashboard-theme')) {
+                        document.getElementById('dashboard-theme').value = settings.theme || 'auto';
+                    }
+                    if (document.getElementById('show-notifications')) {
+                        document.getElementById('show-notifications').checked = settings.showNotifications !== false;
+                    }
+                } catch (e) {
+                    console.error('Error loading dashboard settings:', e);
+                }
+            }
+        });
+    </script>
+}
+
+@section Styles {
+    @await RenderSectionAsync("Styles", required: false)
+}
