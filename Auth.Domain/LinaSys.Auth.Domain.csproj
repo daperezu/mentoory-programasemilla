@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <ItemGroup>
+        <PackageReference Include="MediatR.Contracts" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Shared.Domain\LinaSys.Shared.Domain.csproj" />
+      <ProjectReference Include="..\Shared.Application\LinaSys.Shared.Application.csproj" />
+    </ItemGroup>
+</Project>

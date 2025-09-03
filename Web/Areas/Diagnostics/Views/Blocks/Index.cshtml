@@ -1,0 +1,49 @@
+@{
+    var pageTitle = "Gestión de Bloques";
+    
+    var pageHeaderActions = new List<PageHeaderDropdownItem>
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-plus me-2",
+            Text = "Nuevo bloque",
+            Url = Url.Action("Create", "Blocks", new { area = "Diagnostics" })!
+        }
+    };
+
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Nombre", 
+            Data = "name"
+        },
+        new()
+        {
+            Header = "Cantidad de Preguntas", 
+            Data = "questionCount"
+        }
+    };
+
+    var dataTablesHoverActions = new List<HoverAction>
+    {
+        new() { 
+            Url = Url.Action("Edit", "Blocks", new { area = "Diagnostics", id = "{id}" })!, 
+            IconClass = "fas fa-edit",
+            Text = "Editar"
+        }
+    };
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-cube" dropdown-items="@pageHeaderActions"></page-header>
+
+<div class="card">
+    <div class="card-body">
+        <datatable ajax-url="@Url.Action("List", "Blocks", new { area = "Diagnostics" })"
+                   columns="@dataTablesColumns"
+                   hover-actions="@dataTablesHoverActions"
+                   show-delete-button="true"
+                   delete-url="@Url.Action("Delete", "Blocks", new { area = "Diagnostics" })"
+                   delete-confirmation="¿Está seguro de que desea eliminar este bloque? Esta acción no se puede deshacer."></datatable>
+    </div>
+</div>

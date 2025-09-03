@@ -1,0 +1,93 @@
+@model LinaSys.Web.Areas.KnowledgeStructure.Models.Topic.CreateTopicViewModel
+
+@{
+    ViewData["Title"] = "Crear Tema";
+}
+
+<div class="card shadow">
+    <div class="card-header">
+        <h3 class="card-title">Crear Tema</h3>
+    </div>
+    <form asp-action="Create" method="post">
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="KnowledgeStructureId" class="form-label"></label>
+                <select asp-for="KnowledgeStructureId" asp-items="Model.KnowledgeStructureOptions" class="form-select" id="knowledgeStructureSelect">
+                    <option value="">-- Seleccione una estructura --</option>
+                </select>
+                <span asp-validation-for="KnowledgeStructureId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="StructureModuleId" class="form-label"></label>
+                <select asp-for="StructureModuleId" asp-items="Model.ModuleOptions" class="form-select" id="moduleSelect" disabled>
+                    <option value="">-- Primero seleccione una estructura --</option>
+                </select>
+                <span asp-validation-for="StructureModuleId" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">Crear</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        $(document).ready(function() {
+            // Handle knowledge structure selection change
+            $('#knowledgeStructureSelect').on('change', function() {
+                var knowledgeStructureId = $(this).val();
+                var moduleSelect = $('#moduleSelect');
+                
+                // Clear module select
+                moduleSelect.empty();
+                
+                if (knowledgeStructureId) {
+                    // Enable module select
+                    moduleSelect.prop('disabled', false);
+                    moduleSelect.append('<option value="">-- Cargando módulos --</option>');
+                    
+                    // Fetch modules for selected knowledge structure
+                    $.get('@Url.Action("GetModulesByKnowledgeStructure", "Topics", new { area = "KnowledgeStructure" })', 
+                        { knowledgeStructureId: knowledgeStructureId },
+                        function(data) {
+                            moduleSelect.empty();
+                            moduleSelect.append('<option value="">-- Seleccione un módulo --</option>');
+                            
+                            $.each(data, function(index, item) {
+                                moduleSelect.append($('<option>').val(item.value).text(item.text));
+                            });
+                        });
+                } else {
+                    // Disable module select
+                    moduleSelect.prop('disabled', true);
+                    moduleSelect.append('<option value="">-- Primero seleccione una estructura --</option>');
+                }
+            });
+            
+            // If there's a preselected knowledge structure (e.g., on validation error), trigger change
+            var selectedKnowledgeStructure = $('#knowledgeStructureSelect').val();
+            if (selectedKnowledgeStructure) {
+                $('#knowledgeStructureSelect').trigger('change');
+            }
+        });
+    </script>
+}

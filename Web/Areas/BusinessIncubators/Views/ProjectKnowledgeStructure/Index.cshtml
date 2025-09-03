@@ -1,0 +1,2259 @@
+@model LinaSys.Web.Areas.BusinessIncubators.Models.ProjectKnowledgeStructure.ProjectKnowledgeStructureViewModel
+@{
+    ViewData["Title"] = "Estructura de Conocimiento del Proyecto";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <style>
+        .jstree-custom-icon { color: #007bff; }
+        .jstree-synced { color: #28a745; }
+        .jstree-customized { color: #ffc107; }
+        .jstree-custom { color: #6c757d; }
+        .sync-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+        .sync-indicator.synced { background-color: #28a745; }
+        .sync-indicator.customized { background-color: #ffc107; }
+        .sync-indicator.custom { background-color: #6c757d; }
+        .tree-container {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            min-height: 600px;
+            overflow-y: auto;
+            max-height: calc(100vh - 350px);
+        }
+        .details-panel {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            background-color: white;
+            min-height: 300px;
+        }
+        .jstree-default .jstree-hovered {
+            background: #e7f3ff;
+            border-radius: 2px;
+            box-shadow: none;
+        }
+        .jstree-default .jstree-clicked {
+            background: #beebff;
+            border-radius: 2px;
+            box-shadow: none;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .action-buttons-section {
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        .action-btn {
+            text-align: left;
+            transition: all 0.2s ease-in-out;
+        }
+        .action-btn:hover {
+            transform: translateX(5px);
+        }
+        .action-btn i {
+            width: 20px;
+            text-align: center;
+            margin-right: 5px;
+        }
+        .action-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        /* Group different types of buttons */
+        .action-btn.btn-danger {
+            margin-top: 0.5rem;
+        }
+        /* Search functionality in link questions modal */
+        #questionSearchInput {
+            padding-left: 2.5rem;
+        }
+        #questionsListContainer .form-check {
+            transition: all 0.2s ease-in-out;
+        }
+        #questionsListContainer h6 {
+            color: #6c757d;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+}
+
+<div class="page-header">
+    <div class="row align-items-center">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-area="BusinessIncubators" asp-controller="Home" asp-action="Index">Incubadoras</a></li>
+                    <li class="breadcrumb-item">
+                        <a asp-area="BusinessIncubators" asp-controller="Projects" asp-action="Index" 
+                           asp-route-businessIncubatorId="@Model.BusinessIncubatorId">Proyectos</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a asp-area="BusinessIncubators" asp-controller="Projects" asp-action="Details" 
+                           asp-route-businessIncubatorId="@Model.BusinessIncubatorId" asp-route-projectId="@Model.ProjectId">@Model.ProjectName</a>
+                    </li>
+                    <li class="breadcrumb-item active">Estructura de Conocimiento</li>
+                </ol>
+            </nav>
+            <h2 class="page-title">Estructura de Conocimiento</h2>
+        </div>
+        <div class="col-auto">
+            @if (!Model.HasKnowledgeStructure)
+            {
+                <button type="button" class="btn btn-primary" id="btnCopyStructure">
+                    <i class="ti ti-copy"></i> Copiar Estructura
+                </button>
+            }
+            else
+            {
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-danger" id="btnClearStructure">
+                        <i class="ti ti-trash"></i> Limpiar
+                    </button>
+                    @if (Model.SourceFormId.HasValue)
+                    {
+                        <button type="button" class="btn btn-outline-success" id="btnSyncAll">
+                            <i class="ti ti-refresh"></i> Sincronizar Todo
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        @if (Model.SourceFormId.HasValue)
+        {
+            <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                <i class="ti ti-info-circle me-2"></i>
+                <div>
+                    Esta estructura fue copiada desde: <strong>@Model.SourceFormName</strong>
+                    <br />
+                    <small>Los elementos sincronizados se actualizarán automáticamente cuando cambie el formulario origen.</small>
+                </div>
+            </div>
+        }
+
+        <div class="row">
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Estructura</h3>
+                        <div class="card-actions">
+                            <div class="btn-group me-3" role="group">
+                                <input type="radio" class="btn-check" name="viewMode" id="viewByBlocks" value="blocks" autocomplete="off">
+                                <label class="btn btn-sm btn-outline-primary" for="viewByBlocks">
+                                    <i class="ti ti-layout-list"></i> Por Bloques
+                                </label>
+                                <input type="radio" class="btn-check" name="viewMode" id="viewByModules" value="modules" autocomplete="off" checked>
+                                <label class="btn btn-sm btn-outline-primary" for="viewByModules">
+                                    <i class="ti ti-sitemap"></i> Por Módulos
+                                </label>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2">
+                                    <span class="sync-indicator synced"></span> Sincronizado
+                                </span>
+                                <span class="badge bg-warning me-2">
+                                    <span class="sync-indicator customized"></span> Personalizado
+                                </span>
+                                <span class="badge bg-secondary">
+                                    <span class="sync-indicator custom"></span> Personalizado
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="treeSearch" placeholder="Buscar...">
+                        </div>
+                        <div class="tree-container">
+                            <div id="knowledgeStructureTree"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Detalles</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="detailsPanel" class="details-panel">
+                            <p class="text-muted text-center">Seleccione un elemento para ver sus detalles</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Source Selection -->
+<div class="modal fade" id="sourceSelectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar Estructura de Conocimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="sourceSelectionContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Edit Element -->
+<div class="modal fade" id="editElementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editElementTitle">Editar Elemento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editElementForm">
+                    <input type="hidden" id="editElementId" />
+                    <input type="hidden" id="editElementType" />
+                    
+                    <div class="mb-3">
+                        <label for="editElementName" class="form-label">Nombre</label>
+                        <input type="text" class="form-control" id="editElementName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editElementOrder" class="form-label">Orden</label>
+                        <input type="number" class="form-control" id="editElementOrder" min="1" required>
+                    </div>
+                    
+                    <div class="mb-3" id="editElementContentGroup" style="display: none;">
+                        <label for="editElementContent" class="form-label">Contenido</label>
+                        <textarea class="form-control" id="editElementContent" rows="4"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSaveElement">
+                    <i class="ti ti-device-floppy"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Add Block -->
+<div class="modal fade" id="addBlockModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Bloque</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addBlockForm">
+                    <div class="mb-3">
+                        <label for="newBlockName" class="form-label">Nombre del Bloque</label>
+                        <input type="text" class="form-control" id="newBlockName" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSaveBlock">
+                    <i class="ti ti-plus"></i> Agregar Bloque
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Add Question -->
+<div class="modal fade" id="addQuestionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Pregunta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addQuestionForm">
+                    <input type="hidden" id="questionBlockId" />
+                    
+                    <div class="mb-3">
+                        <label for="newQuestionText" class="form-label">Texto de la Pregunta</label>
+                        <textarea class="form-control" id="newQuestionText" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="newQuestionAnswerType" class="form-label">Tipo de Respuesta</label>
+                        <select class="form-control" id="newQuestionAnswerType" required>
+                            <option value="0">Texto Corto</option>
+                            <option value="1">Texto Largo</option>
+                            <option value="2">Sí/No</option>
+                            <option value="3">Opción Múltiple</option>
+                            <option value="4">Fecha</option>
+                            <option value="5">Número</option>
+                            <option value="6">Email</option>
+                            <option value="7">URL</option>
+                            <option value="8">Archivo</option>
+                            <option value="9">Lista</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="newQuestionIsDiagnostic">
+                            <label class="form-check-label" for="newQuestionIsDiagnostic">
+                                Usar para diagnóstico
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="newQuestionPhase" class="form-label">Fase de Aplicación</label>
+                        <select class="form-control" id="newQuestionPhase">
+                            <option value="0">Registro</option>
+                            <option value="1">Evaluación</option>
+                            <option value="2">Ambas</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="newQuestionTopicId" class="form-label">Vincular a Tema (opcional)</label>
+                        <select class="form-control" id="newQuestionTopicId">
+                            <option value="">-- Sin vincular a tema --</option>
+                        </select>
+                        <small class="form-text text-muted">
+                            Puede vincular esta pregunta a un tema de la estructura de conocimiento
+                        </small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSaveQuestion">
+                    <i class="ti ti-plus"></i> Agregar Pregunta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Add Module -->
+<div class="modal fade" id="addModuleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agregar Módulo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addModuleForm">
+                    <div class="mb-3">
+                        <label for="newModuleName" class="form-label">Nombre del Módulo</label>
+                        <input type="text" class="form-control" id="newModuleName" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSaveModule">
+                    <i class="ti ti-plus"></i> Agregar Módulo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+    <script src="~/js/businessincubators/projectknowledgestructure-edit.js"></script>
+    <script>
+        // Global variables for use in _EditFunctions.js
+        var businessIncubatorId = '@Model.BusinessIncubatorId';
+        var projectId = '@Model.ProjectId';
+        
+        $(document).ready(function() {
+            const hasStructure = @Json.Serialize(Model.HasKnowledgeStructure);
+
+            // Initialize tree if structure exists
+            if (hasStructure) {
+                initializeTree('modules'); // Default to modules view
+            }
+            
+            // Handle view mode toggle
+            $('input[name="viewMode"]').on('change', function() {
+                const viewMode = $(this).val();
+                if (hasStructure) {
+                    $('#knowledgeStructureTree').jstree('destroy');
+                    initializeTree(viewMode);
+                }
+            });
+
+            // Copy structure button
+            $('#btnCopyStructure').on('click', function() {
+                console.log('Copy structure button clicked');
+                loadSourceSelectionModal();
+            });
+
+            // Clear structure button
+            $('#btnClearStructure').on('click', function() {
+                if (confirm('¿Está seguro de que desea limpiar toda la estructura de conocimiento del proyecto?')) {
+                    clearKnowledgeStructure();
+                }
+            });
+
+            // Sync all button
+            $('#btnSyncAll').on('click', function() {
+                if (confirm('¿Está seguro de que desea sincronizar todos los elementos no personalizados con el formulario origen?')) {
+                    syncAllElements();
+                }
+            });
+
+            function initializeTree(viewMode) {
+                const treeUrl = viewMode === 'blocks' 
+                    ? `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/BlocksTree`
+                    : `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/Tree`;
+                    
+                $('#knowledgeStructureTree').jstree({
+                    'core': {
+                        'data': {
+                            'url': treeUrl,
+                            'dataType': 'json'
+                        },
+                        'check_callback': function(operation, node, parent, position, more) {
+                            if (operation === "move_node") {
+                                const nodeType = node.type;
+                                const parentType = parent.type;
+                                
+                                // Define valid moves based on view mode
+                                if (viewMode === 'blocks') {
+                                    const validMoves = {
+                                        'block': ['root', 'project'],
+                                        'question': ['block']
+                                    };
+                                    return validMoves[nodeType] && validMoves[nodeType].includes(parentType);
+                                } else {
+                                    const validMoves = {
+                                        'module': ['structure'],
+                                        'topic': ['module'],
+                                        'subject': ['topic'],
+                                        'resource': ['subject']
+                                    };
+                                    return validMoves[nodeType] && validMoves[nodeType].includes(parentType);
+                                }
+                            }
+                            return true;
+                        },
+                        'themes': {
+                            'responsive': true
+                        }
+                    },
+                    'types': {
+                        'root': {
+                            'icon': 'ti ti-sitemap'
+                        },
+                        'structure': {
+                            'icon': 'ti ti-sitemap'
+                        },
+                        'block': {
+                            'icon': 'ti ti-layout-list'
+                        },
+                        'module': {
+                            'icon': 'ti ti-folder'
+                        },
+                        'topic': {
+                            'icon': 'ti ti-bookmark'
+                        },
+                        'subject': {
+                            'icon': 'ti ti-file-text'
+                        },
+                        'question': {
+                            'icon': 'ti ti-help-circle'
+                        },
+                        'answer': {
+                            'icon': 'ti ti-circle-check'
+                        },
+                        'resource': {
+                            'icon': 'ti ti-link'
+                        },
+                        'empty': {
+                            'icon': 'ti ti-info-circle'
+                        }
+                    },
+                    'plugins': ['types', 'contextmenu', 'dnd', 'search'],
+                    'contextmenu': {
+                        'items': function(node) {
+                            var items = {};
+                            const currentViewMode = $('input[name="viewMode"]:checked').val();
+                            
+                            // Add items based on view mode and node type
+                            if (currentViewMode === 'blocks') {
+                                // Block view context menu
+                                if (node.type === 'root' || node.type === 'project') {
+                                    items.addBlock = {
+                                        'label': 'Agregar Bloque',
+                                        'icon': 'ti ti-plus',
+                                        'action': function() {
+                                            showAddBlockDialog();
+                                        }
+                                    };
+                                } else if (node.type === 'block') {
+                                    items.addQuestion = {
+                                        'label': 'Agregar Pregunta',
+                                        'icon': 'ti ti-plus',
+                                        'action': function() {
+                                            showAddQuestionDialog(node);
+                                        }
+                                    };
+                                    items.editBlock = {
+                                        'label': 'Editar Bloque',
+                                        'icon': 'ti ti-edit',
+                                        'action': function() {
+                                            showEditBlockDialog(node);
+                                        }
+                                    };
+                                    items.deleteBlock = {
+                                        'label': 'Eliminar Bloque',
+                                        'icon': 'ti ti-trash',
+                                        'action': function() {
+                                            if (confirm('¿Está seguro de eliminar este bloque y todas sus preguntas?')) {
+                                                deleteBlock(node);
+                                            }
+                                        }
+                                    };
+                                } else if (node.type === 'question') {
+                                    items.addAnswer = {
+                                        'label': 'Agregar Opción de Respuesta',
+                                        'icon': 'ti ti-plus',
+                                        'action': function() {
+                                            showAddAnswerDialog(node);
+                                        }
+                                    };
+                                    items.editQuestion = {
+                                        'label': 'Editar Pregunta',
+                                        'icon': 'ti ti-edit',
+                                        'action': function() {
+                                            showEditDialog(node);
+                                        }
+                                    };
+                                    items.deleteQuestion = {
+                                        'label': 'Eliminar Pregunta',
+                                        'icon': 'ti ti-trash',
+                                        'action': function() {
+                                            if (confirm('¿Está seguro de eliminar esta pregunta y todas sus opciones de respuesta?')) {
+                                                deleteQuestion(node);
+                                            }
+                                        }
+                                    };
+                                } else if (node.type === 'answer') {
+                                    items.editAnswer = {
+                                        'label': 'Editar Opción',
+                                        'icon': 'ti ti-edit',
+                                        'action': function() {
+                                            showEditDialog(node);
+                                        }
+                                    };
+                                    items.deleteAnswer = {
+                                        'label': 'Eliminar Opción',
+                                        'icon': 'ti ti-trash',
+                                        'action': function() {
+                                            if (confirm('¿Está seguro de eliminar esta opción de respuesta?')) {
+                                                deleteAnswer(node);
+                                            }
+                                        }
+                                    };
+                                }
+                            } else {
+                                // Module view context menu
+                                if (node.type === 'structure') {
+                                    items.addModule = {
+                                        'label': 'Agregar Módulo',
+                                        'icon': 'ti ti-plus',
+                                        'action': function() {
+                                            showAddModuleDialog();
+                                        }
+                                    };
+                                } else if (node.type === 'module') {
+                                    items.addTopic = {
+                                        'label': 'Agregar Tema',
+                                        'icon': 'ti ti-plus',
+                                        'action': function() {
+                                            showAddTopicDialog(node);
+                                        }
+                                    };
+                                    items.edit = {
+                                        'label': 'Editar',
+                                        'icon': 'ti ti-edit',
+                                        'action': function() {
+                                            showEditDialog(node);
+                                        }
+                                    };
+                                } else if (node.type === 'topic') {
+                                    items.addQuestion = {
+                                        'label': 'Crear Nueva Pregunta',
+                                        'icon': 'ti ti-plus',
+                                        'action': function() {
+                                            showAddQuestionToTopicDialog(node);
+                                        }
+                                    };
+                                    items.linkQuestion = {
+                                        'label': 'Vincular Pregunta Existente',
+                                        'icon': 'ti ti-link',
+                                        'action': function() {
+                                            showLinkQuestionToTopicDialog(node);
+                                        }
+                                    };
+                                    items.addSubject = {
+                                        'label': 'Agregar Materia',
+                                        'icon': 'ti ti-plus',
+                                        'action': function() {
+                                            showAddSubjectDialog(node);
+                                        }
+                                    };
+                                    items.edit = {
+                                        'label': 'Editar',
+                                        'icon': 'ti ti-edit',
+                                        'action': function() {
+                                            showEditDialog(node);
+                                        }
+                                    };
+                                } else if (node.type === 'subject') {
+                                    items.edit = {
+                                        'label': 'Editar',
+                                        'icon': 'ti ti-edit',
+                                        'action': function() {
+                                            showEditDialog(node);
+                                        }
+                                    };
+                                } else if (node.type === 'question') {
+                                    // Questions in knowledge structure view
+                                    items.addAnswer = {
+                                        'label': 'Agregar Opción de Respuesta',
+                                        'icon': 'ti ti-plus',
+                                        'action': function() {
+                                            showAddAnswerDialog(node);
+                                        }
+                                    };
+                                    items.editQuestion = {
+                                        'label': 'Editar Pregunta',
+                                        'icon': 'ti ti-edit',
+                                        'action': function() {
+                                            showEditDialog(node);
+                                        }
+                                    };
+                                    items.deleteQuestion = {
+                                        'label': 'Eliminar Pregunta',
+                                        'icon': 'ti ti-trash',
+                                        'action': function() {
+                                            if (confirm('¿Está seguro de eliminar esta pregunta y todas sus opciones de respuesta?')) {
+                                                deleteQuestion(node);
+                                            }
+                                        }
+                                    };
+                                } else if (node.type === 'answer') {
+                                    // Answer options in knowledge structure view
+                                    items.editAnswer = {
+                                        'label': 'Editar Opción',
+                                        'icon': 'ti ti-edit',
+                                        'action': function() {
+                                            showEditDialog(node);
+                                        }
+                                    };
+                                    items.deleteAnswer = {
+                                        'label': 'Eliminar Opción',
+                                        'icon': 'ti ti-trash',
+                                        'action': function() {
+                                            if (confirm('¿Está seguro de eliminar esta opción de respuesta?')) {
+                                                deleteAnswer(node);
+                                            }
+                                        }
+                                    };
+                                }
+                                
+                                // Add sync option for customized elements
+                                if ((node.type === 'module' || node.type === 'topic' || node.type === 'subject') && node.data && node.data.sourceId) {
+                                    items.sync = {
+                                        'label': 'Sincronizar con origen',
+                                        'icon': 'ti ti-refresh',
+                                        'action': function() {
+                                            syncElement(node);
+                                        }
+                                    };
+                                }
+                            }
+                            
+                            return items;
+                        }
+                    }
+                }).on('select_node.jstree', function(e, data) {
+                    showNodeDetails(data.node);
+                }).on('move_node.jstree', function(e, data) {
+                    handleNodeMove(data);
+                });
+            }
+
+            function loadSourceSelectionModal() {
+                $.get(`/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/SelectSourceForm`)
+                    .done(function(html) {
+                        $('#sourceSelectionContent').html(html);
+                        $('#sourceSelectionModal').modal('show');
+                    })
+                    .fail(function(xhr, status, error) {
+                        console.error('Error loading source selection modal:', error);
+                        console.error('Status:', xhr.status);
+                        console.error('Response:', xhr.responseText);
+                        showToast('Error al cargar el formulario de selección', 'danger');
+                    });
+            }
+
+            function clearKnowledgeStructure() {
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/Clear`,
+                    type: 'DELETE',
+                    success: function(result) {
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            setTimeout(() => location.reload(), 1500);
+                        }
+                    }
+                });
+            }
+
+            function syncAllElements() {
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/SyncAll`,
+                    type: 'POST',
+                    beforeSend: function() {
+                        showToast('Sincronización en proceso...', 'info');
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            // Reload the tree to show updated data
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al sincronizar', 'danger');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error syncing all elements:', error);
+                        showToast('Error al sincronizar la estructura', 'danger');
+                    }
+                });
+            }
+
+            function showNodeDetails(node) {
+                let detailsHtml = `<h4>${node.text}</h4>`;
+                
+                switch(node.type) {
+                    case 'block':
+                        detailsHtml += `
+                            <p><strong>Tipo:</strong> Bloque</p>
+                            ${node.data ? `
+                                <p><strong>ID Origen:</strong> ${node.data.sourceId || 'N/A'}</p>
+                                <p><strong>Personalizado:</strong> ${node.data.isCustomized ? 'Sí' : 'No'}</p>
+                            ` : ''}
+                        `;
+                        break;
+                    case 'question':
+                        detailsHtml += `
+                            <p><strong>Tipo:</strong> Pregunta</p>
+                            ${node.data ? `
+                                <p><strong>ID Origen:</strong> ${node.data.sourceId || 'N/A'}</p>
+                                <p><strong>Personalizado:</strong> ${node.data.isCustomized ? 'Sí' : 'No'}</p>
+                                <p><strong>Tipo de respuesta:</strong> ${node.data.answerType || 'N/A'}</p>
+                                <p><strong>Usado para diagnóstico:</strong> ${node.data.isUsedForDiagnosis ? 'Sí' : 'No'}</p>
+                                <p><strong>Fase:</strong> ${node.data.appliesToPhase || 'N/A'}</p>
+                                ${node.data.topicInfo ? `<p><strong>Tema asociado:</strong> ${node.data.topicInfo}</p>` : ''}
+                            ` : ''}
+                        `;
+                        break;
+                    case 'answer':
+                        detailsHtml += `
+                            <p><strong>Tipo:</strong> Opción de Respuesta</p>
+                            ${node.data ? `
+                                <p><strong>ID Origen:</strong> ${node.data.sourceId || 'N/A'}</p>
+                                <p><strong>Personalizado:</strong> ${node.data.isCustomized ? 'Sí' : 'No'}</p>
+                                <p><strong>Puntaje:</strong> ${node.data.score || 0}</p>
+                                <p><strong>FODA:</strong> ${node.data.foda || 'N/A'}</p>
+                                <p><strong>ODSR:</strong> ${node.data.odsr || 'N/A'}</p>
+                                ${node.data.followUpQuestionText ? `<p><strong>Pregunta de seguimiento:</strong> ${node.data.followUpQuestionText}</p>` : ''}
+                            ` : ''}
+                        `;
+                        break;
+                    case 'module':
+                        detailsHtml += `
+                            <p><strong>Tipo:</strong> Módulo</p>
+                            ${node.data ? `
+                                <p><strong>ID Origen:</strong> ${node.data.sourceId || 'N/A'}</p>
+                                <p><strong>Personalizado:</strong> ${node.data.isCustomized ? 'Sí' : 'No'}</p>
+                                <p><strong>Orden:</strong> ${node.data.order || 'N/A'}</p>
+                            ` : ''}
+                        `;
+                        break;
+                    case 'topic':
+                        detailsHtml += `
+                            <p><strong>Tipo:</strong> Tema</p>
+                            ${node.data ? `
+                                <p><strong>ID Origen:</strong> ${node.data.sourceId || 'N/A'}</p>
+                                <p><strong>Personalizado:</strong> ${node.data.isCustomized ? 'Sí' : 'No'}</p>
+                                <p><strong>Orden:</strong> ${node.data.order || 'N/A'}</p>
+                            ` : ''}
+                        `;
+                        break;
+                    case 'subject':
+                        detailsHtml += `
+                            <p><strong>Tipo:</strong> Materia</p>
+                            ${node.data ? `
+                                <p><strong>ID Origen:</strong> ${node.data.sourceId || 'N/A'}</p>
+                                <p><strong>Personalizado:</strong> ${node.data.isCustomized ? 'Sí' : 'No'}</p>
+                                <p><strong>Orden:</strong> ${node.data.order || 'N/A'}</p>
+                                ${node.data.content ? `<p><strong>Contenido:</strong> ${node.data.content}</p>` : ''}
+                            ` : ''}
+                        `;
+                        break;
+                    case 'resource':
+                        detailsHtml += `
+                            <p><strong>Tipo:</strong> Recurso</p>
+                            ${node.data ? `
+                                <p><strong>URL:</strong> <a href="${node.data.url}" target="_blank">${node.data.url}</a></p>
+                                <p><strong>Tipo de recurso:</strong> ${node.data.resourceType || 'N/A'}</p>
+                                <p><strong>Duración estimada:</strong> ${node.data.estimatedMinutes || 'N/A'} minutos</p>
+                            ` : ''}
+                        `;
+                        break;
+                    case 'empty':
+                        detailsHtml += `<p class="text-muted">${node.text}</p>`;
+                        break;
+                    default:
+                        detailsHtml += `<p><strong>Tipo:</strong> ${node.type}</p>`;
+                }
+                
+                // Add action buttons
+                const currentViewMode = $('input[name="viewMode"]:checked').val();
+                const actions = getAvailableActions(node, currentViewMode);
+                detailsHtml += renderActionButtons(actions, node);
+                
+                $('#detailsPanel').html(detailsHtml);
+                
+                // Bind action button events
+                bindActionButtonEvents(node);
+            }
+            
+            // Get available actions based on node type and view mode
+            function getAvailableActions(node, viewMode) {
+                const actions = [];
+                
+                if (viewMode === 'blocks') {
+                    switch(node.type) {
+                        case 'root':
+                        case 'project':
+                            actions.push({ id: 'addBlock', label: 'Agregar Bloque', icon: 'ti ti-plus', class: 'btn-primary' });
+                            break;
+                        case 'block':
+                            actions.push({ id: 'addQuestion', label: 'Agregar Pregunta', icon: 'ti ti-plus', class: 'btn-primary' });
+                            actions.push({ id: 'editBlock', label: 'Editar Bloque', icon: 'ti ti-edit', class: 'btn-info' });
+                            actions.push({ id: 'deleteBlock', label: 'Eliminar Bloque', icon: 'ti ti-trash', class: 'btn-danger', confirm: true });
+                            break;
+                        case 'question':
+                            actions.push({ id: 'addAnswer', label: 'Agregar Opción de Respuesta', icon: 'ti ti-plus', class: 'btn-primary' });
+                            actions.push({ id: 'editQuestion', label: 'Editar Pregunta', icon: 'ti ti-edit', class: 'btn-info' });
+                            actions.push({ id: 'deleteQuestion', label: 'Eliminar Pregunta', icon: 'ti ti-trash', class: 'btn-danger', confirm: true });
+                            break;
+                        case 'answer':
+                            actions.push({ id: 'editAnswer', label: 'Editar Opción', icon: 'ti ti-edit', class: 'btn-info' });
+                            actions.push({ id: 'deleteAnswer', label: 'Eliminar Opción', icon: 'ti ti-trash', class: 'btn-danger', confirm: true });
+                            break;
+                    }
+                } else {
+                    // Knowledge structure view actions
+                    switch(node.type) {
+                        case 'structure':
+                            actions.push({ id: 'addModule', label: 'Agregar Módulo', icon: 'ti ti-plus', class: 'btn-primary' });
+                            break;
+                        case 'module':
+                            actions.push({ id: 'addTopic', label: 'Agregar Tema', icon: 'ti ti-plus', class: 'btn-primary' });
+                            actions.push({ id: 'edit', label: 'Editar', icon: 'ti ti-edit', class: 'btn-info' });
+                            if (node.data && node.data.sourceId) {
+                                actions.push({ id: 'sync', label: 'Sincronizar con origen', icon: 'ti ti-refresh', class: 'btn-warning' });
+                            }
+                            break;
+                        case 'topic':
+                            actions.push({ id: 'addQuestionToTopic', label: 'Crear Nueva Pregunta', icon: 'ti ti-plus', class: 'btn-primary' });
+                            actions.push({ id: 'linkQuestion', label: 'Vincular Pregunta Existente', icon: 'ti ti-link', class: 'btn-primary' });
+                            actions.push({ id: 'addSubject', label: 'Agregar Materia', icon: 'ti ti-plus', class: 'btn-primary' });
+                            actions.push({ id: 'edit', label: 'Editar', icon: 'ti ti-edit', class: 'btn-info' });
+                            if (node.data && node.data.sourceId) {
+                                actions.push({ id: 'sync', label: 'Sincronizar con origen', icon: 'ti ti-refresh', class: 'btn-warning' });
+                            }
+                            break;
+                        case 'subject':
+                            actions.push({ id: 'edit', label: 'Editar', icon: 'ti ti-edit', class: 'btn-info' });
+                            if (node.data && node.data.sourceId) {
+                                actions.push({ id: 'sync', label: 'Sincronizar con origen', icon: 'ti ti-refresh', class: 'btn-warning' });
+                            }
+                            break;
+                        case 'question':
+                            actions.push({ id: 'addAnswer', label: 'Agregar Opción de Respuesta', icon: 'ti ti-plus', class: 'btn-primary' });
+                            actions.push({ id: 'editQuestion', label: 'Editar Pregunta', icon: 'ti ti-edit', class: 'btn-info' });
+                            actions.push({ id: 'deleteQuestion', label: 'Eliminar Pregunta', icon: 'ti ti-trash', class: 'btn-danger', confirm: true });
+                            break;
+                        case 'answer':
+                            actions.push({ id: 'editAnswer', label: 'Editar Opción', icon: 'ti ti-edit', class: 'btn-info' });
+                            actions.push({ id: 'deleteAnswer', label: 'Eliminar Opción', icon: 'ti ti-trash', class: 'btn-danger', confirm: true });
+                            break;
+                    }
+                }
+                
+                return actions;
+            }
+            
+            // Render action buttons HTML
+            function renderActionButtons(actions, node) {
+                if (actions.length === 0) return '';
+                
+                let html = '<div class="action-buttons-section mt-4 border-top pt-3">';
+                html += '<h6 class="text-muted mb-3">Acciones</h6>';
+                html += '<div class="d-grid gap-2">';
+                
+                // Group actions by type for better organization
+                const primaryActions = actions.filter(a => a.class === 'btn-primary');
+                const editActions = actions.filter(a => a.class === 'btn-info');
+                const dangerActions = actions.filter(a => a.class === 'btn-danger');
+                const otherActions = actions.filter(a => a.class === 'btn-warning');
+                
+                // Render primary actions first
+                primaryActions.forEach(action => {
+                    html += renderSingleButton(action, node);
+                });
+                
+                // Then edit actions
+                editActions.forEach(action => {
+                    html += renderSingleButton(action, node);
+                });
+                
+                // Then other actions (sync)
+                otherActions.forEach(action => {
+                    html += renderSingleButton(action, node);
+                });
+                
+                // Finally danger actions
+                dangerActions.forEach(action => {
+                    html += renderSingleButton(action, node);
+                });
+                
+                html += '</div></div>';
+                return html;
+            }
+            
+            // Render a single button
+            function renderSingleButton(action, node) {
+                return `
+                    <button type="button" 
+                            class="btn ${action.class} action-btn btn-sm" 
+                            data-action="${action.id}" 
+                            data-node-id="${node.id}"
+                            ${action.confirm ? 'data-confirm="true"' : ''}>
+                        <i class="${action.icon}"></i> ${action.label}
+                    </button>
+                `;
+            }
+            
+            // Bind action button events
+            function bindActionButtonEvents(node) {
+                $('.action-btn').off('click').on('click', function() {
+                    const action = $(this).data('action');
+                    const $button = $(this);
+                    const needsConfirm = $(this).data('confirm');
+                    
+                    // Disable button during operation
+                    $button.prop('disabled', true);
+                    
+                    // Handle confirmation for dangerous actions
+                    if (needsConfirm) {
+                        let confirmMessage = '';
+                        switch(action) {
+                            case 'deleteBlock':
+                                confirmMessage = '¿Está seguro de eliminar este bloque y todas sus preguntas?';
+                                break;
+                            case 'deleteQuestion':
+                                confirmMessage = '¿Está seguro de eliminar esta pregunta y todas sus opciones de respuesta?';
+                                break;
+                            case 'deleteAnswer':
+                                confirmMessage = '¿Está seguro de eliminar esta opción de respuesta?';
+                                break;
+                        }
+                        
+                        if (!confirm(confirmMessage)) {
+                            $button.prop('disabled', false);
+                            return;
+                        }
+                    }
+                    
+                    // Execute action
+                    switch(action) {
+                        case 'addBlock':
+                            showAddBlockDialog();
+                            break;
+                        case 'addQuestion':
+                            showAddQuestionDialog(node);
+                            break;
+                        case 'addQuestionToTopic':
+                            showAddQuestionToTopicDialog(node);
+                            break;
+                        case 'linkQuestion':
+                            showLinkQuestionToTopicDialog(node);
+                            break;
+                        case 'addAnswer':
+                            showAddAnswerDialog(node);
+                            break;
+                        case 'addModule':
+                            showAddModuleDialog();
+                            break;
+                        case 'addTopic':
+                            showAddTopicDialog(node);
+                            break;
+                        case 'addSubject':
+                            showAddSubjectDialog(node);
+                            break;
+                        case 'edit':
+                        case 'editQuestion':
+                        case 'editAnswer':
+                            showEditDialog(node);
+                            break;
+                        case 'editBlock':
+                            showEditBlockDialog(node);
+                            break;
+                        case 'deleteBlock':
+                            deleteBlock(node);
+                            break;
+                        case 'deleteQuestion':
+                            deleteQuestion(node);
+                            break;
+                        case 'deleteAnswer':
+                            deleteAnswer(node);
+                            break;
+                        case 'sync':
+                            syncElement(node);
+                            break;
+                    }
+                    
+                    // Re-enable button after a short delay
+                    setTimeout(() => $button.prop('disabled', false), 500);
+                });
+            }
+
+            // Removed duplicate showEditDialog - using the one from _EditFunctions.js
+
+            function syncElement(node) {
+                const entityId = getNodeEntityId(node);
+                if (!entityId) {
+                    showToast('No se puede sincronizar este elemento', 'danger');
+                    return;
+                }
+                
+                let syncUrl = '';
+                switch(node.type) {
+                    case 'module':
+                        syncUrl = `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/modules/${entityId}/sync`;
+                        break;
+                    case 'topic':
+                        syncUrl = `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/topics/${entityId}/sync`;
+                        break;
+                    case 'subject':
+                        syncUrl = `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/subjects/${entityId}/sync`;
+                        break;
+                    default:
+                        showToast('Tipo de elemento no válido para sincronización', 'danger');
+                        return;
+                }
+                
+                if (confirm(`¿Está seguro de que desea sincronizar "${node.text}" con su origen?`)) {
+                    $.ajax({
+                        url: syncUrl,
+                        type: 'POST',
+                        beforeSend: function() {
+                            showToast('Sincronizando...', 'info');
+                        },
+                        success: function(result) {
+                            if (result.success) {
+                                showToast(result.message, 'success');
+                                // Reload the tree to show updated data
+                                $('#knowledgeStructureTree').jstree('refresh');
+                            } else {
+                                showToast(result.message || 'Error al sincronizar', 'danger');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error syncing element:', error);
+                            showToast('Error al sincronizar el elemento', 'danger');
+                        }
+                    });
+                }
+            }
+            
+            // Add search functionality
+            let searchTimeout;
+            $('#treeSearch').on('keyup', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    const searchValue = $('#treeSearch').val();
+                    $('#knowledgeStructureTree').jstree(true).search(searchValue);
+                }, 250);
+            });
+            
+            // Handle node move (drag and drop)
+            function handleNodeMove(data) {
+                const nodeType = data.node.type;
+                const nodeId = data.node.data ? data.node.data.entityId : null;
+                const oldParentId = data.old_parent === '#' ? null : $('#knowledgeStructureTree').jstree(true).get_node(data.old_parent).data.entityId;
+                const newParentId = data.parent === '#' ? null : $('#knowledgeStructureTree').jstree(true).get_node(data.parent).data.entityId;
+                const oldPosition = data.old_position;
+                const newPosition = data.position;
+                
+                if (!nodeId) {
+                    console.error('Cannot move node without ID');
+                    $('#knowledgeStructureTree').jstree('refresh');
+                    return;
+                }
+                
+                // Send move request to server
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/MoveNode`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        nodeType: nodeType,
+                        nodeId: nodeId,
+                        oldParentId: oldParentId,
+                        newParentId: newParentId,
+                        oldPosition: oldPosition,
+                        newPosition: newPosition
+                    }),
+                    success: function(result) {
+                        if (result.success) {
+                            showToast('Elemento movido exitosamente', 'success');
+                        } else {
+                            showToast(result.message || 'Error al mover el elemento', 'danger');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al mover el elemento', 'danger');
+                        $('#knowledgeStructureTree').jstree('refresh');
+                    }
+                });
+            }
+            
+            // Dialog functions for blocks view
+            function showAddBlockDialog() {
+                $('#newBlockName').val('');
+                $('#addBlockModal').modal('show');
+            }
+            
+            function showAddQuestionDialog(blockNode) {
+                const blockId = blockNode.data.entityId;
+                $('#questionBlockId').val(blockId);
+                $('#newQuestionText').val('');
+                $('#newQuestionAnswerType').val('0');
+                $('#newQuestionIsDiagnostic').prop('checked', false);
+                $('#newQuestionPhase').val('0');
+                $('#newQuestionTopicId').val('');
+                
+                // Load available topics
+                loadAvailableTopics();
+                
+                $('#addQuestionModal').modal('show');
+            }
+            
+            function loadAvailableTopics() {
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/Tree`,
+                    type: 'GET',
+                    success: function(data) {
+                        const topicSelect = $('#newQuestionTopicId');
+                        topicSelect.empty();
+                        topicSelect.append('<option value="">-- Sin vincular a tema --</option>');
+                        
+                        // Extract topics from the tree structure
+                        if (data && data.length > 0) {
+                            const root = data[0];
+                            if (root.children) {
+                                root.children.forEach(module => {
+                                    if (module.type === 'module' && module.children) {
+                                        const optgroup = $(`<optgroup label="${module.text}"></optgroup>`);
+                                        module.children.forEach(topic => {
+                                            if (topic.type === 'topic' && topic.data && topic.data.entityId) {
+                                                optgroup.append(`<option value="${topic.data.entityId}">${topic.text}</option>`);
+                                            }
+                                        });
+                                        if (optgroup.children().length > 0) {
+                                            topicSelect.append(optgroup);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    },
+                    error: function() {
+                        console.error('Error loading topics');
+                    }
+                });
+            }
+            
+            function showEditBlockDialog(node) {
+                if (!node.data || !node.data.entityId) {
+                    showToast('No se puede editar este bloque', 'danger');
+                    return;
+                }
+                
+                $('#editElementTitle').text('Editar Bloque');
+                $('#editElementId').val(node.data.entityId);
+                $('#editElementType').val('block');
+                $('#editElementName').val(node.text);
+                $('#editElementOrder').val(node.data.order || 1);
+                $('#editElementContentGroup').hide();
+                $('#editElementModal').modal('show');
+            }
+            
+            // Removed duplicate showEditQuestionDialog - using the one from _EditFunctions.js
+            
+            function deleteBlock(node) {
+                const entityId = getNodeEntityId(node);
+                if (!entityId) {
+                    showToast('No se puede eliminar este bloque', 'danger');
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/blocks/${entityId}`,
+                    type: 'DELETE',
+                    success: function(result) {
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al eliminar el bloque', 'danger');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al eliminar el bloque', 'danger');
+                    }
+                });
+            }
+            
+            function deleteQuestion(node) {
+                const entityId = getNodeEntityId(node);
+                if (!entityId) {
+                    showToast('No se puede eliminar esta pregunta', 'danger');
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/questions/${entityId}`,
+                    type: 'DELETE',
+                    success: function(result) {
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al eliminar la pregunta', 'danger');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al eliminar la pregunta', 'danger');
+                    }
+                });
+            }
+            
+            function deleteAnswer(node) {
+                const entityId = getNodeEntityId(node);
+                if (!entityId) {
+                    showToast('No se puede eliminar esta opción de respuesta', 'danger');
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/answer-options/${entityId}`,
+                    type: 'DELETE',
+                    success: function(result) {
+                        if (result.success) {
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al eliminar la opción de respuesta', 'danger');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al eliminar la opción de respuesta', 'danger');
+                    }
+                });
+            }
+            
+            // Functions for creating questions linked to topics
+            function showAddQuestionToTopicDialog(topicNode) {
+                const topicId = getNodeEntityId(topicNode);
+                if (!topicId) {
+                    showToast('No se puede agregar preguntas a este tema', 'danger');
+                    return;
+                }
+                
+                // First, we need to get available blocks
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/BlocksTree`,
+                    type: 'GET',
+                    success: function(blocksData) {
+                        const modalHtml = `
+                            <div class="modal fade" id="addQuestionToTopicModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Crear Nueva Pregunta para ${topicNode.text}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form id="addQuestionToTopicForm">
+                                                <div class="mb-3">
+                                                    <label for="topicQuestionBlockId" class="form-label">Seleccionar Bloque *</label>
+                                                    <select class="form-control" id="topicQuestionBlockId" required>
+                                                        <option value="">-- Seleccione un bloque --</option>
+                                                    </select>
+                                                    <small class="form-text text-muted">
+                                                        Las preguntas deben pertenecer a un bloque, pero se vincularán al tema seleccionado
+                                                    </small>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="topicQuestionText" class="form-label">Texto de la Pregunta *</label>
+                                                    <textarea class="form-control" id="topicQuestionText" rows="3" required></textarea>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="topicQuestionAnswerType" class="form-label">Tipo de Respuesta</label>
+                                                    <select class="form-control" id="topicQuestionAnswerType">
+                                                        <option value="0">Texto Corto</option>
+                                                        <option value="1">Texto Largo</option>
+                                                        <option value="2">Sí/No</option>
+                                                        <option value="3">Opción Múltiple</option>
+                                                        <option value="4">Fecha</option>
+                                                        <option value="5">Número</option>
+                                                        <option value="6">Email</option>
+                                                        <option value="7">URL</option>
+                                                        <option value="8">Archivo</option>
+                                                        <option value="9">Lista</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox" id="topicQuestionIsDiagnostic">
+                                                        <label class="form-check-label" for="topicQuestionIsDiagnostic">
+                                                            Usar para diagnóstico
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="topicQuestionPhase" class="form-label">Fase de Aplicación</label>
+                                                    <select class="form-control" id="topicQuestionPhase">
+                                                        <option value="0">Registro</option>
+                                                        <option value="1">Evaluación</option>
+                                                        <option value="2">Ambas</option>
+                                                    </select>
+                                                </div>
+                                            </form>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="button" class="btn btn-primary" id="btnSaveQuestionToTopic">
+                                                <i class="ti ti-device-floppy"></i> Crear Pregunta
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Remove existing modal if any
+                        $('#addQuestionToTopicModal').remove();
+                        $('body').append(modalHtml);
+                        
+                        // Populate blocks dropdown
+                        const blockSelect = $('#topicQuestionBlockId');
+                        if (blocksData && blocksData.length > 0) {
+                            const projectNode = blocksData[0];
+                            if (projectNode.children) {
+                                projectNode.children.forEach(block => {
+                                    if (block.type === 'block' && block.data && block.data.entityId) {
+                                        blockSelect.append(`<option value="${block.data.entityId}">${block.text}</option>`);
+                                    }
+                                });
+                            }
+                        }
+                        
+                        // Bind save button
+                        $(document).off('click', '#btnSaveQuestionToTopic').on('click', '#btnSaveQuestionToTopic', function() {
+                            const blockId = $('#topicQuestionBlockId').val();
+                            const text = $('#topicQuestionText').val();
+                            const answerType = $('#topicQuestionAnswerType').val();
+                            const isDiagnostic = $('#topicQuestionIsDiagnostic').is(':checked');
+                            const phase = $('#topicQuestionPhase').val();
+                            
+                            if (!blockId || !text) {
+                                showToast('Por favor complete todos los campos requeridos', 'danger');
+                                return;
+                            }
+                            
+                            $.ajax({
+                                url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/questions`,
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    blockId: parseInt(blockId),
+                                    text: text,
+                                    answerType: parseInt(answerType),
+                                    isUsedForDiagnosis: isDiagnostic,
+                                    appliesToPhase: parseInt(phase),
+                                    topicId: topicId // Link to the selected topic
+                                }),
+                                success: function(result) {
+                                    if (result.success) {
+                                        $('#addQuestionToTopicModal').modal('hide');
+                                        showToast(result.message, 'success');
+                                        $('#knowledgeStructureTree').jstree('refresh');
+                                    } else {
+                                        showToast(result.message || 'Error al crear la pregunta', 'danger');
+                                    }
+                                },
+                                error: function() {
+                                    showToast('Error al crear la pregunta', 'danger');
+                                }
+                            });
+                        });
+                        
+                        // Show modal
+                        $('#addQuestionToTopicModal').modal('show');
+                    },
+                    error: function() {
+                        showToast('Error al cargar los bloques disponibles', 'danger');
+                    }
+                });
+            }
+            
+            // Function for linking existing questions to topics
+            function showLinkQuestionToTopicDialog(topicNode) {
+                const topicId = getNodeEntityId(topicNode);
+                if (!topicId) {
+                    showToast('No se puede vincular preguntas a este tema', 'danger');
+                    return;
+                }
+                
+                // Get all questions that are not already linked to this topic
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/BlocksTree`,
+                    type: 'GET',
+                    success: function(blocksData) {
+                        const modalHtml = `
+                            <div class="modal fade" id="linkQuestionToTopicModal" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Vincular Pregunta Existente a ${topicNode.text}</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label for="questionSearchInput" class="form-label">Buscar pregunta:</label>
+                                                <div class="input-group mb-3">
+                                                    <span class="input-group-text"><i class="ti ti-search"></i></span>
+                                                    <input type="text" 
+                                                           class="form-control" 
+                                                           id="questionSearchInput" 
+                                                           placeholder="Escriba para filtrar preguntas por texto..."
+                                                           autocomplete="off">
+                                                    <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn">
+                                                        <i class="ti ti-x"></i> Limpiar
+                                                    </button>
+                                                </div>
+                                                <small class="text-muted d-block mb-2">
+                                                    <span id="searchResultCount">0</span> pregunta(s) encontrada(s)
+                                                </small>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Seleccione una pregunta para vincular:</label>
+                                                <div id="questionsListContainer" style="max-height: 400px; overflow-y: auto;">
+                                                    <p class="text-muted">Cargando preguntas disponibles...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Remove existing modal if any
+                        $('#linkQuestionToTopicModal').remove();
+                        $('body').append(modalHtml);
+                        
+                        // Extract all questions from blocks tree
+                        const questionsHtml = [];
+                        if (blocksData && blocksData.length > 0) {
+                            const projectNode = blocksData[0];
+                            if (projectNode.children) {
+                                projectNode.children.forEach(block => {
+                                    if (block.type === 'block' && block.children) {
+                                        questionsHtml.push(`<h6 class="mt-3">${block.text}</h6>`);
+                                        block.children.forEach(question => {
+                                            if (question.type === 'question' && question.data) {
+                                                const isLinked = question.data.topicId == topicId;
+                                                const topicInfo = question.data.topicInfo || '';
+                                                questionsHtml.push(`
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input question-checkbox" 
+                                                               type="checkbox" 
+                                                               value="${question.data.entityId}" 
+                                                               id="question_${question.data.entityId}"
+                                                               ${isLinked ? 'checked disabled' : ''}>
+                                                        <label class="form-check-label" for="question_${question.data.entityId}">
+                                                            ${question.text}
+                                                            ${topicInfo && !isLinked ? `<small class="text-muted">(Vinculado a: ${topicInfo})</small>` : ''}
+                                                            ${isLinked ? '<small class="text-success">(Ya vinculado a este tema)</small>' : ''}
+                                                        </label>
+                                                    </div>
+                                                `);
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                        
+                        $('#questionsListContainer').html(questionsHtml.join('') || '<p class="text-muted">No hay preguntas disponibles</p>');
+                        
+                        // Store all question elements for search functionality
+                        const allQuestionElements = $('#questionsListContainer .form-check').toArray();
+                        const allBlockHeaders = $('#questionsListContainer h6').toArray();
+                        
+                        // Update search result count
+                        function updateSearchCount() {
+                            const visibleQuestions = $('#questionsListContainer .form-check:visible').length;
+                            $('#searchResultCount').text(visibleQuestions);
+                        }
+                        
+                        // Initial count
+                        updateSearchCount();
+                        
+                        // Search functionality
+                        $('#questionSearchInput').on('input', function() {
+                            const searchTerm = $(this).val().toLowerCase().trim();
+                            
+                            if (searchTerm === '') {
+                                // Show all questions and headers
+                                $(allQuestionElements).show();
+                                $(allBlockHeaders).show();
+                                updateSearchCount();
+                                return;
+                            }
+                            
+                            // Hide all headers initially
+                            $(allBlockHeaders).hide();
+                            
+                            // Filter questions
+                            let currentBlockHeader = null;
+                            let blockHasVisibleQuestions = false;
+                            
+                            $(allQuestionElements).each(function() {
+                                const questionText = $(this).find('.form-check-label').text().toLowerCase();
+                                const prevElement = $(this).prev();
+                                
+                                // Check if previous element is a block header
+                                if (prevElement.is('h6')) {
+                                    // Show previous block header if it had visible questions
+                                    if (currentBlockHeader && blockHasVisibleQuestions) {
+                                        $(currentBlockHeader).show();
+                                    }
+                                    currentBlockHeader = prevElement[0];
+                                    blockHasVisibleQuestions = false;
+                                }
+                                
+                                if (questionText.includes(searchTerm)) {
+                                    $(this).show();
+                                    blockHasVisibleQuestions = true;
+                                } else {
+                                    $(this).hide();
+                                }
+                            });
+                            
+                            // Show last block header if it had visible questions
+                            if (currentBlockHeader && blockHasVisibleQuestions) {
+                                $(currentBlockHeader).show();
+                            }
+                            
+                            updateSearchCount();
+                        });
+                        
+                        // Clear search button
+                        $('#clearSearchBtn').on('click', function() {
+                            $('#questionSearchInput').val('').trigger('input');
+                        });
+                        
+                        // Add link button dynamically when questions are selected
+                        $(document).off('change', '.question-checkbox').on('change', '.question-checkbox', function() {
+                            const selectedQuestions = $('.question-checkbox:checked:not(:disabled)').length;
+                            if (selectedQuestions > 0) {
+                                if ($('#btnLinkQuestions').length === 0) {
+                                    $('.modal-footer').prepend(`
+                                        <button type="button" class="btn btn-primary" id="btnLinkQuestions">
+                                            <i class="ti ti-link"></i> Vincular Preguntas Seleccionadas
+                                        </button>
+                                    `);
+                                }
+                            } else {
+                                $('#btnLinkQuestions').remove();
+                            }
+                        });
+                        
+                        // Handle link button click
+                        $(document).off('click', '#btnLinkQuestions').on('click', '#btnLinkQuestions', function() {
+                            const selectedQuestionIds = [];
+                            $('.question-checkbox:checked:not(:disabled)').each(function() {
+                                selectedQuestionIds.push($(this).val());
+                            });
+                            
+                            if (selectedQuestionIds.length === 0) {
+                                showToast('Por favor seleccione al menos una pregunta', 'warning');
+                                return;
+                            }
+                            
+                            // Link each selected question to the topic
+                            let completed = 0;
+                            let errors = 0;
+                            
+                            selectedQuestionIds.forEach(questionId => {
+                                // First get the question details
+                                $.ajax({
+                                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/questions/${questionId}`,
+                                    type: 'GET',
+                                    success: function(response) {
+                                        if (!response.success || !response.question) {
+                                            errors++;
+                                            return;
+                                        }
+                                        
+                                        const questionData = response.question;
+                                        // Parse enum values from strings
+                                        const answerTypeValue = parseInt(questionData.answerType) || 0;
+                                        const appliesToPhaseValue = parseInt(questionData.appliesToPhase) || 0;
+                                        
+                                        // Now update the question with the new topicId
+                                        $.ajax({
+                                            url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/questions/${questionId}`,
+                                            type: 'PUT',
+                                            contentType: 'application/json',
+                                            data: JSON.stringify({
+                                                text: questionData.text,
+                                                answerType: answerTypeValue,
+                                                isUsedForDiagnosis: questionData.isUsedForDiagnosis || false,
+                                                appliesToPhase: appliesToPhaseValue,
+                                                order: questionData.order || 999,
+                                                topicId: topicId
+                                            }),
+                                            success: function() {
+                                                completed++;
+                                                if (completed + errors === selectedQuestionIds.length) {
+                                                    $('#linkQuestionToTopicModal').modal('hide');
+                                                    if (errors > 0) {
+                                                        showToast(`${completed} pregunta(s) vinculada(s), ${errors} error(es)`, 'warning');
+                                                    } else {
+                                                        showToast(`${completed} pregunta(s) vinculada(s) exitosamente`, 'success');
+                                                    }
+                                                    $('#knowledgeStructureTree').jstree('refresh');
+                                                }
+                                            },
+                                            error: function(xhr) {
+                                                errors++;
+                                                console.error('Error updating question:', xhr.responseText);
+                                                if (xhr.status === 400 && xhr.responseJSON) {
+                                                    const response = xhr.responseJSON;
+                                                    if (response.errors) {
+                                                        // Show validation errors
+                                                        const errorMessages = [];
+                                                        for (const field in response.errors) {
+                                                            errorMessages.push(...response.errors[field]);
+                                                        }
+                                                        console.error('Validation errors:', errorMessages.join(', '));
+                                                    }
+                                                }
+                                                if (completed + errors === selectedQuestionIds.length) {
+                                                    $('#linkQuestionToTopicModal').modal('hide');
+                                                    showToast(`${completed} pregunta(s) vinculada(s), ${errors} error(es)`, 'warning');
+                                                    $('#knowledgeStructureTree').jstree('refresh');
+                                                }
+                                            }
+                                        });
+                                    },
+                                    error: function() {
+                                        errors++;
+                                        if (completed + errors === selectedQuestionIds.length) {
+                                            $('#linkQuestionToTopicModal').modal('hide');
+                                            showToast(`Error al obtener datos de las preguntas`, 'danger');
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                        
+                        // Show modal
+                        $('#linkQuestionToTopicModal').modal('show');
+                    },
+                    error: function() {
+                        showToast('Error al cargar las preguntas disponibles', 'danger');
+                    }
+                });
+            }
+            
+            function showAddAnswerDialog(questionNode) {
+                const entityId = getNodeEntityId(questionNode);
+                if (!entityId) {
+                    showToast('No se puede agregar opciones a esta pregunta', 'danger');
+                    return;
+                }
+                
+                // Create modal for adding answer options
+                const modalHtml = `
+                    <div class="modal fade" id="addAnswerModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Agregar Opción de Respuesta</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="addAnswerForm">
+                                        <input type="hidden" id="answerQuestionId" value="${entityId}" />
+                                        
+                                        <div class="mb-3">
+                                            <label for="newAnswerText" class="form-label">Texto de la Opción</label>
+                                            <input type="text" class="form-control" id="newAnswerText" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="newAnswerScore" class="form-label">Puntaje</label>
+                                            <input type="number" class="form-control" id="newAnswerScore" min="0" max="100" value="0" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="newAnswerFoda" class="form-label">Tipo FODA</label>
+                                            <select class="form-control" id="newAnswerFoda" required>
+                                                <option value="78">No Definido</option>
+                                                <option value="70">Fortaleza</option>
+                                                <option value="79">Oportunidad</option>
+                                                <option value="68">Debilidad</option>
+                                                <option value="65">Amenaza</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="newAnswerFodaExplanation" class="form-label">Explicación FODA</label>
+                                            <textarea class="form-control" id="newAnswerFodaExplanation" rows="2"></textarea>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="newAnswerOdsr" class="form-label">Tipo ODSR</label>
+                                            <select class="form-control" id="newAnswerOdsr" required>
+                                                <option value="78">No Definido</option>
+                                                <option value="79">Ofensiva</option>
+                                                <option value="68">Defensiva</option>
+                                                <option value="83">Supervivencia</option>
+                                                <option value="82">Reorientación</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="newAnswerOdsrExplanation" class="form-label">Explicación ODSR</label>
+                                            <textarea class="form-control" id="newAnswerOdsrExplanation" rows="2"></textarea>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="newAnswerFollowUpQuestion" class="form-label">Pregunta de Seguimiento (opcional)</label>
+                                            <textarea class="form-control" id="newAnswerFollowUpQuestion" rows="2" placeholder="¿Alguna pregunta adicional cuando se seleccione esta opción?"></textarea>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="newAnswerOrder" class="form-label">Orden</label>
+                                            <input type="number" class="form-control" id="newAnswerOrder" min="1" value="1" required>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-primary" id="btnSaveNewAnswer">
+                                        <i class="ti ti-plus"></i> Agregar Opción
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal if any
+                $('#addAnswerModal').remove();
+                $('body').append(modalHtml);
+                
+                // Bind save button event
+                $('#btnSaveNewAnswer').on('click', function() {
+                    saveNewAnswer();
+                });
+                
+                // Show modal
+                $('#addAnswerModal').modal('show');
+            }
+            
+            function saveNewAnswer() {
+                const questionId = $('#answerQuestionId').val();
+                const text = $('#newAnswerText').val();
+                const score = $('#newAnswerScore').val();
+                const foda = $('#newAnswerFoda').val();
+                const fodaExplanation = $('#newAnswerFodaExplanation').val();
+                const odsr = $('#newAnswerOdsr').val();
+                const odsrExplanation = $('#newAnswerOdsrExplanation').val();
+                const followUpQuestionText = $('#newAnswerFollowUpQuestion').val();
+                const order = $('#newAnswerOrder').val();
+                
+                if (!text) {
+                    showToast('Por favor ingrese el texto de la opción', 'danger');
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/questions/${questionId}/answer-options`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        text: text,
+                        score: parseInt(score),
+                        foda: parseInt(foda),
+                        fodaExplanation: fodaExplanation || '',
+                        odsr: parseInt(odsr),
+                        odsrExplanation: odsrExplanation || '',
+                        order: parseInt(order),
+                        followUpQuestionText: followUpQuestionText || null
+                    }),
+                    success: function(result) {
+                        if (result.success) {
+                            $('#addAnswerModal').modal('hide');
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al crear la opción de respuesta', 'danger');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al crear la opción de respuesta', 'danger');
+                    }
+                });
+            }
+            
+            // Dialog functions for modules view
+            function showAddModuleDialog() {
+                $('#newModuleName').val('');
+                $('#addModuleModal').modal('show');
+            }
+            
+            function showAddTopicDialog(moduleNode) {
+                const entityId = getNodeEntityId(moduleNode);
+                if (!entityId) {
+                    showToast('No se puede agregar temas a este módulo', 'danger');
+                    return;
+                }
+                
+                const modalHtml = `
+                    <div class="modal fade" id="addTopicModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Agregar Tema</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="addTopicForm">
+                                        <input type="hidden" id="topicModuleId" value="${entityId}" />
+                                        <div class="mb-3">
+                                            <label for="newTopicName" class="form-label">Nombre del Tema</label>
+                                            <input type="text" class="form-control" id="newTopicName" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newTopicOrder" class="form-label">Orden</label>
+                                            <input type="number" class="form-control" id="newTopicOrder" min="1" value="1" required>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-primary" id="btnSaveNewTopic">
+                                        <i class="ti ti-plus"></i> Agregar Tema
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#addTopicModal').remove();
+                $('body').append(modalHtml);
+                
+                // Bind save button event
+                $('#btnSaveNewTopic').on('click', function() {
+                    saveNewTopic();
+                });
+                
+                $('#addTopicModal').modal('show');
+            }
+            
+            function saveNewTopic() {
+                const moduleId = $('#topicModuleId').val();
+                const name = $('#newTopicName').val();
+                const order = $('#newTopicOrder').val();
+                
+                if (!name) {
+                    showToast('Por favor ingrese el nombre del tema', 'danger');
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/topics`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        moduleId: parseInt(moduleId),
+                        name: name,
+                        order: parseInt(order)
+                    }),
+                    success: function(result) {
+                        if (result.success) {
+                            $('#addTopicModal').modal('hide');
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al crear el tema', 'danger');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al crear el tema', 'danger');
+                    }
+                });
+            }
+            
+            function showAddSubjectDialog(topicNode) {
+                const entityId = getNodeEntityId(topicNode);
+                if (!entityId) {
+                    showToast('No se puede agregar materias a este tema', 'danger');
+                    return;
+                }
+                
+                const modalHtml = `
+                    <div class="modal fade" id="addSubjectModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Agregar Materia</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="addSubjectForm">
+                                        <input type="hidden" id="subjectTopicId" value="${entityId}" />
+                                        <div class="mb-3">
+                                            <label for="newSubjectName" class="form-label">Nombre de la Materia</label>
+                                            <input type="text" class="form-control" id="newSubjectName" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newSubjectContent" class="form-label">Contenido</label>
+                                            <textarea class="form-control" id="newSubjectContent" rows="4"></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="newSubjectOrder" class="form-label">Orden</label>
+                                            <input type="number" class="form-control" id="newSubjectOrder" min="1" value="1" required>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="button" class="btn btn-primary" id="btnSaveNewSubject">
+                                        <i class="ti ti-plus"></i> Agregar Materia
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#addSubjectModal').remove();
+                $('body').append(modalHtml);
+                
+                // Bind save button event
+                $('#btnSaveNewSubject').on('click', function() {
+                    saveNewSubject();
+                });
+                
+                $('#addSubjectModal').modal('show');
+            }
+            
+            function saveNewSubject() {
+                const topicId = $('#subjectTopicId').val();
+                const name = $('#newSubjectName').val();
+                const content = $('#newSubjectContent').val();
+                const order = $('#newSubjectOrder').val();
+                
+                if (!name) {
+                    showToast('Por favor ingrese el nombre de la materia', 'danger');
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/subjects`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        topicId: parseInt(topicId),
+                        name: name,
+                        content: content || '',
+                        order: parseInt(order)
+                    }),
+                    success: function(result) {
+                        if (result.success) {
+                            $('#addSubjectModal').modal('hide');
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al crear la materia', 'danger');
+                        }
+                    },
+                    error: function() {
+                        showToast('Error al crear la materia', 'danger');
+                    }
+                });
+            }
+            
+            // Handle save element button
+            $('#btnSaveElement').on('click', function() {
+                const elementId = $('#editElementId').val();
+                const elementType = $('#editElementType').val();
+                const name = $('#editElementName').val();
+                const order = $('#editElementOrder').val();
+                const content = $('#editElementContent').val();
+                
+                if (!name || !order) {
+                    showToast('Por favor complete todos los campos requeridos', 'danger');
+                    return;
+                }
+                
+                let updateUrl = '';
+                let data = {};
+                
+                switch(elementType) {
+                    case 'module':
+                        updateUrl = `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/modules/${elementId}`;
+                        data = { name: name, order: parseInt(order) };
+                        break;
+                    case 'block':
+                        updateUrl = `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/blocks/${elementId}`;
+                        data = { name: name, order: parseInt(order) };
+                        break;
+                    case 'topic':
+                        updateUrl = `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/topics/${elementId}`;
+                        data = { name: name, order: parseInt(order) };
+                        break;
+                    case 'subject':
+                        updateUrl = `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/subjects/${elementId}`;
+                        data = { name: name, content: content, order: parseInt(order) };
+                        break;
+                    default:
+                        showToast('Tipo de elemento no válido', 'danger');
+                        return;
+                }
+                
+                $.ajax({
+                    url: updateUrl,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    beforeSend: function() {
+                        $('#btnSaveElement').prop('disabled', true);
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            $('#editElementModal').modal('hide');
+                            showToast(result.message, 'success');
+                            // Reload the tree to show updated data
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al actualizar', 'danger');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error updating element:', error);
+                        showToast('Error al actualizar el elemento', 'danger');
+                    },
+                    complete: function() {
+                        $('#btnSaveElement').prop('disabled', false);
+                    }
+                });
+            });
+            
+            // Handle save block button
+            $('#btnSaveBlock').on('click', function() {
+                const blockName = $('#newBlockName').val();
+                
+                if (!blockName) {
+                    showToast('Por favor ingrese el nombre del bloque', 'danger');
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/blocks`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ name: blockName }),
+                    beforeSend: function() {
+                        $('#btnSaveBlock').prop('disabled', true);
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            $('#addBlockModal').modal('hide');
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al crear el bloque', 'danger');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error creating block:', error);
+                        showToast('Error al crear el bloque', 'danger');
+                    },
+                    complete: function() {
+                        $('#btnSaveBlock').prop('disabled', false);
+                    }
+                });
+            });
+            
+            // Handle save question button
+            $('#btnSaveQuestion').on('click', function() {
+                const blockId = $('#questionBlockId').val();
+                const questionText = $('#newQuestionText').val();
+                const answerType = $('#newQuestionAnswerType').val();
+                const isDiagnostic = $('#newQuestionIsDiagnostic').is(':checked');
+                const phase = $('#newQuestionPhase').val();
+                const topicId = $('#newQuestionTopicId').val();
+                
+                if (!questionText) {
+                    showToast('Por favor ingrese el texto de la pregunta', 'danger');
+                    return;
+                }
+                
+                const requestData = {
+                    blockId: parseInt(blockId),
+                    text: questionText,
+                    answerType: parseInt(answerType),
+                    isUsedForDiagnosis: isDiagnostic,
+                    appliesToPhase: parseInt(phase)
+                };
+                
+                // Add topicId only if selected
+                if (topicId) {
+                    requestData.topicId = parseInt(topicId);
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/questions`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(requestData),
+                    beforeSend: function() {
+                        $('#btnSaveQuestion').prop('disabled', true);
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            $('#addQuestionModal').modal('hide');
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al crear la pregunta', 'danger');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error creating question:', error);
+                        showToast('Error al crear la pregunta', 'danger');
+                    },
+                    complete: function() {
+                        $('#btnSaveQuestion').prop('disabled', false);
+                    }
+                });
+            });
+            
+            // Handle save module button
+            $('#btnSaveModule').on('click', function() {
+                const moduleName = $('#newModuleName').val();
+                
+                if (!moduleName) {
+                    showToast('Por favor ingrese el nombre del módulo', 'danger');
+                    return;
+                }
+                
+                $.ajax({
+                    url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/modules`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ name: moduleName }),
+                    beforeSend: function() {
+                        $('#btnSaveModule').prop('disabled', true);
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            $('#addModuleModal').modal('hide');
+                            showToast(result.message, 'success');
+                            $('#knowledgeStructureTree').jstree('refresh');
+                        } else {
+                            showToast(result.message || 'Error al crear el módulo', 'danger');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error creating module:', error);
+                        showToast('Error al crear el módulo', 'danger');
+                    },
+                    complete: function() {
+                        $('#btnSaveModule').prop('disabled', false);
+                    }
+                });
+            });
+        });
+    </script>
+}

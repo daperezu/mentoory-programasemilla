@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Core.Application\LinaSys.Core.Application.csproj" />
+    <ProjectReference Include="..\Shared.Domain\LinaSys.Shared.Domain.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,68 @@
+@model dynamic
+@{
+    var value = Model?.Value ?? "0";
+    var label = Model?.Label ?? "Estadística";
+    var icon = Model?.Icon ?? "fa-chart-bar";
+    var color = Model?.Color ?? "primary";
+    var trend = Model?.Trend;
+    var trendValue = Model?.TrendValue ?? 0;
+    var subtitle = Model?.Subtitle;
+    var link = Model?.Link;
+    var linkText = Model?.LinkText ?? "Ver más";
+    var format = Model?.Format ?? "number"; // number, currency, percentage
+    
+    // Format value based on type
+    string formattedValue = format switch
+    {
+        "currency" => $"${value:N0}",
+        "percentage" => $"{value}%",
+        _ => value.ToString()
+    };
+}
+
+<div class="card h-100">
+    <div class="card-body">
+        <div class="d-flex align-items-center mb-3">
+            <div class="flex-1">
+                <span class="text-700 fs-9 text-uppercase fw-bold">@label</span>
+            </div>
+            <div class="h-30px">
+                <span class="fas @icon text-@color"></span>
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-end justify-content-between">
+            <div>
+                <h2 class="mb-0 text-1000">@formattedValue</h2>
+                
+                @if (trend != null)
+                {
+                    var isPositive = trendValue >= 0;
+                    var trendColor = trend == "good" ? (isPositive ? "success" : "danger") : (isPositive ? "danger" : "success");
+                    
+                    <div class="d-flex align-items-center mt-1">
+                        <span class="badge badge-phoenix badge-phoenix-@trendColor">
+                            <span class="fas fa-caret-@(isPositive ? "up" : "down") me-1"></span>
+                            @Math.Abs(trendValue)%
+                        </span>
+                        @if (subtitle != null)
+                        {
+                            <span class="fs-10 text-500 ms-2">@subtitle</span>
+                        }
+                    </div>
+                }
+                else if (subtitle != null)
+                {
+                    <p class="fs-10 text-500 mb-0 mt-1">@subtitle</p>
+                }
+            </div>
+            
+            @if (link != null)
+            {
+                <a href="@link" class="btn btn-link btn-sm p-0">
+                    @linkText <span class="fas fa-chevron-right ms-1 fs-11"></span>
+                </a>
+            }
+        </div>
+    </div>
+</div>

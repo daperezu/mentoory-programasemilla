@@ -1,0 +1,72 @@
+@model LinaSys.Web.Areas.KnowledgeStructure.Models.KnowledgeStructure.CreateKnowledgeStructureViewModel
+
+@{
+    ViewData["Title"] = "Nueva Estructura de Conocimiento";
+}
+
+<page-header title="@ViewData["Title"]">
+    <breadcrumb>
+        <breadcrumb-item title="Inicio" asp-area="" asp-controller="Home" asp-action="Index"></breadcrumb-item>
+        <breadcrumb-item title="Estructuras de Conocimiento" asp-area="KnowledgeStructure" asp-controller="KnowledgeStructure" asp-action="Index"></breadcrumb-item>
+        <breadcrumb-item title="Nueva" active="true"></breadcrumb-item>
+    </breadcrumb>
+</page-header>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" />
+                            <label asp-for="IsActive" class="form-check-label"></label>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Guardar
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Información</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Las estructuras de conocimiento definen la organización general del contenido educativo en el sistema.
+                </p>
+                <p class="text-muted">
+                    Una vez creada, podrá agregar módulos, temas y materias para completar la estructura.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

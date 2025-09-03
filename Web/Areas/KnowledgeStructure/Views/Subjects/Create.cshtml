@@ -1,0 +1,145 @@
+@model LinaSys.Web.Areas.KnowledgeStructure.Models.Subject.CreateSubjectViewModel
+
+@{
+    ViewData["Title"] = "Crear Tema";
+}
+
+<div class="page-header">
+    <div class="row">
+        <div class="col-sm-12">
+            <h3 class="page-title">@ViewData["Title"]</h3>
+            <ul class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index">Inicio</a></li>
+                <li class="breadcrumb-item">Estructura de Conocimiento</li>
+                <li class="breadcrumb-item"><a asp-action="Index">Temas</a></li>
+                <li class="breadcrumb-item active">Crear</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Nuevo Tema</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="KnowledgeStructureId"></label>
+                                <select asp-for="KnowledgeStructureId" asp-items="Model.KnowledgeStructureOptions" class="form-control" id="knowledgeStructureSelect">
+                                    <option value="">-- Seleccione una estructura --</option>
+                                </select>
+                                <span asp-validation-for="KnowledgeStructureId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="StructureModuleId"></label>
+                                <select asp-for="StructureModuleId" asp-items="Model.ModuleOptions" class="form-control" id="moduleSelect" disabled>
+                                    <option value="">-- Seleccione un módulo --</option>
+                                </select>
+                                <span asp-validation-for="StructureModuleId" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="StructureTopicId"></label>
+                                <select asp-for="StructureTopicId" asp-items="Model.TopicOptions" class="form-control" id="topicSelect" disabled>
+                                    <option value="">-- Seleccione un tema --</option>
+                                </select>
+                                <span asp-validation-for="StructureTopicId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="Title"></label>
+                                <input asp-for="Title" class="form-control" />
+                                <span asp-validation-for="Title" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Content"></label>
+                        <textarea asp-for="Content" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Content" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-save"></i> Guardar
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fa fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function() {
+            // Handle knowledge structure change
+            $('#knowledgeStructureSelect').change(function() {
+                var knowledgeStructureId = $(this).val();
+                var moduleSelect = $('#moduleSelect');
+                var topicSelect = $('#topicSelect');
+                
+                // Clear and disable dependent dropdowns
+                moduleSelect.empty().append('<option value="">-- Seleccione un módulo --</option>').prop('disabled', true);
+                topicSelect.empty().append('<option value="">-- Seleccione un tema --</option>').prop('disabled', true);
+                
+                if (knowledgeStructureId) {
+                    // Load modules
+                    $.get('@Url.Action("GetModulesByKnowledgeStructure")', { knowledgeStructureId: knowledgeStructureId })
+                        .done(function(data) {
+                            $.each(data, function(index, item) {
+                                moduleSelect.append($('<option>', { 
+                                    value: item.value,
+                                    text: item.text 
+                                }));
+                            });
+                            moduleSelect.prop('disabled', false);
+                        });
+                }
+            });
+            
+            // Handle module change
+            $('#moduleSelect').change(function() {
+                var structureModuleId = $(this).val();
+                var topicSelect = $('#topicSelect');
+                
+                // Clear and disable topic dropdown
+                topicSelect.empty().append('<option value="">-- Seleccione un tema --</option>').prop('disabled', true);
+                
+                if (structureModuleId) {
+                    // Load topics
+                    $.get('@Url.Action("GetTopicsByModule")', { structureModuleId: structureModuleId })
+                        .done(function(data) {
+                            $.each(data, function(index, item) {
+                                topicSelect.append($('<option>', { 
+                                    value: item.value,
+                                    text: item.text 
+                                }));
+                            });
+                            topicSelect.prop('disabled', false);
+                        });
+                }
+            });
+        });
+    </script>
+}

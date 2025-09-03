@@ -1,0 +1,53 @@
+@model LinaSys.Core.Application.Navigation.Queries.NavigationMenuDto
+
+<nav class="navbar navbar-vertical navbar-expand-lg">
+    <div class="collapse navbar-collapse" id="navbarVerticalCollapse">
+        <div class="navbar-vertical-content">
+            <ul class="navbar-nav flex-column" id="navbarVerticalNav">
+                @if (Model.Items != null && Model.Items.Any())
+                {
+                    @foreach (var item in Model.Items)
+                    {
+                        @if (item.IsSection && item.Children != null && item.Children.Any())
+                        {
+                            @* Sections with children are rendered as collapsible parent items *@
+                            <li class="nav-item">
+                                <partial name="_MenuItemPartial" model="item" />
+                            </li>
+                        }
+                        else if (item.IsSection && (item.Children == null || !item.Children.Any()))
+                        {
+                            @* Section without children - render as label *@
+                            <li class="nav-item">
+                                <p class="navbar-vertical-label">
+                                    @item.DisplayText
+                                </p>
+                                <hr class="navbar-vertical-line" />
+                            </li>
+                        }
+                        else
+                        {
+                            @* Regular menu items wrapped in nav-item *@
+                            <li class="nav-item">
+                                <partial name="_MenuItemPartial" model="item" />
+                            </li>
+                        }
+                    }
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <span class="text-muted">No hay elementos de menú disponibles</span>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <div class="navbar-vertical-footer">
+        <button class="btn navbar-vertical-toggle border-0 fw-semibold w-100 white-space-nowrap d-flex align-items-center">
+            <span class="uil uil-left-arrow-to-left fs-8"></span>
+            <span class="uil uil-arrow-from-right fs-8"></span>
+            <span class="navbar-vertical-footer-text ms-2">Ocultar menú</span>
+        </button>
+    </div>
+</nav>

@@ -1,0 +1,265 @@
+﻿@using LinaSys.Web.Areas.BusinessIncubators.Models.BusinessIncubator
+@using LinaSys.Web.Extensions
+@model EditViewModel
+
+@{
+    ViewData["Title"] = "Editar Incubadora";
+
+    const string tabActiveCss = "active";
+    const string tabShowActiveCss = "show active";
+
+    var (detailsTabCss, detailsTabLinkCss) = ViewBag.Tab == EditViewModel.DetailsTabId ? (tabShowActiveCss, tabActiveCss) : (string.Empty, string.Empty);
+    var (statusTabCss, statusTabLinkCss) = ViewBag.Tab == EditViewModel.StatusTabId ? (tabShowActiveCss, tabActiveCss) : (string.Empty, string.Empty);
+    var (subscriptionTabCss, subscriptionTabLinkCss) = ViewBag.Tab == EditViewModel.SubscriptionTabId ? (tabShowActiveCss, tabActiveCss) : (string.Empty, string.Empty);
+}
+
+<style>
+    .warning-icon-wrapper svg {
+        transition: transform 0.3s ease;
+    }
+
+    .btn:hover .warning-icon-wrapper svg {
+        transform: rotate(-15deg) scale(1.5);
+    }
+</style>
+
+<h4 class="mb-3">
+    <span class="fa-solid fa-edit"></span>
+    Incubadora: @Model.Name
+</h4>
+
+<div class="row g-0 border-top border-bottom">
+    <div class="col-sm-3">
+        <div class="nav flex-sm-column border-bottom border-bottom-sm-0 border-end-sm fs-9 vertical-tab h-100 justify-content-between" role="tablist" aria-orientation="vertical">
+            <a class="nav-link border-end border-end-sm-0 border-bottom-sm text-center text-sm-start cursor-pointer outline-none d-sm-flex align-items-sm-center @detailsTabLinkCss" id="detailsTab" data-bs-toggle="tab" data-bs-target="#@EditViewModel.DetailsTabId" role="tab" aria-controls="@EditViewModel.DetailsTabId" aria-selected="false">
+                <span class="me-sm-2 fs-4 nav-icons" data-feather="tag"></span>
+                <span class="d-none d-sm-inline">Detalles</span>
+            </a>
+            <a class="nav-link border-end border-end-sm-0 border-bottom-sm text-center text-sm-start cursor-pointer outline-none d-sm-flex align-items-sm-center @statusTabLinkCss" id="statusTab" data-bs-toggle="tab" data-bs-target="#@EditViewModel.StatusTabId" role="tab" aria-controls="@EditViewModel.StatusTabId" aria-selected="false">
+                <span class="me-sm-2 fs-4 nav-icons" data-feather="power"></span>
+                <span class="d-none d-sm-inline">Estado</span>
+            </a>
+            <a class="nav-link border-end border-end-sm-0 border-bottom-sm text-center text-sm-start cursor-pointer outline-none d-sm-flex align-items-sm-center @subscriptionTabLinkCss" id="subscriptionTab" data-bs-toggle="tab" data-bs-target="#@EditViewModel.SubscriptionTabId" role="tab" aria-controls="@EditViewModel.SubscriptionTabId" aria-selected="false">
+                <span class="me-sm-2 fs-4 nav-icons" data-feather="package"></span>
+                <span class="d-none d-sm-inline">Subscripción</span>
+            </a>
+        </div>
+    </div>
+    <div class="col-sm-9">
+        <div class="tab-content py-3 ps-sm-4 h-100">
+
+            <!-- Details tab -->
+            <div class="tab-pane fade @detailsTabCss" id="@EditViewModel.DetailsTabId" role="tabpanel">
+                <form asp-action="UpdateDetails" asp-route-id="@Model.Id" asp-antiforgery="true" class="needs-validation" novalidate="">
+                    <h4 class="mb-3 d-sm-none">Detalles</h4>
+                    <div class="row g-3">
+                        <div class="col-12 col-lg-6">
+                            <label class="form-label" asp-for="Name">Nombre</label>
+                            <input asp-for="Name" class="form-control" type="text" placeholder="Nombre" required />
+                            <span asp-validation-for="Name"></span>
+                        </div>
+                        <div class="col-12 col-lg-6">
+                            <label class="form-label" asp-for="Key">Llave</label>
+                            <input class="form-control" type="text" placeholder="Llave" asp-for="Key" required />
+                            <span asp-validation-for="Key"></span>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" asp-for="Description">Descripción</label>
+                            <textarea class="form-control" asp-for="Description" placeholder="Descripción"></textarea>
+                        </div>
+                        <div class="col-12">
+                            <button class="btn btn-primary px-8 px-sm-11 me-2" type="submit">Guardar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Status tab -->
+            <div class="tab-pane fade @statusTabCss" id="@EditViewModel.StatusTabId" role="tabpanel" aria-labelledby="statusTab">
+                <form class="row mb-6 needs-validation" asp-action="UpdateStatus" asp-route-id="@Model.Id" asp-antiforgery="true" novalidate="">
+
+                    <div class="row mb-6 d-sm-none">
+                        <h4>Estado</h4>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="col-12">
+                            <label class="form-label" asp-for="Status">Estado actual</label>
+                            <select class="form-select" asp-for="Status" asp-items="Model.StatusOptions" required>
+                                <option value="">Seleccione un estado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-6 d-flex align-items-end position-relative">
+                        <button type="submit" class="btn btn-primary position-relative">
+                            Cambiar estado
+                            <span class="warning-icon-wrapper position-absolute top-0 start-100 translate-middle"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  title="Cambiar el estado de una incubadora afecta todos sus proyectos">
+                                <i data-feather="alert-triangle" class="text-warning" style="font-size: 1rem;"></i>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Subscription tab -->
+            <div class="tab-pane fade @subscriptionTabCss" id="@EditViewModel.SubscriptionTabId" role="tabpanel" aria-labelledby="subscriptionTab">
+
+                <div class="row mb-6 d-sm-none">
+                    <h4>Subscripción</h4>
+                </div>
+
+                <form class="row mb-6 needs-validation" asp-action="UpdateSubscription" asp-route-id="@Model.Id" asp-antiforgery="true" novalidate="">
+                    <div class="col-6">
+                        <h4 class="fs-9 p-0 mb-2 ms-n2">Subscripción actual</h4>
+                        <select asp-for="PackageVersionId" class="form-select" asp-items="Model.PackageOptions" required>
+                            <option value="">Seleccione una subscripción</option>
+                        </select>
+                    </div>
+
+                    <div class="col-6 d-flex align-items-end position-relative">
+                        <button type="submit" class="btn btn-primary position-relative">
+                            Cambiar subscripción
+                            <span class="warning-icon-wrapper position-absolute top-0 start-100 translate-middle"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  title="Cambiar la subscripción podría inhabilitar usuarios y proyectos">
+                                <i data-feather="alert-triangle" class="text-warning" style="font-size: 1rem;"></i>
+                            </span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="row mb-6">
+                    <h4 class="fs-9 ms-n2">Límites efectivos</h4>
+                    @if (!Model.EffectiveLimits.Any())
+                    {
+                        <p>No tiene límites efectivos. Esto es un error.</p>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm fs-9 mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="border-translucent ps-3">Tipo</th>
+                                        <th class="border-translucent text-center">Cantidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="list">
+                                    @{
+                                        foreach (var limit in Model.EffectiveLimits)
+                                        {
+                                            <tr>
+                                                <td class="align-middle ps-3">@limit.ToView()</td>
+                                                <td class="align-middle text-center">@limit.Quantity</td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between">
+                    <h4 class="fs-9 ms-n2">Extensiones a límites de la subscripción</h4>
+                    @if (!Model.LimitOverrides.Any())
+                    {
+                        <p class="mb-0 ms-3">No tiene agregaciones a límites registrados.</p>
+                    }
+                </div>
+
+                <div class="row">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm fs-9 mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="border-translucent  align-middle ps-3">Tipo</th>
+                                    <th class="border-translucent align-middle text-center">Cantidad</th>
+                                    <th class="border-translucent align-middle text-end">
+                                        <div class="d-flex justify-content-end align-items-center gap-2">
+                                            <span>Acciones</span>
+                                            
+                                            @if (Model.LimitOverrides.Any())
+                                            {
+                                                <div class="btn-reveal-trigger position-static">
+                                                    <button class="d-inline btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10"
+                                                            type="button"
+                                                            data-bs-toggle="dropdown"
+                                                            data-boundary="window"
+                                                            aria-haspopup="true"
+                                                            aria-expanded="false"
+                                                            data-bs-reference="parent">
+                                                        <span class="fas fa-ellipsis-h fs-10"></span>
+                                                    </button>
+                                                    <div class="dropdown-menu dropdown-menu-end py-2">
+                                                        <form asp-action="ClearAllLimits" asp-route-id="@Model.Id" asp-antiforgery="true" class="needs-validation mb-0" novalidate="">
+                                                            <button class="dropdown-item d-inline-flex align-items-center text-danger" type="submit">
+                                                                <i data-feather="trash-2" class="me-2"></i>
+                                                                Eliminar todos
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="list">
+
+                                @{
+                                    foreach (var limit in Model.LimitOverrides)
+                                    {
+                                        <tr>
+                                            <td class="align-middle ps-3">@limit.ToView()</td>
+                                            <td class="align-middle text-center">@limit.Quantity</td>
+                                            <td class="align-middle white-space-nowrap text-end pe-0">
+                                                <form asp-action="DeleteExtraLimit" asp-route-id="@Model.Id" asp-antiforgery="true">
+                                                    <input type="hidden" name="Type" value="@limit.Type" />
+                                                    <input type="hidden" name="Quantity" value="@limit.Quantity" />
+
+                                                    <div class="btn-reveal-trigger position-static">
+                                                        <button class="btn btn-sm dropdown-toggle dropdown-caret-none transition-none btn-reveal fs-10" type="button" data-bs-toggle="dropdown" data-boundary="window" aria-haspopup="true" aria-expanded="false" data-bs-reference="parent"><span class="fas fa-ellipsis-h fs-10"></span></button>
+                                                        <div class="dropdown-menu dropdown-menu-end py-2">
+                                                            <button class="dropdown-item d-inline-flex align-items-center text-danger" type="submit">
+                                                                <i data-feather="trash-2" class="me-2"></i>
+                                                                Eliminar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+
+                                <tr>
+                                    <form asp-action="AddExtraLimit" asp-route-id="@Model.Id" asp-antiforgery="true" class="needs-validation" novalidate="">
+                                        <td class="align-middle">
+                                            <select name="Type" class="form-select" asp-items="Model.PackageLimitTypes" required>
+                                                <option value="">Seleccione el tipo</option>
+                                            </select>
+                                        </td>
+                                        <td class="align-middle">
+                                            <input class="form-control text-center" name="Quantity" type="number" placeholder="0" required />
+                                        </td>
+                                        <td class="align-middle text-end">
+                                            <button class="btn btn-link fs-9 p-0" type="submit">
+                                                <i data-feather="plus" class="me-2"></i>Incrementar límite
+                                            </button>
+                                        </td>
+                                    </form>
+                                </tr>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

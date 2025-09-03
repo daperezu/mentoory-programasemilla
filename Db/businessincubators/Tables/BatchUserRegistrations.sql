@@ -1,0 +1,26 @@
+CREATE TABLE [businessincubators].[BatchUserRegistrations] (
+    [Id]                 BIGINT IDENTITY (1, 1) NOT NULL,
+    [ExternalId]         UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
+    [ProjectId]          BIGINT NOT NULL,
+    [FileName]           NVARCHAR(255) NOT NULL,
+    [TotalUsers]         INT NOT NULL,
+    [ProcessedUsers]     INT NOT NULL DEFAULT 0,
+    [SuccessfulUsers]    INT NOT NULL DEFAULT 0,
+    [FailedUsers]        INT NOT NULL DEFAULT 0,
+    [Status]             INT NOT NULL DEFAULT 0, -- 0=Pending, 1=Processing, 2=Completed, 3=Failed, 4=PartiallyCompleted
+    [ProcessingStartedAt] DATETIME2 NULL,
+    [ProcessingCompletedAt] DATETIME2 NULL,
+    [ErrorDetails]       NVARCHAR(MAX) NULL,
+    [CreatedAt]          DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+    [CreatedBy]          NVARCHAR(450) NULL,
+    [UpdatedAt]          DATETIME2 NULL,
+    [UpdatedBy]          NVARCHAR(450) NULL,
+    [IsDeleted]          BIT NOT NULL DEFAULT 0,
+    [DeletedAt]          DATETIME2 NULL,
+    [DeletedBy]          NVARCHAR(450) NULL,
+    [RestoredAt]         DATETIME2 NULL,
+    [RestoredBy]         NVARCHAR(450) NULL,
+    CONSTRAINT [PK_BatchUserRegistrations] PRIMARY KEY CLUSTERED ([Id]),
+    CONSTRAINT [FK_BatchUserRegistrations_Projects] FOREIGN KEY ([ProjectId]) REFERENCES [businessincubators].[Projects] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [UQ_BatchUserRegistrations_ExternalId] UNIQUE ([ExternalId])
+);

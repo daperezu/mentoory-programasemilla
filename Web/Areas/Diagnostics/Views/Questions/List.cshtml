@@ -1,0 +1,102 @@
+﻿@model LinaSys.Web.Areas.Diagnostics.Models.Questions.QuestionsListViewModel
+
+@{
+    var pageTitle = "Gestión de preguntas";
+    ViewData["Title"] = pageTitle;
+
+    var catalogsJson = System.Text.Json.JsonSerializer.Serialize(Model);
+
+    var pageHeaderActions = new List<PageHeaderDropdownItem>()
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-plus me-2",
+            Text = "Nueva pregunta",
+            Url = Url.Action("Create", "Questions", new { area = "Diagnostics" })!
+        }
+    };
+
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Pregunta", Data = "text"
+        },
+        new()
+        {
+            Header = "Estructura de Conocimiento", Data = "topicId",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "function (data, type, row) { return catalogsMap.Topics[data] ? catalogsMap.Topics[data].KnowledgeStructure : '- estructura desconocida -'; }",
+            FilterType = ColFilterType.Select,
+            FilterOptions = Model.KnowledgeStructures.ToDictionary(k => k.Key.ToString(), v => v.Value)
+        },
+        new()
+        {
+            Header = "Tema", Data = "topicId",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "function (data, type, row) { return catalogsMap.Topics[data] ? catalogsMap.Topics[data].KnowledgeStructure + ' > ' + catalogsMap.Topics[data].Module + ' > ' + catalogsMap.Topics[data].Topic : '- tema desconocido -'; }",
+            FilterType = ColFilterType.Select,
+            FilterOptions = Model.Topics.ToDictionary(k => k.Key.ToString(), v => $"{v.Value.KnowledgeStructure} > {v.Value.Module} > {v.Value.Topic}")
+        },
+        new()
+        {
+            Header = "Bloque", Data = "blockId",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "function (data, type, row) { return catalogsMap.Blocks[data] ?? '- bloque desconocido -'; }",
+            FilterType = ColFilterType.Select,
+            FilterOptions = Model.Blocks.ToDictionary(k => k.Key.ToString(), v => v.Value),
+        },
+        new()
+        {
+            Header = "Tipo de respuesta", Data = "answerType",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "function (data, type, row) { return catalogsMap.AnswerTypes[data] ?? '- tipo desconocido -'; }",
+            FilterType = ColFilterType.Select,
+            FilterOptions = Model.AnswerTypes.ToDictionary(k => k.Key.ToString(), v => v.Value),
+        },
+
+        new()
+        {
+            Header = "Fases a aplicar", Data = "appliesToPhase",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "function (data, type, row) { return catalogsMap.QuestionPhases[data] ?? '- tipo desconocido -'; }",
+        },
+        new() {
+            Header = "Se utiliza para la creación del plan?", Data = "isUsedForMentoringPlan",
+            RenderType = ColRenderType.Badge,
+            FilterType = ColFilterType.Select,
+            FilterOptions = new Dictionary<string, string> {
+                { "", "Todos" },
+                { "True", "Para creación de plan" },
+                { "False", "No es parte del plan" }
+            },
+            BadgeMap = new Dictionary<string, string> {
+                { "True", "Si" },
+                { "False", "No" }
+            },
+            BadgeClassMap = new Dictionary<string, string> {
+                { "True", "success" },
+                { "False", "secondary" }
+            }
+        }
+    };
+
+    var dataTablesHoverActions = new List<HoverAction>
+    {
+        new() { Url = Url.Action("Edit", "Questions", new { area = "Diagnostics", id = "{id}" })!, IconClass = "fas fa-edit" },
+        new() { Url = Url.Action("Delete", "Questions", new { area = "Diagnostics", id = "{id}" })!, IconClass = "fas fa-delete" },
+    };
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-wrench" dropdown-items="@pageHeaderActions"></page-header>
+
+<datatable ajax-url="@Url.Action("List", "Questions", new { area = "Diagnostics" })"
+           columns="@dataTablesColumns"
+           hover-actions="@dataTablesHoverActions"></datatable>
+           
+@section Scripts
+{
+    <script>
+        const catalogsMap = @Html.Raw(catalogsJson);
+    </script>
+}

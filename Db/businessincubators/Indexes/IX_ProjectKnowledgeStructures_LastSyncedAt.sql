@@ -1,0 +1,3 @@
+CREATE INDEX IX_ProjectKnowledgeStructures_LastSyncedAt 
+ON businessincubators.ProjectKnowledgeStructures(LastSyncedAt) 
+WHERE LastSyncedAt IS NOT NULL;

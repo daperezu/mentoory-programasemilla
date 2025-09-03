@@ -1,0 +1,422 @@
+@model LinaSys.Core.Application.Dashboard.Queries.GetDashboard.DashboardDto
+@{
+    ViewData["Title"] = $"Vista Macro '{ViewBag.ProjectName}'";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard-core.css" />
+    <style>
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .widget-refresh {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .widget-refresh:hover {
+            opacity: 1;
+        }
+    </style>
+}
+
+@* Dashboard Header *@
+<div class="dashboard-header mb-4">
+    <div class="row align-items-center">
+        <div class="col">
+            <h3 class="mb-0">@ViewData["Title"]</h3>
+            <p class="text-muted mb-0">@ViewBag.IncubatorName</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-phoenix-primary btn-sm" id="refreshDashboard">
+                <span class="fas fa-sync-alt me-1"></span>Actualizar
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Quick Stats Row *@
+<div class="row g-3 mb-4">
+    @* Participants Widget *@
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card stat-card h-100" data-widget="participants">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="mb-1 text-900">Participantes</h5>
+                        <h2 class="text-1000" id="totalParticipants">-</h2>
+                    </div>
+                    <div>
+                        <span class="fas fa-users fa-2x text-primary-300"></span>
+                        <span class="fas fa-sync-alt widget-refresh ms-2" data-widget-refresh="participants"></span>
+                    </div>
+                </div>
+                <div class="progress mb-2" style="height: 5px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" id="activeParticipantsBar"></div>
+                </div>
+                <p class="fs-10 fw-semi-bold text-500 mb-0">
+                    <span id="activeParticipants">-</span> activos de <span id="totalParticipantsCount">-</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    @* Diagnostics Completion Widget *@
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card stat-card h-100" data-widget="diagnostics">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="mb-1 text-900">Diagnósticos</h5>
+                        <h2 class="text-1000"><span id="completionRate">-</span>%</h2>
+                    </div>
+                    <div>
+                        <span class="fas fa-clipboard-check fa-2x text-success-300"></span>
+                        <span class="fas fa-sync-alt widget-refresh ms-2" data-widget-refresh="diagnostics"></span>
+                    </div>
+                </div>
+                <div class="progress mb-2" style="height: 5px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%" id="diagnosticsProgressBar"></div>
+                </div>
+                <p class="fs-10 fw-semi-bold text-500 mb-0">
+                    <span id="completedForms">-</span> completados de <span id="totalForms">-</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    @* Pending Reviews Widget *@
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card stat-card h-100" data-widget="reviews">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="mb-1 text-900">Revisiones Pendientes</h5>
+                        <h2 class="text-1000" id="totalPending">-</h2>
+                    </div>
+                    <div>
+                        <span class="fas fa-eye fa-2x text-warning-300"></span>
+                        <span class="fas fa-sync-alt widget-refresh ms-2" data-widget-refresh="reviews"></span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center">
+                    <span class="badge badge-phoenix badge-phoenix-warning me-2">
+                        <span class="fas fa-clock me-1"></span><span id="oldestWaiting">-</span> días max
+                    </span>
+                </div>
+                <a href="#" class="btn btn-link btn-sm p-0 mt-2">Ver todas →</a>
+            </div>
+        </div>
+    </div>
+
+    @* Recent Activity Widget *@
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card stat-card h-100" data-widget="activity">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="mb-1 text-900">Actividad Reciente</h5>
+                        <h2 class="text-1000" id="recentActivityCount">-</h2>
+                    </div>
+                    <div>
+                        <span class="fas fa-history fa-2x text-info-300"></span>
+                        <span class="fas fa-sync-alt widget-refresh ms-2" data-widget-refresh="activity"></span>
+                    </div>
+                </div>
+                <p class="fs-10 fw-semi-bold text-500 mb-0">
+                    Últimas 24 horas
+                </p>
+                <a href="#" class="btn btn-link btn-sm p-0 mt-2">Ver historial →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Main Content Row *@
+<div class="row g-3">
+    @* Participants by Role Chart *@
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">Participantes por Rol</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="participantsByRoleChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+
+    @* Pending Reviews List *@
+    <div class="col-12 col-lg-6">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between">
+                <h5 class="mb-0">Revisiones Pendientes</h5>
+                <a href="#" class="btn btn-phoenix-primary btn-sm">Ver Todas</a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover" id="pendingReviewsTable">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Tipo</th>
+                                <th>Enviado</th>
+                                <th>Prioridad</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Recent Activity Timeline *@
+<div class="row g-3 mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Actividad Reciente del Proyecto</h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline-vertical" id="activityTimeline">
+                    <div class="text-center">
+                        <div class="spinner-border spinner-border-sm" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const projectId = @(ViewBag.ProjectId ?? 0);
+            let participantsChart = null;
+
+            // Load all widgets on page load
+            loadParticipantStats();
+            loadDiagnosticStats();
+            loadPendingReviews();
+            loadRecentActivity();
+
+            // Refresh button handler
+            $('#refreshDashboard').click(function() {
+                const btn = $(this);
+                btn.prop('disabled', true);
+                btn.find('.fas').addClass('fa-spin');
+                
+                Promise.all([
+                    loadParticipantStats(),
+                    loadDiagnosticStats(),
+                    loadPendingReviews(),
+                    loadRecentActivity()
+                ]).finally(() => {
+                    btn.prop('disabled', false);
+                    btn.find('.fas').removeClass('fa-spin');
+                });
+            });
+
+            // Individual widget refresh
+            $('.widget-refresh').click(function(e) {
+                e.stopPropagation();
+                const widget = $(this).data('widget-refresh');
+                $(this).addClass('fa-spin');
+                
+                switch(widget) {
+                    case 'participants':
+                        loadParticipantStats().finally(() => $(this).removeClass('fa-spin'));
+                        break;
+                    case 'diagnostics':
+                        loadDiagnosticStats().finally(() => $(this).removeClass('fa-spin'));
+                        break;
+                    case 'reviews':
+                        loadPendingReviews().finally(() => $(this).removeClass('fa-spin'));
+                        break;
+                    case 'activity':
+                        loadRecentActivity().finally(() => $(this).removeClass('fa-spin'));
+                        break;
+                }
+            });
+
+            function loadParticipantStats() {
+                return $.get('@Url.Action("GetParticipantStats")')
+                    .done(function(response) {
+                        if (response.success && response.data) {
+                            const data = response.data;
+                            $('#totalParticipants').text(data.total);
+                            $('#totalParticipantsCount').text(data.total);
+                            $('#activeParticipants').text(data.activeCount);
+                            
+                            const activePercentage = data.total > 0 
+                                ? Math.round((data.activeCount / data.total) * 100) 
+                                : 0;
+                            $('#activeParticipantsBar').css('width', activePercentage + '%');
+
+                            // Update chart
+                            if (data.byRole) {
+                                updateParticipantsByRoleChart(data.byRole);
+                            }
+                        }
+                    })
+                    .fail(function() {
+                        console.error('Error loading participant stats');
+                    });
+            }
+
+            function loadDiagnosticStats() {
+                return $.get('@Url.Action("GetDiagnosticStats")')
+                    .done(function(response) {
+                        if (response.success && response.data) {
+                            const data = response.data;
+                            $('#completionRate').text(data.completionRate);
+                            $('#completedForms').text(data.completedForms);
+                            $('#totalForms').text(data.totalForms);
+                            $('#diagnosticsProgressBar').css('width', data.completionRate + '%');
+                        }
+                    })
+                    .fail(function() {
+                        console.error('Error loading diagnostic stats');
+                    });
+            }
+
+            function loadPendingReviews() {
+                return $.get('@Url.Action("GetPendingReviews")')
+                    .done(function(response) {
+                        if (response.success && response.data) {
+                            const data = response.data;
+                            $('#totalPending').text(data.totalPending);
+                            $('#oldestWaiting').text(data.oldestWaitingDays);
+
+                            // Update table
+                            const tbody = $('#pendingReviewsTable tbody');
+                            tbody.empty();
+
+                            if (data.reviews && data.reviews.length > 0) {
+                                data.reviews.forEach(function(review) {
+                                    const priorityBadge = review.priority === 'High' 
+                                        ? 'badge-phoenix-danger' 
+                                        : 'badge-phoenix-warning';
+                                    
+                                    tbody.append(`
+                                        <tr>
+                                            <td>${review.userName}</td>
+                                            <td>${review.formType}</td>
+                                            <td>${review.submittedAt}</td>
+                                            <td><span class="badge ${priorityBadge}">${review.priority}</span></td>
+                                            <td>
+                                                <a href="#" class="btn btn-phoenix-secondary btn-sm">
+                                                    <span class="fas fa-eye"></span>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    `);
+                                });
+                            } else {
+                                tbody.append('<tr><td colspan="5" class="text-center">No hay revisiones pendientes</td></tr>');
+                            }
+                        }
+                    })
+                    .fail(function() {
+                        console.error('Error loading pending reviews');
+                    });
+            }
+
+            function loadRecentActivity() {
+                return $.get('@Url.Action("GetRecentActivity")')
+                    .done(function(response) {
+                        if (response.success && response.data) {
+                            $('#recentActivityCount').text(response.data.length);
+
+                            const timeline = $('#activityTimeline');
+                            timeline.empty();
+
+                            response.data.forEach(function(activity) {
+                                timeline.append(`
+                                    <div class="timeline-item">
+                                        <div class="timeline-icon bg-${activity.color}-subtle">
+                                            <span class="${activity.icon} text-${activity.color}"></span>
+                                        </div>
+                                        <div class="timeline-content">
+                                            <h6 class="mb-1">${activity.user}</h6>
+                                            <p class="mb-0">${activity.action}</p>
+                                            <small class="text-muted">${activity.timestamp}</small>
+                                        </div>
+                                    </div>
+                                `);
+                            });
+                        }
+                    })
+                    .fail(function() {
+                        console.error('Error loading recent activity');
+                    });
+            }
+
+            function updateParticipantsByRoleChart(roleData) {
+                const ctx = document.getElementById('participantsByRoleChart').getContext('2d');
+                
+                if (participantsChart) {
+                    participantsChart.destroy();
+                }
+
+                participantsChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: roleData.map(r => r.role),
+                        datasets: [{
+                            data: roleData.map(r => r.count),
+                            backgroundColor: [
+                                'rgba(79, 172, 254, 0.8)',
+                                'rgba(0, 208, 132, 0.8)',
+                                'rgba(255, 193, 7, 0.8)',
+                                'rgba(220, 53, 69, 0.8)'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed || 0;
+                                        const percentage = roleData[context.dataIndex].percentage;
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Auto-refresh every 5 minutes
+            setInterval(function() {
+                $('#refreshDashboard').click();
+            }, 5 * 60 * 1000);
+        });
+    </script>
+}

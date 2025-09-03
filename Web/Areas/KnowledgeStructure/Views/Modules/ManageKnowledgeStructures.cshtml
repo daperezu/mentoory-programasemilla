@@ -1,0 +1,141 @@
+@model LinaSys.Web.Areas.KnowledgeStructure.Models.Module.ManageModuleKnowledgeStructuresViewModel
+@{
+    ViewData["Title"] = $"Gestión de Estructuras - {Model.ModuleName}";
+}
+
+<page-header title="@ViewData["Title"]" icon-class="fas fa-sitemap">
+    <breadcrumb>
+        <breadcrumb-item title="Inicio" asp-area="" asp-controller="Home" asp-action="Index"></breadcrumb-item>
+        <breadcrumb-item title="Módulos" asp-area="KnowledgeStructure" asp-controller="Modules" asp-action="Index"></breadcrumb-item>
+        <breadcrumb-item title="@Model.ModuleName" active="true"></breadcrumb-item>
+    </breadcrumb>
+</page-header>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Estructuras de Conocimiento Asignadas</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.AssignedKnowledgeStructures.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Estructura</th>
+                                    <th>Estado</th>
+                                    <th>Orden</th>
+                                    <th>Temas</th>
+                                    <th width="100">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var ks in Model.AssignedKnowledgeStructures)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@ks.Name</strong>
+                                            @if (!string.IsNullOrWhiteSpace(ks.Description))
+                                            {
+                                                <br />
+                                                <small class="text-muted">@ks.Description</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (ks.IsActive)
+                                            {
+                                                <span class="badge bg-success">Activa</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Inactiva</span>
+                                            }
+                                        </td>
+                                        <td>@ks.Order</td>
+                                        <td>
+                                            <span class="badge bg-info">@ks.TopicCount</span>
+                                        </td>
+                                        <td>
+                                            @if (Model.AssignedKnowledgeStructures.Count > 1 && ks.TopicCount == 0)
+                                            {
+                                                <form asp-action="RemoveFromKnowledgeStructure" method="post" class="d-inline"
+                                                      onsubmit="return confirm('¿Está seguro de remover este módulo de la estructura?');">
+                                                    <input type="hidden" name="moduleId" value="@Model.ModuleId" />
+                                                    <input type="hidden" name="structureModuleId" value="@ks.StructureModuleId" />
+                                                    <input type="hidden" name="knowledgeStructureId" value="@ks.Id" />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remover">
+                                                        <i class="fas fa-unlink"></i>
+                                                    </button>
+                                                </form>
+                                            }
+                                            else if (ks.TopicCount > 0)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="No se puede remover - tiene temas asociados">
+                                                    <i class="fas fa-lock"></i>
+                                                </button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (Model.AssignedKnowledgeStructures.Count == 1)
+                    {
+                        <div class="alert alert-info mt-3">
+                            <i class="fas fa-info-circle"></i> Este módulo debe estar asignado al menos a una estructura de conocimiento.
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Este módulo no está asignado a ninguna estructura de conocimiento.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Asignar a Nueva Estructura</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.AvailableKnowledgeStructures.Any())
+                {
+                    <form asp-action="AddToKnowledgeStructure" method="post">
+                        <input type="hidden" name="moduleId" value="@Model.ModuleId" />
+                        <div class="mb-3">
+                            <label class="form-label">Estructura de Conocimiento</label>
+                            <select name="knowledgeStructureId" class="form-select" required>
+                                <option value="">-- Seleccione una estructura --</option>
+                                @foreach (var item in Model.AvailableKnowledgeStructures)
+                                {
+                                    <option value="@item.Value">@item.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Asignar
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> Este módulo ya está asignado a todas las estructuras de conocimiento activas disponibles.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver al listado
+    </a>
+</div>

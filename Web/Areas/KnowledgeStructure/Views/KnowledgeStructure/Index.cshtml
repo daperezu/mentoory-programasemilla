@@ -1,0 +1,72 @@
+@{
+    var pageTitle = "Gestión de Estructuras de Conocimiento";
+    ViewData["Title"] = pageTitle;
+
+    var pageHeaderActions = new List<PageHeaderDropdownItem>()
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-plus me-2",
+            Text = "Nueva estructura",
+            Url = Url.Action("Create", "KnowledgeStructure", new { area = "KnowledgeStructure" })!
+        },
+        new()
+        {
+            IconClass = "fa-solid fa-sitemap me-2",
+            Text = "Constructor visual",
+            Url = Url.Action("Builder", "KnowledgeStructure", new { area = "KnowledgeStructure" })!
+        }
+    };
+
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Nombre",
+            Data = "name",
+            RenderType = ColRenderType.Link,
+            LinkUrl = Url.Action("Edit", "KnowledgeStructure", new { area = "KnowledgeStructure", id = "{id}" })!,
+            LinkTextField = "{name}"
+        },
+        new()
+        {
+            Header = "Descripción",
+            Data = "description"
+        },
+        new()
+        {
+            Header = "Estado",
+            Data = "isActive",
+            RenderType = ColRenderType.Badge,
+            BadgeMap = new Dictionary<string, string>
+            {
+                { "true", "Activo" },
+                { "false", "Inactivo" }
+            },
+            BadgeClassMap = new Dictionary<string, string>
+            {
+                { "true", "success" },
+                { "false", "danger" }
+            }
+        },
+        new()
+        {
+            Header = "Fecha de creación",
+            Data = "createdAt",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "function(data) { return new Date(data).toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }"
+        }
+    };
+
+    var dataTablesHoverActions = new List<HoverAction>
+    {
+        new() { Url = Url.Action("Edit", "KnowledgeStructure", new { area = "KnowledgeStructure", id = "{id}" })!, IconClass = "fas fa-edit", Text = "Editar" },
+        new() { Url = Url.Action("Builder", "KnowledgeStructure", new { area = "KnowledgeStructure" })!, IconClass = "fas fa-sitemap", Text = "Constructor" }
+    };
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-sitemap" dropdown-items="@pageHeaderActions"></page-header>
+
+<datatable ajax-url="@Url.Action("List", "KnowledgeStructure", new { area = "KnowledgeStructure" })"
+           columns="@dataTablesColumns"
+           hover-actions="@dataTablesHoverActions"></datatable>

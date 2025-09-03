@@ -1,0 +1,140 @@
+@model List<LinaSys.Notification.Application.EmailTemplates.Queries.EmailTemplateListDto>
+@{
+    ViewData["Title"] = "Plantillas de Correo";
+    ViewData["PageHeader"] = "Plantillas de Correo";
+    ViewData["PageDescription"] = "Gestión de plantillas de correo electrónico del sistema";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h3 class="card-title">Plantillas de Correo</h3>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <a asp-action="Create" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Nueva Plantilla
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="get" class="mb-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="text" name="searchTerm" class="form-control" placeholder="Buscar..." value="@ViewBag.SearchTerm" />
+                        </div>
+                        <div class="col-md-3">
+                            <select name="category" class="form-control">
+                                <option value="">Todas las categorías</option>
+                                <option value="Usuario" selected="@(ViewBag.Category == "Usuario")">Usuario</option>
+                                <option value="Proyecto" selected="@(ViewBag.Category == "Proyecto")">Proyecto</option>
+                                <option value="Formulario" selected="@(ViewBag.Category == "Formulario")">Formulario</option>
+                                <option value="Sistema" selected="@(ViewBag.Category == "Sistema")">Sistema</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select name="isActive" class="form-control">
+                                <option value="">Todos los estados</option>
+                                <option value="true" selected="@(ViewBag.IsActive == true)">Activas</option>
+                                <option value="false" selected="@(ViewBag.IsActive == false)">Inactivas</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-secondary w-100">
+                                <i class="fas fa-search"></i> Filtrar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No se encontraron plantillas de correo.
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Clave</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Estado</th>
+                                    <th>Última Actualización</th>
+                                    <th width="150">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var template in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <code>@template.Key</code>
+                                        </td>
+                                        <td>
+                                            <strong>@template.Name</strong>
+                                            @if (!string.IsNullOrEmpty(template.Description))
+                                            {
+                                                <br />
+                                                <small class="text-muted">@template.Description</small>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(template.Category))
+                                            {
+                                                <span class="badge bg-info">@template.Category</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sin categoría</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (template.IsActive)
+                                            {
+                                                <span class="badge bg-success">Activa</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Inactiva</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @template.UpdatedAt.ToString("dd/MM/yyyy HH:mm")
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a asp-action="Preview" asp-route-key="@template.Key" 
+                                                   class="btn btn-outline-info" 
+                                                   target="_blank"
+                                                   title="Vista previa">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a asp-action="Edit" asp-route-key="@template.Key" 
+                                                   class="btn btn-outline-primary"
+                                                   title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <a asp-action="Details" asp-route-key="@template.Key" 
+                                                   class="btn btn-outline-secondary"
+                                                   title="Detalles">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

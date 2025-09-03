@@ -1,0 +1,194 @@
+@using LinaSys.Web.Models.Shared
+@model LinaSys.Web.Areas.Coordination.Controllers.CoordinatorParticipantManagementViewModel
+
+@{
+    var pageTitle = "Gestión de Participantes";
+    ViewData["Title"] = pageTitle;
+
+    var pageHeaderActions = new List<PageHeaderDropdownItem>()
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-upload me-2",
+            Text = "Invitar participantes",
+            Url = Url.Action("BulkInvite")!
+        },
+        new()
+        {
+            IconClass = "fa-solid fa-download me-2",
+            Text = "Exportar Participantes",
+            Url = Url.Action("Export")!
+        }
+    };
+    
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Nombre", 
+            Data = "fullName",
+            RenderType = ColRenderType.Default
+        },
+        new()
+        {
+            Header = "Email", 
+            Data = "email",
+            RenderType = ColRenderType.Default
+        },
+        new()
+        {
+            Header = "Identificación", 
+            Data = "identificationNumber",
+            RenderType = ColRenderType.Default
+        },
+        new()
+        {
+            Header = "Estado", 
+            Data = "isActive",
+            RenderType = ColRenderType.Badge,
+            FilterType = ColFilterType.Select,
+            FilterOptions = new Dictionary<string, string> {
+                { "", "Todos los estados" },
+                { "active", "Activo" },
+                { "inactive", "Inactivo" }
+            },
+            BadgeMap = new Dictionary<string, string> {
+                { "true", "Activo" },
+                { "false", "Inactivo" }
+            },
+            BadgeClassMap = new Dictionary<string, string> {
+                { "true", "success" },
+                { "false", "secondary" }
+            }
+        },
+        new()
+        {
+            Header = "Formulario", 
+            Data = "formStatus",
+            RenderType = ColRenderType.Badge,
+            BadgeMap = new Dictionary<string, string> {
+                { "Pendiente", "Pendiente" },
+                { "En progreso", "En progreso" },
+                { "Enviado", "Enviado" },
+                { "Aprobado", "Aprobado" },
+                { "Rechazado", "Rechazado" }
+            },
+            BadgeClassMap = new Dictionary<string, string> {
+                { "Pendiente", "secondary" },
+                { "En progreso", "warning" },
+                { "Enviado", "info" },
+                { "Aprobado", "success" },
+                { "Rechazado", "danger" }
+            }
+        },
+        new()
+        {
+            Header = "Fecha Ingreso", 
+            Data = "joinedAt",
+            Searchable = false
+        },
+        new()
+        {
+            Header = "Última Actividad", 
+            Data = "lastActivity",
+            Searchable = false,
+            Orderable = false
+        }
+    };
+    
+    var hoverActions = new List<HoverAction>
+    {
+        new() { 
+            Url = "#", 
+            IconClass = "fas fa-eye", 
+            Text = "Ver Detalle" 
+        }
+    };
+}
+
+@section Styles {
+    <style>
+        .participant-stats {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+        
+        .bulk-invite-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            text-align: center;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+    </style>
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-users" dropdown-items="@pageHeaderActions"></page-header>
+
+@* Quick Stats Row *@
+<div class="row g-3 mb-4 justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+        <div class="participant-stats">
+            <div class="row">
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalParticipants">-</div>
+                        <div class="stat-label">Total Participantes</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number" id="activeParticipants">-</div>
+                        <div class="stat-label">Participantes Activos</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number" id="completedForms">-</div>
+                        <div class="stat-label">Completados</div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-item">
+                        <div class="stat-number" id="pendingForms">-</div>
+                        <div class="stat-label">Pendientes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<datatable ajax-url="@Url.Action("List")"
+           columns="@dataTablesColumns"
+           hover-actions="@hoverActions"
+           table-id="participantsTable"
+           show-filter-toggle="true"></datatable>
+
+@section Scripts {
+    <script src="~/js/coordination/participant-management.js"></script>
+}

@@ -1,0 +1,45 @@
+@model LinaSys.KnowledgeStructure.Application.KnowledgeStructure.DTOs.KnowledgeStructureDetailDto
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fa fa-sitemap"></i> Estructura de Conocimiento
+        </h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-4">Nombre:</dt>
+            <dd class="col-sm-8">@Model.Name</dd>
+            
+            <dt class="col-sm-4">Descripción:</dt>
+            <dd class="col-sm-8">@(Model.Description ?? "Sin descripción")</dd>
+            
+            <dt class="col-sm-4">Estado:</dt>
+            <dd class="col-sm-8">
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">Activo</span>
+                }
+                else
+                {
+                    <span class="badge bg-danger">Inactivo</span>
+                }
+            </dd>
+            
+            <dt class="col-sm-4">Módulos:</dt>
+            <dd class="col-sm-8">@Model.ModuleCount</dd>
+            
+            <dt class="col-sm-4">Fecha de creación:</dt>
+            <dd class="col-sm-8">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</dd>
+        </dl>
+        
+        <div class="node-actions">
+            <a href="@Url.Action("Edit", "KnowledgeStructure", new { id = Model.Id })" class="btn btn-primary">
+                <i class="fa fa-edit"></i> Editar
+            </a>
+            <a href="@Url.Action("Create", "Modules", new { knowledgeStructureId = Model.Id })" class="btn btn-success">
+                <i class="fa fa-plus"></i> Agregar Módulo
+            </a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,50 @@
+﻿@model CreateProjectViewModel
+
+@{
+    ViewData["Title"] = $"{Model.BusinessIncubatorName} - Nuevo Proyecto";
+    var serverValidationSuccess = ViewData.ModelState.IsValid;
+}
+
+<div class="container-small">
+
+    <div class="row">
+        <div class="col-lg-7 mb-4 mb-lg-0">
+            <form asp-action="Create" asp-antiforgery="true" class="needs-validation" novalidate="">
+                <h3 class="mb-5">
+                    <span class="fa-solid fa-plus"></span>
+                    @ViewData["Title"]
+                </h3>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="Name">Nombre</label>
+                        <input asp-for="Name" class="form-control" type="text" placeholder="Nombre" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="Key">Llave</label>
+                        <input class="form-control" type="text" placeholder="Llave" asp-for="Key" required />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Description">Descripción</label>
+                        <textarea class="form-control" asp-for="Description" placeholder="Descripción"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-primary px-8 px-sm-11 me-2" type="submit">Guardar</button>
+                        <a href="../Projects/" class="btn btn-link btn-sm">cancelar</a>
+                    </div>
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="invalid-feedback" style="display:block">
+                            @Html.ValidationSummary()
+                        </div>
+                    }
+
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-5 col-xl-4 position-relative d-none d-lg-block">
+            <div class="bg-holder" style="background-image:url(/assets/img/layout/add-incubator.png);">
+            </div>
+        </div>
+    </div>
+</div>

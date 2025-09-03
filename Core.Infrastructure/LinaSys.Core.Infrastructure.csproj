@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" />
+    <PackageReference Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core.Domain\LinaSys.Core.Domain.csproj" />
+    <ProjectReference Include="..\Core.Application\LinaSys.Core.Application.csproj" />
+    <ProjectReference Include="..\Shared.Infrastructure\LinaSys.Shared.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

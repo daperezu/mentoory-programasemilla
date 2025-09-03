@@ -1,0 +1,200 @@
+@model LinaSys.Web.Models.EntrepreneurForm.EntrepreneurFormViewModel
+@{
+    ViewData["Title"] = Model.PhaseDisplay;
+}
+
+@section Styles {
+    <link href="~/css/entrepreneur-wizard.css" rel="stylesheet" />
+}
+
+<div class="container-fluid px-0">
+    <div class="card">
+        @* Header with project info and status *@
+        <div class="card-header bg-body-tertiary">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>
+                        @Model.PhaseDisplay - @Model.ProjectName
+                    </h5>
+                </div>
+                <div class="col-auto">
+                    @if (Model.DueDate.HasValue)
+                    {
+                        <span class="badge bg-warning text-dark me-2">
+                            <i class="fas fa-clock me-1"></i>
+                            Vence: @Model.DueDate.Value.ToString("dd/MM/yyyy")
+                        </span>
+                    }
+                    <span class="badge bg-@(Model.Status == LinaSys.BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Draft ? "info" : "success")">
+                        @Model.StatusDisplay
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card-body p-0">
+            @* Phoenix Wizard Container *@
+            <div class="theme-wizard" 
+                 data-theme-wizard="data-theme-wizard"
+                 id="entrepreneurWizard">
+                 
+                @* Wizard Navigation *@
+                <ul class="nav nav-wizard nav-wizard-success">
+                    @for (int i = 0; i < Model.Blocks.Count; i++)
+                    {
+                        var block = Model.Blocks[i];
+                        var isActive = i == 0 ? "active" : "";
+                        var isDone = block.IsCompleted ? "done" : "";
+                        
+                        <li class="nav-item @isDone" data-block-order="@block.Order">
+                            <a class="nav-link @isActive" 
+                               href="#block-@block.BlockId"
+                               data-bs-toggle="tab"
+                               data-wizard-step="@(i + 1)"
+                               role="tab">
+                                <span class="nav-item-circle-parent">
+                                    <span class="nav-item-circle">
+                                        <span class="fas @block.IconClass"></span>
+                                    </span>
+                                </span>
+                                <span class="nav-item-title d-none d-md-block">
+                                    @block.BlockName
+                                </span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+                
+                @* Progress Bar *@
+                <div class="px-4 pb-3">
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
+                             id="progressBar" 
+                             style="width: @Model.CurrentProgress%"
+                             role="progressbar"
+                             aria-valuenow="@Model.CurrentProgress"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <small class="text-muted">
+                            <i class="fas fa-check-square me-1"></i>
+                            <span id="answeredCount">0</span> de <span id="totalCount">0</span> preguntas
+                        </small>
+                        <small class="text-primary fw-bold">
+                            <span id="progressPercent">@Model.CurrentProgress</span>%
+                        </small>
+                    </div>
+                </div>
+                
+                @* Tab Content - Form Steps *@
+                <div class="tab-content px-4 pb-3" id="wizardContent">
+                    @for (int i = 0; i < Model.Blocks.Count; i++)
+                    {
+                        var block = Model.Blocks[i];
+                        var isActive = i == 0 ? "show active" : "";
+                        
+                        <div class="tab-pane fade @isActive" 
+                             id="block-@block.BlockId"
+                             data-block-id="@block.BlockId"
+                             data-block-order="@block.Order"
+                             role="tabpanel">
+                            
+                            <h5 class="mb-3">@block.BlockName</h5>
+                            @if (!string.IsNullOrEmpty(block.BlockDescription))
+                            {
+                                <p class="text-muted mb-4">@block.BlockDescription</p>
+                            }
+                            
+                            <form class="needs-validation" 
+                                  novalidate 
+                                  data-wizard-form="@(i + 1)"
+                                  id="form-step-@(i + 1)">
+                                
+                                @foreach (var question in block.Questions)
+                                {
+                                    @await Html.PartialAsync("_QuestionInput", question)
+                                }
+                            </form>
+                        </div>
+                    }
+                </div>
+                
+                @* Wizard Footer Navigation *@
+                <div class="card-footer bg-body-tertiary" 
+                     data-wizard-footer="data-wizard-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button class="btn btn-secondary" 
+                                type="button"
+                                id="btnPrevious"
+                                data-wizard-prev-btn="data-wizard-prev-btn">
+                            <i class="fas fa-chevron-left me-1"></i>
+                            Anterior
+                        </button>
+                        
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary" 
+                                    type="button"
+                                    id="btnSaveDraft"
+                                    @(Model.CanEdit ? "" : "disabled")>
+                                <i class="fas fa-save me-1"></i>
+                                <span class="d-none d-sm-inline">Guardar Borrador</span>
+                            </button>
+                            
+                            <button class="btn btn-primary" 
+                                    type="button"
+                                    id="btnNext"
+                                    data-wizard-next-btn="data-wizard-next-btn">
+                                Siguiente
+                                <i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                            
+                            <button class="btn btn-success d-none" 
+                                    type="button"
+                                    id="btnSubmit"
+                                    @(Model.CanEdit ? "" : "disabled")>
+                                <i class="fas fa-paper-plane me-1"></i>
+                                Enviar Formulario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Auto-save Indicator (Fixed Position) *@
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 1050;">
+    <div class="auto-save-indicator d-none" id="autoSaveIndicator">
+        <div class="d-flex align-items-center bg-white border rounded shadow-sm px-3 py-2">
+            <span class="spinner-border spinner-border-sm me-2 d-none" 
+                  id="saveSpinner"
+                  role="status">
+                <span class="visually-hidden">Guardando...</span>
+            </span>
+            <i class="fas fa-check text-success me-2 d-none" id="saveCheck"></i>
+            <i class="fas fa-exclamation-triangle text-danger me-2 d-none" id="saveError"></i>
+            <span id="saveText">Guardando...</span>
+            <small class="text-muted ms-2" id="saveTime"></small>
+        </div>
+    </div>
+</div>
+
+@* Hidden fields for JavaScript *@
+<input type="hidden" id="submissionExternalId" value="@Model.SubmissionExternalId" />
+<input type="hidden" id="currentPhase" value="@((int)Model.Phase)" />
+<input type="hidden" id="draftData" value="@Html.Raw(Model.DraftData ?? "{}")" />
+
+@section Scripts {
+    <script src="~/js/entrepreneur/form-auto-save.js"></script>
+    <script src="~/js/entrepreneur/form-validator.js"></script>
+    <script src="~/js/entrepreneur/entrepreneur-form-wizard.js"></script>
+    <script>
+        $(document).ready(function() {
+            window.entrepreneurFormWizard = new EntrepreneurFormWizard();
+        });
+    </script>
+}

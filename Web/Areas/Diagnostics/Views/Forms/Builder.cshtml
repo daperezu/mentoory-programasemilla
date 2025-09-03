@@ -1,0 +1,458 @@
+@model LinaSys.Web.Areas.Diagnostics.Models.Forms.FormBuilderViewModel
+
+@{
+    ViewData["Title"] = "Constructor de Formularios - " + Model.FormName;
+}
+
+<page-header title="@Model.FormName" subtitle="Constructor de Formularios" icon-class="fas fa-tools">
+    <breadcrumb>
+        <breadcrumb-item title="Inicio" asp-area="" asp-controller="Home" asp-action="Index"></breadcrumb-item>
+        <breadcrumb-item title="Formularios" asp-area="Diagnostics" asp-controller="Forms" asp-action="List"></breadcrumb-item>
+        <breadcrumb-item title="Constructor" active="true"></breadcrumb-item>
+    </breadcrumb>
+</page-header>
+
+<div class="row">
+    <!-- Left Panel: Available Components -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Componentes Disponibles</h3>
+            </div>
+            <div class="card-body">
+                <!-- Knowledge Structure Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Estructura de Conocimiento</label>
+                    <select id="knowledgeStructureSelect" class="form-select">
+                        <option value="">Seleccione una estructura</option>
+                        @foreach (var ks in Model.KnowledgeStructures)
+                        {
+                            <option value="@ks.Id">@ks.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Module Selection (populated dynamically) -->
+                <div class="mb-3" id="moduleSelectContainer" style="display:none;">
+                    <label class="form-label">Módulo</label>
+                    <select id="moduleSelect" class="form-select">
+                        <option value="">Seleccione un módulo</option>
+                    </select>
+                </div>
+
+                <!-- Topic Selection (populated dynamically) -->
+                <div class="mb-3" id="topicSelectContainer" style="display:none;">
+                    <label class="form-label">Tema</label>
+                    <select id="topicSelect" class="form-select">
+                        <option value="">Seleccione un tema (opcional)</option>
+                    </select>
+                </div>
+
+                <!-- Block Selection -->
+                <div class="mb-3">
+                    <label class="form-label">Bloque <span class="text-danger">*</span></label>
+                    <select id="blockSelect" class="form-select">
+                        <option value="">Seleccione un bloque</option>
+                        @foreach (var block in Model.AvailableBlocks)
+                        {
+                            <option value="@block.Key">@block.Value</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Question Type -->
+                <div class="mb-3">
+                    <label class="form-label">Tipo de Respuesta <span class="text-danger">*</span></label>
+                    <select id="answerTypeSelect" class="form-select">
+                        <option value="1">Opción Múltiple</option>
+                        <option value="2">Texto Libre</option>
+                        <option value="3">Numérico</option>
+                        <option value="4">Sí/No</option>
+                        <option value="5">Escala</option>
+                    </select>
+                </div>
+
+                <!-- Question Phase -->
+                <div class="mb-3">
+                    <label class="form-label">Fase de Aplicación <span class="text-danger">*</span></label>
+                    <select id="phaseSelect" class="form-select">
+                        <option value="1">Diagnóstico Inicial</option>
+                        <option value="2">Diagnóstico Final</option>
+                        <option value="3">Ambas Fases</option>
+                    </select>
+                </div>
+
+                <!-- Question Usage -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="useForMentoringCheck" checked>
+                        <label class="form-check-label" for="useForMentoringCheck">
+                            Usar para Plan de Mentoría
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="useForDiagnosisCheck" checked>
+                        <label class="form-check-label" for="useForDiagnosisCheck">
+                            Usar para Diagnóstico
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Add Question Button -->
+                <div class="d-grid">
+                    <button id="addQuestionBtn" class="btn btn-primary" disabled>
+                        <i class="fas fa-plus me-2"></i>Agregar Pregunta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Form Preview -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">Preguntas del Formulario</h3>
+                <span class="badge bg-info">@Model.Questions.Count preguntas</span>
+            </div>
+            <div class="card-body">
+                <div id="questionsContainer" class="sortable-questions">
+                    @if (Model.Questions.Any())
+                    {
+                        @foreach (var question in Model.Questions.OrderBy(q => q.Order))
+                        {
+                            <div class="question-item card mb-3" data-question-id="@question.Id" data-order="@question.Order">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <span class="drag-handle me-3" style="cursor: move;">
+                                                    <i class="fas fa-grip-vertical text-muted"></i>
+                                                </span>
+                                                <h5 class="mb-0">@question.Order. @question.Text</h5>
+                                            </div>
+                                            <div class="question-metadata">
+                                                <span class="badge bg-secondary me-2">@question.BlockName</span>
+                                                @if (question.TopicId.HasValue)
+                                                {
+                                                    <span class="badge bg-info me-2">Tema</span>
+                                                }
+                                                <span class="badge bg-primary me-2">@GetAnswerTypeDisplay(question.AnswerType)</span>
+                                                <span class="badge bg-success me-2">@GetPhaseDisplay(question.AppliesToPhase)</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-danger remove-question" data-question-id="@question.Id">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div id="emptyState" class="text-center py-5">
+                            <i class="fas fa-clipboard-list fa-4x text-muted mb-3"></i>
+                            <p class="text-muted">No hay preguntas en este formulario. Agregue preguntas usando el panel izquierdo.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between">
+                    <a asp-action="List" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Volver
+                    </a>
+                    <button id="saveOrderBtn" class="btn btn-success" style="display:none;">
+                        <i class="fas fa-save me-2"></i>Guardar Orden
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question Modal -->
+<div class="modal fade" id="questionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Pregunta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Texto de la Pregunta <span class="text-danger">*</span></label>
+                    <textarea id="questionText" class="form-control" rows="3" placeholder="Ingrese el texto de la pregunta..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="saveQuestionBtn" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Guardar Pregunta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const formId = @Model.FormId;
+            const knowledgeStructures = @Html.Raw(Json.Serialize(Model.KnowledgeStructures));
+            let selectedTopicId = null;
+
+            // Initialize Sortable
+            const sortable = Sortable.create(document.getElementById('questionsContainer'), {
+                animation: 150,
+                handle: '.drag-handle',
+                onEnd: function (evt) {
+                    $('#saveOrderBtn').show();
+                    updateQuestionOrders();
+                }
+            });
+
+            // Knowledge Structure change
+            $('#knowledgeStructureSelect').change(function() {
+                const ksId = $(this).val();
+                if (ksId) {
+                    const ks = knowledgeStructures.find(k => k.id == ksId);
+                    populateModules(ks.modules);
+                    $('#moduleSelectContainer').show();
+                } else {
+                    $('#moduleSelectContainer, #topicSelectContainer').hide();
+                    $('#moduleSelect, #topicSelect').val('');
+                }
+                checkCanAddQuestion();
+            });
+
+            // Module change
+            $('#moduleSelect').change(function() {
+                const moduleId = $(this).val();
+                if (moduleId) {
+                    const ksId = $('#knowledgeStructureSelect').val();
+                    const ks = knowledgeStructures.find(k => k.id == ksId);
+                    const module = ks.modules.find(m => m.id == moduleId);
+                    populateTopics(module.topics);
+                    $('#topicSelectContainer').show();
+                } else {
+                    $('#topicSelectContainer').hide();
+                    $('#topicSelect').val('');
+                }
+                checkCanAddQuestion();
+            });
+
+            // Topic change
+            $('#topicSelect').change(function() {
+                selectedTopicId = $(this).val() || null;
+                checkCanAddQuestion();
+            });
+
+            // Block change
+            $('#blockSelect').change(checkCanAddQuestion);
+
+            // Check if can add question
+            function checkCanAddQuestion() {
+                const hasBlock = $('#blockSelect').val() !== '';
+                $('#addQuestionBtn').prop('disabled', !hasBlock);
+            }
+
+            // Populate modules dropdown
+            function populateModules(modules) {
+                const select = $('#moduleSelect');
+                select.empty().append('<option value="">Seleccione un módulo</option>');
+                modules.forEach(m => {
+                    select.append(`<option value="${m.id}">${m.name}</option>`);
+                });
+            }
+
+            // Populate topics dropdown
+            function populateTopics(topics) {
+                const select = $('#topicSelect');
+                select.empty().append('<option value="">Seleccione un tema (opcional)</option>');
+                topics.forEach(t => {
+                    select.append(`<option value="${t.id}">${t.name}</option>`);
+                });
+            }
+
+            // Add Question button click
+            $('#addQuestionBtn').click(function() {
+                $('#questionModal').modal('show');
+                $('#questionText').val('').focus();
+            });
+
+            // Save Question
+            $('#saveQuestionBtn').click(function() {
+                const questionText = $('#questionText').val().trim();
+                if (!questionText) {
+                    alert('Por favor ingrese el texto de la pregunta.');
+                    return;
+                }
+
+                const order = $('.question-item').length + 1;
+                const data = {
+                    formId: formId,
+                    topicId: selectedTopicId,
+                    blockId: parseInt($('#blockSelect').val()),
+                    questionText: questionText,
+                    answerType: parseInt($('#answerTypeSelect').val()),
+                    questionPhase: parseInt($('#phaseSelect').val()),
+                    isUsedForMentoringPlan: $('#useForMentoringCheck').is(':checked'),
+                    isUsedForDiagnosis: $('#useForDiagnosisCheck').is(':checked'),
+                    order: order
+                };
+
+                $.ajax({
+                    url: '@Url.Action("AddQuestion", "Forms", new { area = "Diagnostics" })',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            location.reload(); // Reload to show new question
+                        } else {
+                            alert(result.message || 'Error al agregar la pregunta.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error al procesar la solicitud.');
+                    }
+                });
+
+                $('#questionModal').modal('hide');
+            });
+
+            // Remove Question
+            $(document).on('click', '.remove-question', function() {
+                if (!confirm('¿Está seguro de eliminar esta pregunta?')) return;
+
+                const questionId = $(this).data('question-id');
+                const $card = $(this).closest('.question-item');
+
+                $.ajax({
+                    url: '@Url.Action("RemoveQuestion", "Forms", new { area = "Diagnostics" })',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        formId: formId,
+                        questionId: questionId
+                    }),
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            $card.fadeOut(300, function() {
+                                $(this).remove();
+                                updateQuestionOrders();
+                                if ($('.question-item').length === 0) {
+                                    location.reload();
+                                }
+                            });
+                        } else {
+                            alert(result.message || 'Error al eliminar la pregunta.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error al procesar la solicitud.');
+                    }
+                });
+            });
+
+            // Update question orders after drag
+            function updateQuestionOrders() {
+                $('.question-item').each(function(index) {
+                    $(this).attr('data-order', index + 1);
+                    $(this).find('h5').html(function(i, html) {
+                        return html.replace(/^\d+\./, (index + 1) + '.');
+                    });
+                });
+            }
+
+            // Save Order button
+            $('#saveOrderBtn').click(function() {
+                const questions = [];
+                $('.question-item').each(function(index) {
+                    questions.push({
+                        questionId: $(this).data('question-id'),
+                        order: index + 1
+                    });
+                });
+
+                $.ajax({
+                    url: '@Url.Action("ReorderQuestions", "Forms", new { area = "Diagnostics" })',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        formId: formId,
+                        questions: questions
+                    }),
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            $('#saveOrderBtn').hide();
+                            showToast('Orden de preguntas actualizado.', 'success');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .sortable-questions {
+            min-height: 200px;
+        }
+        .question-item {
+            transition: all 0.3s ease;
+        }
+        .question-item:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .question-metadata {
+            font-size: 0.875rem;
+        }
+        .drag-handle {
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+        .question-item:hover .drag-handle {
+            opacity: 1;
+        }
+    </style>
+}
+
+@functions {
+    string GetAnswerTypeDisplay(int answerType)
+    {
+        return answerType switch
+        {
+            1 => "Opción Múltiple",
+            2 => "Texto Libre",
+            3 => "Numérico",
+            4 => "Sí/No",
+            5 => "Escala",
+            _ => "Desconocido"
+        };
+    }
+
+    string GetPhaseDisplay(int phase)
+    {
+        return phase switch
+        {
+            1 => "Diagnóstico Inicial",
+            2 => "Diagnóstico Final",
+            3 => "Ambas Fases",
+            _ => "Desconocido"
+        };
+    }
+}

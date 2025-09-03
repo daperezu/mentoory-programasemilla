@@ -1,0 +1,49 @@
+@model LinaSys.Web.Areas.KnowledgeStructure.Models.Topic.EditTopicViewModel
+
+@{
+    ViewData["Title"] = "Editar Tema";
+}
+
+<div class="card shadow">
+    <div class="card-header">
+        <h3 class="card-title">Editar Tema</h3>
+    </div>
+    <form asp-action="Edit" method="post">
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="StructureModuleId" type="hidden" />
+        
+        <div class="card-body">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Estructura de Conocimiento</label>
+                <input type="text" class="form-control" value="@Model.KnowledgeStructureName" readonly />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Módulo</label>
+                <input type="text" class="form-control" value="@Model.ModuleName" readonly />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="card-footer">
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

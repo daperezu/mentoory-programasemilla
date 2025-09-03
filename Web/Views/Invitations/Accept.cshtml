@@ -1,0 +1,112 @@
+@model LinaSys.Web.Models.Invitations.AcceptInvitationViewModel
+@{
+    ViewData["Title"] = "Activar Cuenta";
+    Layout = "_HeadlessLayout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-plus"></i> Activar tu Cuenta en LinaSys</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> ¡Bienvenido, @Model.FullName!</h5>
+                        <p class="mb-0">Has sido invitado a participar en el proyecto <strong>@Model.ProjectName</strong>.</p>
+                        <p class="mb-0">Tu cuenta está asociada al email: <strong>@Model.Email</strong></p>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <small><i class="fas fa-clock"></i> Esta invitación expira el @Model.ExpiresAt.ToString("dd/MM/yyyy 'a las' HH:mm")</small>
+                    </div>
+
+                    <form asp-action="Accept" asp-route-token="@Model.Token" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Token" />
+                        <input type="hidden" asp-for="Email" />
+                        <input type="hidden" asp-for="FullName" />
+                        <input type="hidden" asp-for="ProjectName" />
+                        <input type="hidden" asp-for="ExpiresAt" />
+
+                        <div class="mb-3">
+                            <label asp-for="NewPassword" class="form-label">
+                                <i class="fas fa-key"></i> @Html.DisplayNameFor(model => model.NewPassword)
+                            </label>
+                            <input asp-for="NewPassword" class="form-control" placeholder="Ingresa tu nueva contraseña" />
+                            <span asp-validation-for="NewPassword" class="text-danger"></span>
+                            <div class="form-text">
+                                La contraseña debe tener al menos 6 caracteres e incluir mayúsculas, minúsculas, números y caracteres especiales.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="ConfirmPassword" class="form-label">
+                                <i class="fas fa-lock"></i> @Html.DisplayNameFor(model => model.ConfirmPassword)
+                            </label>
+                            <input asp-for="ConfirmPassword" class="form-control" placeholder="Confirma tu nueva contraseña" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input asp-for="AcceptTerms" class="form-check-input" type="checkbox" />
+                                <label asp-for="AcceptTerms" class="form-check-label">
+                                    @Html.DisplayNameFor(model => model.AcceptTerms)
+                                    <a href="/terminos" target="_blank">Leer términos y condiciones</a>
+                                </label>
+                                <span asp-validation-for="AcceptTerms" class="text-danger d-block"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check"></i> Activar Cuenta y Acceder al Proyecto
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-4 text-center">
+                        <form asp-action="Decline" asp-route-token="@Model.Token" method="post" style="display: inline;">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-secondary btn-sm" 
+                                    onclick="return confirm('¿Estás seguro de que deseas rechazar esta invitación?')">
+                                <i class="fas fa-times"></i> Rechazar Invitación
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Show password strength indicator
+        $('#NewPassword').on('input', function() {
+            var password = $(this).val();
+            var strength = 0;
+            
+            if (password.length >= 6) strength++;
+            if (/[a-z]/.test(password)) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^a-zA-Z0-9]/.test(password)) strength++;
+            
+            var indicator = $('#password-strength');
+            indicator.removeClass();
+            
+            if (strength < 3) {
+                indicator.addClass('text-danger').text('Débil');
+            } else if (strength < 5) {
+                indicator.addClass('text-warning').text('Media');
+            } else {
+                indicator.addClass('text-success').text('Fuerte');
+            }
+        });
+    </script>
+}

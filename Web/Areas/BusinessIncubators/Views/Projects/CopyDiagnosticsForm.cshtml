@@ -1,0 +1,148 @@
+@model CopyDiagnosticsFormViewModel
+
+@{
+    var pageTitle = "Copiar formulario de diagnóstico";
+    ViewData["Title"] = pageTitle;
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row flex-between-center">
+                    <div class="col-auto">
+                        <h6 class="mb-0">@pageTitle</h6>
+                        <p class="text-body-tertiary mb-0">Incubadora: <strong>@Model.BusinessIncubatorName</strong></p>
+                    </div>
+                    <div class="col-auto">
+                        <a asp-action="Index" asp-route-businessIncubatorId="@Model.BusinessIncubatorExternalId" class="btn btn-phoenix-secondary btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Regresar
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-8 col-xl-6">
+                        <form asp-action="CopyDiagnosticsForm" method="post">
+                            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-12">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Información:</strong> Al copiar un formulario de diagnóstico, se copiarán todas las preguntas, respuestas y estructura de conocimiento asociada al proyecto seleccionado.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label asp-for="FormId" class="col-sm-3 col-form-label"></label>
+                                <div class="col-sm-9">
+                                    <select asp-for="FormId" asp-items="Model.FormOptions" class="form-select">
+                                    </select>
+                                    <span asp-validation-for="FormId" class="text-danger"></span>
+                                    <div class="form-text">
+                                        Seleccione el formulario de diagnóstico que desea copiar.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <label asp-for="ProjectExternalId" class="col-sm-3 col-form-label"></label>
+                                <div class="col-sm-9">
+                                    <select asp-for="ProjectExternalId" asp-items="Model.ProjectOptions" class="form-select">
+                                    </select>
+                                    <span asp-validation-for="ProjectExternalId" class="text-danger"></span>
+                                    <div class="form-text">
+                                        Seleccione el proyecto al cual desea copiar el formulario.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-sm-9 offset-sm-3">
+                                    <div class="form-check">
+                                        <input asp-for="ResetProjectBeforeCopy" class="form-check-input" type="checkbox" id="resetProjectCheck">
+                                        <label asp-for="ResetProjectBeforeCopy" class="form-check-label" for="resetProjectCheck">
+                                            @Html.DisplayNameFor(m => m.ResetProjectBeforeCopy)
+                                        </label>
+                                        <div class="form-text">
+                                            <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                                            Si marca esta opción, se eliminará todo el contenido actual del proyecto (bloques, estructura de conocimiento, preguntas y respuestas) antes de copiar el nuevo formulario.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-sm-9 offset-sm-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-copy me-1"></i>
+                                        Copiar formulario
+                                    </button>
+                                    <a asp-action="Index" asp-route-businessIncubatorId="@Model.BusinessIncubatorExternalId" class="btn btn-phoenix-secondary ms-2">
+                                        Cancelar
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="col-lg-4 col-xl-6">
+                        <div class="card bg-body-tertiary">
+                            <div class="card-header">
+                                <h6 class="mb-0">¿Qué se copia?</h6>
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Todas las preguntas del formulario
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Opciones de respuesta y puntuaciones
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Estructura de conocimiento asociada
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Bloques de preguntas
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="fas fa-check text-success me-2"></i>
+                                        Configuración FODA y ODSR
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Add loading state to form submission
+            $('form').on('submit', function() {
+                const submitButton = $(this).find('button[type="submit"]');
+                const originalText = submitButton.html();
+                
+                submitButton.prop('disabled', true);
+                submitButton.html('<i class="fas fa-spinner fa-spin me-1"></i>Copiando...');
+                
+                // Re-enable after 10 seconds to prevent permanent disable if something goes wrong
+                setTimeout(function() {
+                    submitButton.prop('disabled', false);
+                    submitButton.html(originalText);
+                }, 10000);
+            });
+        });
+    </script>
+}

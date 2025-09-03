@@ -1,0 +1,36 @@
+@model LinaSys.Web.Models.Invitations.InvitationExpiredViewModel
+@{
+    ViewData["Title"] = "Invitación Expirada";
+    Layout = "_HeadlessLayout";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body text-center p-5">
+                    <i class="fas fa-clock text-danger" style="font-size: 4rem;"></i>
+                    <h3 class="mt-3">Invitación Expirada</h3>
+                    <p class="text-muted">
+                        Hola <strong>@Model.FullName</strong>, lamentablemente tu invitación para participar en el proyecto 
+                        <strong>@Model.ProjectName</strong> ha expirado.
+                    </p>
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <i class="fas fa-envelope"></i> 
+                            La invitación fue enviada a: @Model.Email
+                        </small>
+                    </div>
+                    <p class="text-muted">
+                        Para obtener una nueva invitación, por favor contacta al administrador del proyecto.
+                    </p>
+                    <div class="mt-4">
+                        <a href="/" class="btn btn-primary">
+                            <i class="fas fa-home"></i> Ir al Inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Shared.Application\LinaSys.Shared.Application.csproj" />
+        <ProjectReference Include="..\Notification.Domain\LinaSys.Notification.Domain.csproj" />
+        <ProjectReference Include="..\Auth.Domain\LinaSys.Auth.Domain.csproj" />
+        <ProjectReference Include="..\BusinessIncubator.Domain\LinaSys.BusinessIncubator.Domain.csproj" />
+        <ProjectReference Include="..\UserManagement.Domain\LinaSys.UserManagement.Domain.csproj" />
+        <ProjectReference Include="..\UserManagement.Application\LinaSys.UserManagement.Application.csproj" />
+    </ItemGroup>
+</Project>

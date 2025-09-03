@@ -1,0 +1,194 @@
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using LinaSys.BusinessIncubator.Domain.Enums;
+using LinaSys.BusinessIncubator.Domain.Repositories;
+using LinaSys.Shared.Application;
+using LinaSys.Shared.Application.MediatR;
+
+namespace LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetProjectFormStructure;
+
+/// <summary>
+/// Handler for getting the form structure for a project.
+/// </summary>
+public sealed class GetProjectFormStructureQueryHandler : BaseCommandHandler<GetProjectFormStructureQuery, ProjectFormStructureDto>
+{
+    private readonly IBusinessIncubatorRepository _repository;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetProjectFormStructureQueryHandler"/> class.
+    /// </summary>
+    /// <param name="repository">The business incubator repository.</param>
+    public GetProjectFormStructureQueryHandler(IBusinessIncubatorRepository repository)
+    {
+        _repository = repository;
+    }
+
+    /// <inheritdoc/>
+    public override async Task<Result<ProjectFormStructureDto>> Handle(GetProjectFormStructureQuery request, CancellationToken cancellationToken)
+    {
+        // Get the project with its knowledge structure
+        var project = await _repository.GetProjectWithKnowledgeStructureByIdAsync(request.ProjectId);
+        if (project == null)
+        {
+            return Result<ProjectFormStructureDto>.Failure(
+                ResultErrorCodes.EntityNotFound,
+                "Proyecto no encontrado.");
+        }
+
+        // Get the knowledge structure
+        var knowledgeStructure = project.ProjectKnowledgeStructures.FirstOrDefault();
+        if (knowledgeStructure == null)
+        {
+            return Result<ProjectFormStructureDto>.Failure(
+                ResultErrorCodes.InvalidOperation,
+                "El proyecto no tiene estructura de conocimiento configurada.");
+        }
+
+        // Build the form structure DTO
+        var formStructure = new ProjectFormStructureDto
+        {
+            FormId = request.FormId,
+            FormName = $"Formulario de Diagnóstico - {project.Name}",
+            Version = knowledgeStructure.CurrentVersion,
+            ProjectId = project.Id,
+            ProjectName = project.Name,
+            Blocks = new()
+        };
+
+        // Get project with blocks
+        var projectWithBlocks = await _repository.GetProjectWithBlocksByIdAsync(request.ProjectId);
+        if (projectWithBlocks == null)
+        {
+            return Result<ProjectFormStructureDto>.Failure(
+                ResultErrorCodes.EntityNotFound,
+                "Proyecto no encontrado.");
+        }
+
+        var blocks = projectWithBlocks.ProjectBlocks;
+
+        // Process each block
+        foreach (var block in blocks.OrderBy(b => b.Order))
+        {
+            var blockDto = new FormBlockDto
+            {
+                Id = block.Id,
+                Name = block.Name,
+                Order = block.Order,
+                Questions = new()
+            };
+
+            // Get questions for this block (only diagnostic questions)
+            var blockQuestions = block.ProjectQuestions
+                .Where(q => q.IsUsedForDiagnosis)
+                .OrderBy(q => q.Order);
+
+            foreach (var question in blockQuestions)
+            {
+                var questionDto = new FormQuestionDto
+                {
+                    Id = question.Id,
+                    Text = question.Text,
+                    HelpText = question.HelpText,
+                    AnswerType = (int)question.AnswerType,
+                    IsRequired = true, // All diagnostic questions are required
+                    Order = question.Order,
+                    TopicId = question.ProjectTopicId,
+                    AnswerOptions = new()
+                };
+
+                // Add answer options for multiple choice questions
+                if (question.AnswerType == Domain.Enums.AnswerType.MultipleChoice)
+                {
+                    foreach (var option in question.ProjectAnswerOptions.OrderBy(o => o.Order))
+                    {
+                        questionDto.AnswerOptions.Add(new AnswerOptionDto
+                        {
+                            Id = option.Id,
+                            Text = option.Text,
+                            Value = option.Text, // Use text as value for now
+                            Score = option.Score,
+                            Order = option.Order
+                        });
+                    }
+                }
+
+                blockDto.Questions.Add(questionDto);
+            }
+
+            // Only add blocks that have questions
+            if (blockDto.Questions.Any())
+            {
+                formStructure.Blocks.Add(blockDto);
+            }
+        }
+
+        // Also get questions from modules/topics that might not be in blocks
+        foreach (var module in knowledgeStructure.ProjectModules.OrderBy(m => m.Order))
+        {
+            foreach (var topic in module.ProjectTopics.OrderBy(t => t.Order))
+            {
+                var topicQuestions = topic.ProjectQuestions
+                    .Where(q => q.IsUsedForDiagnosis && q.ProjectBlockId == null)
+                    .OrderBy(q => q.Order);
+
+                if (topicQuestions.Any())
+                {
+                    // Create a virtual block for topic questions
+                    var topicBlock = new FormBlockDto
+                    {
+                        Id = -topic.Id, // Negative ID to distinguish from real blocks
+                        Name = $"{module.Name} - {topic.Name}",
+                        Order = 1000 + module.Order * 10 + topic.Order, // High order to appear after real blocks
+                        Questions = new()
+                    };
+
+                    foreach (var question in topicQuestions)
+                    {
+                        var questionDto = new FormQuestionDto
+                        {
+                            Id = question.Id,
+                            Text = question.Text,
+                            HelpText = question.HelpText,
+                            AnswerType = (int)question.AnswerType,
+                            IsRequired = true,
+                            Order = question.Order,
+                            TopicId = topic.Id,
+                            TopicName = topic.Name,
+                            AnswerOptions = new()
+                        };
+
+                        // Add answer options for multiple choice questions
+                        if (question.AnswerType == AnswerType.MultipleChoice)
+                        {
+                            foreach (var option in question.ProjectAnswerOptions.OrderBy(o => o.Order))
+                            {
+                                questionDto.AnswerOptions.Add(new AnswerOptionDto
+                                {
+                                    Id = option.Id,
+                                    Text = option.Text,
+                                    Value = option.Text,
+                                    Score = option.Score,
+                                    Order = option.Order
+                                });
+                            }
+                        }
+
+                        topicBlock.Questions.Add(questionDto);
+                    }
+
+                    formStructure.Blocks.Add(topicBlock);
+                }
+            }
+        }
+
+        if (!formStructure.Blocks.Any())
+        {
+            return Result<ProjectFormStructureDto>.Failure(
+                ResultErrorCodes.InvalidOperation,
+                "No hay preguntas de diagnóstico configuradas para este proyecto.");
+        }
+
+        return Result<ProjectFormStructureDto>.Success(formStructure);
+    }
+}

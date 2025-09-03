@@ -1,0 +1,104 @@
+﻿@model (int IdleTimeoutSeconds, int AutoLogoutSeconds, string LogoutUrl)
+
+<div class="modal fade" id="sessionTimeoutModal" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false"
+     aria-labelledby="sessionTimeoutLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-dark">
+                <h5 class="modal-title d-flex align-items-center gap-2" id="sessionTimeoutLabel">
+                    <i class="fas fa-clock text-dark"></i>
+                    Sesión a punto de expirar
+                </h5>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" type="button" id="continueSessionBtn">
+                    Continuar en mi sesión <span id="countdown">(10)</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (() => {
+      const idleTimeoutMs = @Model.IdleTimeoutSeconds * 1000;
+      const autoLogoutMs = @Model.AutoLogoutSeconds * 1000;
+      const autoLogoutSeconds = @Model.AutoLogoutSeconds;
+      const logoutUrl = '@Model.LogoutUrl';
+
+      let idleTimer, logoutTimer, countdownTimer;
+      let countdownValue = autoLogoutSeconds;
+
+      function updateCountdownUI() {
+        const countdownElement = document.getElementById('countdown');
+        if (countdownElement) {
+          countdownElement.textContent = `(${countdownValue})`;
+        }
+      }
+
+      function startCountdown() {
+          stopCountdown();
+          countdownValue = autoLogoutSeconds;
+          updateCountdownUI();
+
+          countdownTimer = setInterval(() => {
+            countdownValue--;
+            updateCountdownUI();
+
+            if (countdownValue <= 0) {
+              stopCountdown();
+              submitLogoutForm();
+            }
+          }, 1000);
+        }
+
+        function stopCountdown() {
+          clearInterval(countdownTimer);
+          countdownTimer = null;
+          const countdownElement = document.getElementById('countdown');
+          if (countdownElement) {
+            countdownElement.textContent = "";
+          }
+        }
+
+        function resetIdleTimer() {
+          clearTimeout(idleTimer);
+          clearTimeout(logoutTimer);
+          stopCountdown();
+
+          idleTimer = setTimeout(() => {
+            const modalEl = document.getElementById('sessionTimeoutModal');
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+            if (!modalEl.classList.contains('show')) {
+              modalInstance.show();
+            }
+
+            startCountdown();
+            logoutTimer = setTimeout(() => {
+              window.location.href = logoutUrl;
+            }, autoLogoutMs);
+          }, idleTimeoutMs);
+        }
+
+      ['click', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt =>
+        document.addEventListener(evt, resetIdleTimer)
+      );
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('continueSessionBtn');
+        if (btn) {
+          btn.addEventListener('click', () => {
+            resetIdleTimer();
+
+            const modalInstance = bootstrap.Modal.getInstance(document.getElementById('sessionTimeoutModal'));
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+          });
+        }
+        resetIdleTimer();
+      });
+    })();
+</script>

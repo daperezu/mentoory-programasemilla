@@ -1,0 +1,159 @@
+@using LinaSys.Web.Models.Context
+@model ContextSelectionViewModel
+
+@{
+    ViewData["Title"] = "Selección de Contexto";
+    Layout = "_HeadlessLayout";
+}
+
+<div class="container-fluid bg-body-tertiary dark__bg-gray-1200">
+    <div class="bg-holder bg-auth-card-overlay" style="background-image:url(/assets/img/bg/37.png);">
+    </div>
+    <!--/.bg-holder-->
+
+    <div class="row flex-center position-relative min-vh-100 g-0 py-5">
+        <div class="col-11 col-sm-10 col-xl-8">
+            <div class="card border border-translucent auth-card">
+                <div class="card-body pe-md-0">
+                    <div class="row align-items-center gx-0 gy-7">
+                        <div class="col-auto bg-body-highlight dark__bg-gray-1100 rounded-3 position-relative overflow-hidden auth-title-box">
+                            <div class="bg-holder" style="background-image:url(/assets/img/bg/38.png);">
+                            </div>
+                            <!--/.bg-holder-->
+
+                            <div class="position-relative px-4 px-lg-7 pt-7 pb-7 pb-sm-5 text-center text-md-start pb-lg-7 pb-md-7">
+                                <h3 class="mb-3 text-body-emphasis fs-7">Ingreso a Mentoory</h3>
+                                <p class="text-body-tertiary">Tu camino al éxito!</p>
+                            </div>
+                            <div class="position-relative z-n1 mb-6 d-none d-md-block text-center mt-md-15"><img class="auth-title-box-img d-dark-none" src="~/assets/img/spot-illustrations/auth.png" alt="" /><img class="auth-title-box-img d-light-none" src="~/assets/img/spot-illustrations/auth-dark.png" alt="" /></div>
+                        </div>
+                        <div class="col mx-auto">
+                            <div class="auth-form-box">
+                                
+                                <div id="contextMessage" class="mb-4">
+                                    <p class="text-muted">
+                                        Seleccione el contexto en el que desea trabajar. Este contexto determinará los permisos y accesos disponibles.
+                                    </p>
+                                </div>
+                                
+                                <div id="globalAdminMessage" class="alert alert-info mb-4" style="display: none;">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Administrador Global:</strong> Puede continuar sin seleccionar incubadora o proyecto, o puede seleccionarlos opcionalmente para trabajar en un contexto específico.
+                                </div>
+
+                                <form id="contextSelectionForm">
+                                    @Html.AntiForgeryToken()
+                                    <div class="row g-4">
+                                        <!-- Role Selection -->
+                                        <div class="col-12">
+                                            <label class="form-label" for="roleSelect">
+                                                <i class="fas fa-user-tag"></i> Rol
+                                            </label>
+                                            <select class="form-select" id="roleSelect" required>
+                                                <option value="">-- Seleccione un rol --</option>
+                                                @foreach (var role in Model.Roles)
+                                                {
+                                                    @if (role == Model.SelectedRole)
+                                                    {
+                                                        <option value="@role" selected>@role</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@role">@role</option>
+                                                    }
+                                                }
+                                            </select>
+                                            <div class="form-text">Seleccione el rol con el que desea trabajar</div>
+                                        </div>
+
+                                        <!-- Incubator Selection -->
+                                        <div class="col-12" id="incubatorSection" style="display: none;">
+                                            <label class="form-label" for="incubatorSelect">
+                                                <i class="fas fa-building"></i> Incubadora <span id="incubatorRequired" class="text-danger">*</span>
+                                                <span id="incubatorOptional" class="badge bg-secondary ms-2" style="display: none;">Opcional</span>
+                                            </label>
+                                            <select class="form-select" id="incubatorSelect">
+                                                <option value="">-- Seleccione una incubadora --</option>
+                                                @if (Model.Incubators?.Any() == true)
+                                                {
+                                                    @foreach (var incubator in Model.Incubators)
+                                                    {
+                                                        @if (incubator.IncubatorId == Model.SelectedIncubatorId)
+                                                        {
+                                                            <option value="@incubator.IncubatorId" selected>@incubator.Name</option>
+                                                        }
+                                                        else
+                                                        {
+                                                            <option value="@incubator.IncubatorId">@incubator.Name</option>
+                                                        }
+                                                    }
+                                                }
+                                            </select>
+                                            <div class="form-text" id="incubatorHelpText">Seleccione la incubadora en la que desea trabajar</div>
+                                        </div>
+
+                                        <!-- Project Selection -->
+                                        <div class="col-12" id="projectSection" style="display: none;">
+                                            <label class="form-label" for="projectSelect">
+                                                <i class="fas fa-project-diagram"></i> Proyecto <span id="projectRequired" class="text-danger">*</span>
+                                                <span id="projectOptional" class="badge bg-secondary ms-2" style="display: none;">Opcional</span>
+                                            </label>
+                                            <select class="form-select" id="projectSelect">
+                                                <option value="">-- Seleccione un proyecto --</option>
+                                                @if (Model.Projects?.Any() == true)
+                                                {
+                                                    @foreach (var project in Model.Projects)
+                                                    {
+                                                        @if (project.ProjectId == Model.SelectedProjectId)
+                                                        {
+                                                            <option value="@project.ProjectId" data-role="@project.UserRole" selected>
+                                                                @project.Name @(!string.IsNullOrEmpty(project.UserRole) ? $"({project.UserRole})" : "")
+                                                            </option>
+                                                        }
+                                                        else
+                                                        {
+                                                            <option value="@project.ProjectId" data-role="@project.UserRole">
+                                                                @project.Name @(!string.IsNullOrEmpty(project.UserRole) ? $"({project.UserRole})" : "")
+                                                            </option>
+                                                        }
+                                                    }
+                                                }
+                                            </select>
+                                            <div class="form-text" id="projectHelpText">Seleccione el proyecto en el que desea trabajar</div>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="col-12">
+                                            <button type="submit" class="btn btn-primary px-8" id="saveContextBtn">
+                                                <i class="fas fa-arrow-right"></i> Continuar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/coordination/context-selection.js"></script>
+    <script>
+        // Initialize with server-side data
+        window.contextSelectionData = {
+            selectedRole: '@Model.SelectedRole',
+            selectedIncubatorId: @(Model.SelectedIncubatorId?.ToString() ?? "null"),
+            selectedProjectId: @(Model.SelectedProjectId?.ToString() ?? "null"),
+            urls: {
+                selectContext: '@Url.Action("SelectContext", "ContextSelection", new { area = string.Empty })',
+                loadContext: '@Url.Action("LoadContext", "ContextSelection", new { area = string.Empty })',
+                getIncubators: '@Url.Action("GetIncubators", "ContextSelection", new { area = string.Empty })',
+                getProjects: '@Url.Action("GetProjects", "ContextSelection", new { area = string.Empty })',
+            }
+        };
+    </script>
+}

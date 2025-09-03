@@ -1,0 +1,120 @@
+@model LinaSys.Web.Areas.Coordination.Models.UserManagement.BatchRoleAssignmentViewModel
+
+<div class="modal fade" id="batchRoleModal" tabindex="-1" aria-labelledby="batchRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="batchRoleModalLabel">
+                    <i class="fas fa-users-cog"></i> Asignación Masiva de Roles
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <form id="batchRoleForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <span id="selectedUsersCount">0</span> usuarios seleccionados
+                    </div>
+
+                    <input type="hidden" id="batchUserIds" asp-for="UserIds" />
+
+                    <div class="mb-3">
+                        <label asp-for="Action" class="form-label"></label>
+                        <select asp-for="Action" class="form-select">
+                            <option value="@LinaSys.Web.Areas.Coordination.Models.UserManagement.RoleAssignmentAction.Add">
+                                Agregar Rol
+                            </option>
+                            <option value="@LinaSys.Web.Areas.Coordination.Models.UserManagement.RoleAssignmentAction.Remove">
+                                Remover Rol
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Role" class="form-label"></label>
+                        <select asp-for="Role" class="form-select">
+                            <option value="">-- Seleccione un rol --</option>
+                            @if (ViewBag.AvailableRoles != null)
+                            {
+                                @foreach (var role in ViewBag.AvailableRoles)
+                                {
+                                    <option value="@role.Value">@role.Text</option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="Role" class="text-danger"></span>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Esta acción afectará a todos los usuarios seleccionados. Asegúrese de revisar su selección.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="batchRoleSubmit">
+                        <i class="fas fa-save"></i> Aplicar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('batchRoleForm');
+        const modal = document.getElementById('batchRoleModal');
+        
+        // Update selected users count when modal opens
+        modal.addEventListener('show.bs.modal', function() {
+            const selectedUsers = getSelectedUsers();
+            document.getElementById('selectedUsersCount').textContent = selectedUsers.length;
+            document.getElementById('batchUserIds').value = JSON.stringify(selectedUsers);
+        });
+
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const selectedUsers = getSelectedUsers();
+            formData.set('UserIds', JSON.stringify(selectedUsers));
+
+            fetch('@Url.Action("BatchRoleAssignment", "UserManagement")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', data.message);
+                    // Refresh the DataTable
+                    $('#userManagementTable').DataTable().ajax.reload();
+                    // Close modal
+                    bootstrap.Modal.getInstance(modal).hide();
+                } else {
+                    showToast('error', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('error', 'Error al procesar la solicitud');
+            });
+        });
+    });
+
+    function getSelectedUsers() {
+        // This function should be implemented to get selected users from the DataTable
+        // For now, return empty array
+        const checkboxes = document.querySelectorAll('.user-select-checkbox:checked');
+        return Array.from(checkboxes).map(cb => cb.value);
+    }
+
+    function showToast(type, message) {
+        // Implement toast notification
+        // For now, use alert
+        alert(message);
+    }
+</script>

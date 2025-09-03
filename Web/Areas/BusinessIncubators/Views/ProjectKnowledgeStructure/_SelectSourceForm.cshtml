@@ -1,0 +1,216 @@
+@model LinaSys.Web.Areas.BusinessIncubators.Models.ProjectKnowledgeStructure.SelectSourceFormViewModel
+
+<div class="row">
+    <div class="col-12">
+        <div class="mb-3">
+            <label class="form-label">Tipo de Origen</label>
+            <select id="sourceType" class="form-select">
+                <option value="">Seleccione un tipo...</option>
+                @foreach (var sourceType in Model.SourceTypes)
+                {
+                    <option value="@sourceType.Value">@sourceType.Text</option>
+                }
+            </select>
+            <small class="form-hint" id="sourceTypeHint"></small>
+        </div>
+    </div>
+</div>
+
+<div class="row" id="formSelectionRow" style="display: none;">
+    <div class="col-12">
+        <div class="mb-3">
+            <label class="form-label">Formulario</label>
+            <select id="sourceForm" class="form-select">
+                <option value="">Seleccione un formulario...</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="row" id="formPreviewRow" style="display: none;">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Vista Previa</h4>
+            </div>
+            <div class="card-body">
+                <div id="formPreview">
+                    <!-- Preview content will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    <button type="button" class="btn btn-primary" id="btnConfirmCopy" disabled>
+        <i class="ti ti-copy"></i> Copiar Estructura
+    </button>
+</div>
+
+<script>
+    $(document).ready(function() {
+        const businessIncubatorId = '@Model.BusinessIncubatorId';
+        const projectId = '@Model.ProjectId';
+        
+        $('#sourceType').on('change', function() {
+            const sourceType = $(this).val();
+            const sourceTypes = @Json.Serialize(Model.SourceTypes);
+            const selectedType = sourceTypes.find(t => t.value === sourceType);
+            
+            if (selectedType) {
+                $('#sourceTypeHint').text(selectedType.description);
+                loadSourceForms(sourceType);
+                $('#formSelectionRow').show();
+            } else {
+                $('#sourceTypeHint').text('');
+                $('#formSelectionRow').hide();
+                $('#formPreviewRow').hide();
+                $('#btnConfirmCopy').prop('disabled', true);
+            }
+        });
+        
+        $('#sourceForm').on('change', function() {
+            const formId = $(this).val();
+            if (formId) {
+                loadFormPreview(formId);
+                $('#formPreviewRow').show();
+                $('#btnConfirmCopy').prop('disabled', false);
+            } else {
+                $('#formPreviewRow').hide();
+                $('#btnConfirmCopy').prop('disabled', true);
+            }
+        });
+        
+        $('#btnConfirmCopy').on('click', function() {
+            const sourceType = $('#sourceType').val();
+            const sourceFormId = $('#sourceForm').val();
+            
+            if (!sourceType || !sourceFormId) {
+                showToast('error', 'Debe seleccionar un tipo de origen y un formulario');
+                return;
+            }
+            
+            copyKnowledgeStructure(sourceType, sourceFormId);
+        });
+        
+        function loadSourceForms(sourceType) {
+            $('#sourceForm').html('<option value="">Cargando...</option>');
+            
+            // Load sources from API based on type
+            $.get(`/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/GetAvailableSources?sourceType=${sourceType}`)
+                .done(function(sources) {
+                    let options = '<option value="">Seleccione...</option>';
+                    
+                    if (sources && sources.length > 0) {
+                        sources.forEach(source => {
+                            const label = sourceType === '2' ? `${source.name} (Proyecto)` : source.name;
+                            options += `<option value="${source.id}" data-type="${source.type}">${label}</option>`;
+                        });
+                    } else {
+                        const message = sourceType === '2' 
+                            ? 'No hay otros proyectos con estructura de conocimiento' 
+                            : 'No hay formularios disponibles';
+                        options = `<option value="">${message}</option>`;
+                    }
+                    
+                    $('#sourceForm').html(options);
+                })
+                .fail(function() {
+                    $('#sourceForm').html('<option value="">Error al cargar opciones</option>');
+                });
+        }
+        
+        function loadFormPreview(formId) {
+            $('#formPreview').html('<div class="text-center"><div class="spinner-border" role="status"></div></div>');
+            
+            const selectedOption = $('#sourceForm option:selected');
+            const sourceType = $('#sourceType').val();
+            const sourceName = selectedOption.text();
+            
+            if (formId && sourceName) {
+                // Get structure preview from API
+                $.get(`/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/GetSourcePreview?sourceType=${sourceType}&sourceId=${formId}`)
+                    .done(function(preview) {
+                        const typeLabel = sourceType === '2' 
+                            ? 'Proyecto de la Incubadora' 
+                            : 'Formulario de Diagnóstico Global';
+                        
+                        let modulesHtml = '';
+                        if (preview.modules && preview.modules.length > 0) {
+                            modulesHtml = '<ul class="list-unstyled mt-3">';
+                            preview.modules.forEach(module => {
+                                modulesHtml += `<li class="mb-2">
+                                    <i class="ti ti-folder"></i> <strong>${module.name}</strong>
+                                    <span class="text-muted ms-2">
+                                        ${module.questionsCount} preguntas
+                                        ${module.topicsCount ? `, ${module.topicsCount} temas` : ''}
+                                    </span>
+                                </li>`;
+                            });
+                            modulesHtml += '</ul>';
+                        } else {
+                            modulesHtml = '<p class="text-muted">No se encontraron módulos</p>';
+                        }
+                        
+                        $('#formPreview').html(`
+                            <div class="form-preview">
+                                <h5>${sourceName}</h5>
+                                <p class="text-muted">Tipo: ${typeLabel}</p>
+                                <div class="mt-3">
+                                    <h6>Estructura a copiar:</h6>
+                                    ${modulesHtml}
+                                    <p class="text-info mt-3">
+                                        <i class="ti ti-info-circle"></i> ${preview.message}
+                                    </p>
+                                    ${preview.totalQuestions > 0 ? `<p class="text-muted">Total de preguntas: ${preview.totalQuestions}</p>` : ''}
+                                </div>
+                            </div>
+                        `);
+                    })
+                    .fail(function() {
+                        $('#formPreview').html(`
+                            <div class="form-preview">
+                                <h5>${sourceName}</h5>
+                                <p class="text-muted">ID: ${formId}</p>
+                                <p class="text-muted">Tipo: ${sourceType === '2' ? 'Proyecto de la Incubadora' : 'Formulario de Diagnóstico Global'}</p>
+                                <div class="alert alert-warning mt-3">
+                                    <i class="ti ti-alert-circle"></i> 
+                                    No se pudo cargar la vista previa detallada
+                                </div>
+                            </div>
+                        `);
+                    });
+            } else {
+                $('#formPreview').html('<p class="text-danger">Error al cargar la vista previa</p>');
+            }
+        }
+        
+        function copyKnowledgeStructure(sourceType, sourceFormId) {
+            const data = {
+                sourceType: parseInt(sourceType),
+                sourceFormId: parseInt(sourceFormId)
+            };
+            
+            $.ajax({
+                url: `/BusinessIncubators/${businessIncubatorId}/Projects/${projectId}/KnowledgeStructure/CopyStructure`,
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(result) {
+                    if (result.success) {
+                        $('#sourceSelectionModal').modal('hide');
+                        showToast('success', result.message);
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showToast('error', 'Error al copiar la estructura');
+                    }
+                },
+                error: function() {
+                    showToast('error', 'Error al copiar la estructura');
+                }
+            });
+        }
+    });
+</script>

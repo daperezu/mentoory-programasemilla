@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="..\Diagnostics.Domain\LinaSys.Diagnostics.Domain.csproj" />
+        <ProjectReference Include="..\Diagnostics.Infrastructure\LinaSys.Diagnostics.Infrastructure.csproj" />
+        <ProjectReference Include="..\Shared.Application\LinaSys.Shared.Application.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="ProjectForm\Commands\" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,39 @@
+@model LinaSys.KnowledgeStructure.Application.Module.DTOs.ModuleDetailDto
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="fa fa-book"></i> Módulo
+        </h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-4">Nombre:</dt>
+            <dd class="col-sm-8">@Model.Name</dd>
+            
+            <dt class="col-sm-4">Descripción:</dt>
+            <dd class="col-sm-8">@(Model.Description ?? "Sin descripción")</dd>
+            
+            <dt class="col-sm-4">Orden:</dt>
+            <dd class="col-sm-8">@Model.Order</dd>
+            
+            <dt class="col-sm-4">Estructura:</dt>
+            <dd class="col-sm-8">@Model.KnowledgeStructureName</dd>
+            
+            <dt class="col-sm-4">Temas:</dt>
+            <dd class="col-sm-8">@Model.TopicCount</dd>
+        </dl>
+        
+        <div class="node-actions">
+            <a href="@Url.Action("Edit", "Modules", new { id = Model.Id })" class="btn btn-primary">
+                <i class="fa fa-edit"></i> Editar
+            </a>
+            <a href="@Url.Action("Create", "Topics", new { structureModuleId = Model.Id })" class="btn btn-success">
+                <i class="fa fa-plus"></i> Agregar Tema
+            </a>
+            <button type="button" class="btn btn-danger" onclick="deleteModule(@Model.Id)">
+                <i class="fa fa-trash"></i> Eliminar
+            </button>
+        </div>
+    </div>
+</div>

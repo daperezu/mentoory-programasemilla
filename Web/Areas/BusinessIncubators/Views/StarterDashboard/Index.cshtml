@@ -1,0 +1,373 @@
+@model LinaSys.BusinessIncubator.Application.Starter.Queries.GetStarterDashboard.StarterDashboardDto
+@{
+    ViewData["Title"] = "Mi Dashboard";
+    Layout = "_DashboardLayout";
+    
+    ViewBag.ShowProjectSelector = true;
+    ViewBag.ShowRefreshButton = true;
+    ViewBag.ShowSettingsButton = true;
+    ViewBag.CurrentProjectName = Model.ProjectName;
+    ViewBag.ProjectBadge = Model.ProjectName; // Using ProjectName as badge since ProjectStatus doesn't exist
+    ViewBag.Subtitle = $"Bienvenido, {Model.UserName}";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dashboard-core.css" />
+}
+
+@* Dashboard Header with Quick Actions *@
+<div class="dashboard-header mb-3">
+    <div class="d-flex justify-content-between align-items-center">
+        <h4 class="mb-0">Dashboard del Participante</h4>
+        <button class="btn btn-phoenix-primary btn-sm add-widget-btn">
+            <span class="fas fa-plus me-1"></span>Agregar Widget
+        </button>
+    </div>
+</div>
+
+@* Phoenix Template Dashboard Grid with Drag & Drop Support *@
+<div class="row g-3 mb-4 dashboard-grid">
+    @* Progress Overview Card *@
+    <div class="col-12 col-md-6 col-xxl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="mb-1 text-900">Progreso General</h5>
+                        <h2 class="text-1000">@Model.Progress.OverallProgress%</h2>
+                        <div class="badge badge-phoenix badge-phoenix-success">
+                            <span class="fa-solid fa-arrow-up me-1"></span>+5% esta semana
+                        </div>
+                    </div>
+                    <div class="ps-3">
+                        <div class="echart-progress-chart" data-progress="@Model.Progress.OverallProgress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Tasks Pending Card *@
+    <div class="col-12 col-md-6 col-xxl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="mb-1 text-900">Tareas Pendientes</h5>
+                        <h2 class="text-1000">@Model.UpcomingTasks.Count()</h2>
+                        <p class="fs-10 fw-semi-bold text-500 mb-0">De @Model.Tasks.Count total</p>
+                    </div>
+                    <div class="ps-3">
+                        <span class="fas fa-tasks fa-3x text-primary-300"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Next Milestone Card *@
+    <div class="col-12 col-md-6 col-xxl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="mb-1 text-900">Próximo Hito</h5>
+                        <h6 class="text-800">@Model.Progress.NextMilestoneName</h6>
+                        <p class="fs-10 fw-semi-bold text-warning-500 mb-0">
+                            <span class="far fa-calendar me-1"></span>
+                            @(Model.Progress.NextMilestoneDate?.ToString("dd MMM yyyy") ?? "Sin fecha")
+                        </p>
+                    </div>
+                    <div class="ps-3">
+                        <span class="fas fa-flag-checkered fa-3x text-warning-300"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Mentor Info Card *@
+    <div class="col-12 col-md-6 col-xxl-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h5 class="mb-1 text-900">Mi Mentor</h5>
+                        <h6 class="text-800">@Model.MentorInfo?.MentorName</h6>
+                        <a href="mailto:@Model.MentorInfo?.MentorEmail" class="btn btn-phoenix-primary btn-sm mt-2">
+                            <span class="fas fa-comments me-1"></span>Contactar
+                        </a>
+                    </div>
+                    <div class="ps-3">
+                        <img src="@(Model.MentorInfo?.MentorPhoto ?? "/assets/img/team/avatar.webp")" 
+                             alt="Mentor" class="rounded-circle" width="60" height="60">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Main Content Row *@
+<div class="row g-3 mb-4">
+    @* Tasks List Widget *@
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header bg-body-tertiary py-3">
+                <div class="row align-items-center g-2">
+                    <div class="col">
+                        <h6 class="mb-0">Mis Tareas</h6>
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-phoenix-secondary btn-sm">
+                            <span class="fas fa-filter"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @foreach (var task in Model.Tasks.Take(5))
+                    {
+                        <div class="list-group-item px-4 py-3">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div class="form-check mb-0">
+                                        <input class="form-check-input task-checkbox" type="checkbox" 
+                                               id="task-@task.Id" data-task-id="@task.Id"
+                                               @(task.Status == "completed" ? "checked" : "")>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <label for="task-@task.Id" class="form-label mb-0 @(task.Status == "completed" ? "text-decoration-line-through text-500" : "")">
+                                        @task.Title
+                                    </label>
+                                    <p class="fs-10 text-500 mb-0">@task.Category</p>
+                                </div>
+                                <div class="col-auto">
+                                    <span class="badge badge-phoenix badge-phoenix-@(task.Priority == "high" ? "danger" : task.Priority == "medium" ? "warning" : "info")">
+                                        @task.Priority
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="card-footer bg-body-tertiary py-2">
+                <a href="@Url.Action("GetTasksData", "StarterDashboard", new { projectId = ViewBag.ProjectId })" class="btn btn-link btn-sm" data-bs-toggle="modal" data-bs-target="#tasksModal">Ver todas las tareas</a>
+            </div>
+        </div>
+    </div>
+
+    @* Progress Timeline Widget *@
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header bg-body-tertiary py-3">
+                <h6 class="mb-0">Línea de Tiempo del Proyecto</h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline-vertical timeline-with-details">
+                    @for (int i = 0; i < Math.Min(4, Model.Milestones.Count); i++)
+                    {
+                        var milestone = Model.Milestones[i];
+                        var isCompleted = milestone.Status == "completed";
+                        var isCurrent = milestone.Status == "in_progress";
+                        
+                        <div class="timeline-item position-relative">
+                            <div class="row">
+                                <div class="col-auto timeline-item-bar position-relative">
+                                    <div class="icon-item icon-item-sm @(isCompleted ? "bg-success" : isCurrent ? "bg-warning" : "bg-300") text-white">
+                                        <span class="fas fa-@(isCompleted ? "check" : isCurrent ? "spinner fa-spin" : "circle") fs-10"></span>
+                                    </div>
+                                    @if (i < Model.Milestones.Count - 1)
+                                    {
+                                        <span class="timeline-bar @(isCompleted ? "bg-success" : "bg-300")"></span>
+                                    }
+                                </div>
+                                <div class="col">
+                                    <div class="timeline-item-content ps-1">
+                                        <h6 class="fs-9 mb-1">@milestone.Name</h6>
+                                        <p class="fs-10 text-500 mb-0">@milestone.Description</p>
+                                        <p class="fs-11 text-600 mb-2">
+                                            <span class="far fa-calendar me-1"></span>
+                                            @milestone.TargetDate.ToString("dd MMM yyyy")
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Notifications and Resources Row *@
+<div class="row g-3">
+    @* Recent Notifications *@
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header bg-body-tertiary py-3">
+                <div class="row align-items-center g-2">
+                    <div class="col">
+                        <h6 class="mb-0">Notificaciones Recientes</h6>
+                    </div>
+                    <div class="col-auto">
+                        <span class="badge badge-phoenix badge-phoenix-primary">
+                            @Model.Metrics.UnreadNotifications
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @foreach (var activity in Model.RecentActivities.Take(5))
+                    {
+                        <div class="list-group-item px-4 py-3">
+                            <div class="row align-items-center">
+                                <div class="col-auto">
+                                    <div class="avatar avatar-m">
+                                        <div class="avatar-name rounded-circle bg-info-subtle">
+                                            <span class="@activity.Icon text-info"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <p class="mb-0">@activity.Description</p>
+                                    <p class="fs-10 text-500 mb-0">@activity.Date.ToString("dd MMM HH:mm")</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* Resources and Documents *@
+    <div class="col-12 col-xl-6">
+        <div class="card h-100">
+            <div class="card-header bg-body-tertiary py-3">
+                <h6 class="mb-0">Recursos y Documentos</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="@Url.Action("Index", "Resource", new { projectId = ViewBag.ProjectId, category = "guide" })" class="btn btn-outline-primary w-100 py-3">
+                            <span class="fas fa-book fa-2x mb-2 d-block"></span>
+                            <span>Guías de Estudio</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="@Url.Action("Index", "Resource", new { projectId = ViewBag.ProjectId, category = "video" })" class="btn btn-outline-info w-100 py-3">
+                            <span class="fas fa-video fa-2x mb-2 d-block"></span>
+                            <span>Videos Tutoriales</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="@Url.Action("Index", "Resource", new { projectId = ViewBag.ProjectId, category = "template" })" class="btn btn-outline-success w-100 py-3">
+                            <span class="fas fa-file-alt fa-2x mb-2 d-block"></span>
+                            <span>Plantillas</span>
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="@Url.Action("Index", "Resource", new { projectId = ViewBag.ProjectId })" class="btn btn-outline-warning w-100 py-3">
+                            <span class="fas fa-folder-open fa-2x mb-2 d-block"></span>
+                            <span>Todos los Recursos</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/businessincubators/dashboard-core.js"></script>
+    <script src="~/js/businessincubators/starter-dashboard.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize dashboard with full configuration
+            if (typeof StarterDashboard !== 'undefined') {
+                window.starterDashboard = new StarterDashboard({
+                    dashboardId: '@Model.ProjectId',
+                    projectId: @(ViewBag.ProjectId ?? 0),
+                    userId: '@Model.UserId',
+                    refreshInterval: 60000,
+                    enableDragDrop: true,
+                    enableAutoSave: true,
+                    apiEndpoints: {
+                        loadWidgets: '@Url.Action("GetWidgetData", "StarterDashboard")',
+                        saveLayout: '@Url.Action("UpdatePreferences", "StarterDashboard")',
+                        refreshWidget: '@Url.Action("RefreshWidget", "StarterDashboard")',
+                        updatePreferences: '@Url.Action("UpdatePreferences", "StarterDashboard")',
+                        completeTask: '@Url.Action("CompleteTask", "StarterDashboard")',
+                        markNotificationRead: '@Url.Action("MarkNotificationRead", "StarterDashboard")',
+                        getWidgetData: '@Url.Action("GetWidgetData", "StarterDashboard")'
+                    }
+                });
+                
+                // Make dashboard available globally for debugging
+                window.dashboardCore = window.starterDashboard;
+            }
+            
+            // Function to mark notification as read
+            window.markNotificationAsRead = function(notificationId) {
+                fetch('@Url.Action("MarkNotificationRead", "StarterDashboard")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ notificationId: notificationId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove highlight and hide button
+                        const notificationElement = document.querySelector(`[data-notification-id="${notificationId}"]`).closest('.list-group-item');
+                        notificationElement.classList.remove('bg-primary-100');
+                        document.querySelector(`[data-notification-id="${notificationId}"]`).style.display = 'none';
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            };
+            
+            // Handle task completion
+            document.querySelectorAll('.task-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const taskId = this.dataset.taskId;
+                    const isCompleted = this.checked;
+                    
+                    if (isCompleted) {
+                        fetch('@Url.Action("CompleteTask", "StarterDashboard")', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            },
+                            body: JSON.stringify({ taskId: taskId })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Add strikethrough effect
+                                const label = document.querySelector(`label[for="task-${taskId}"]`);
+                                label.classList.add('text-decoration-line-through', 'text-500');
+                            } else {
+                                // Revert checkbox if failed
+                                this.checked = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            this.checked = false;
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

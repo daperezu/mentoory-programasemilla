@@ -1,0 +1,262 @@
+@model LinaSys.Web.Areas.BusinessIncubators.Models.ParticipantForm.ParticipantFormViewModel
+@{
+    ViewData["Title"] = "Completar Formulario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@section Styles {
+    <style>
+        .wizard-container {
+            min-height: calc(100vh - 200px);
+        }
+
+        .wizard-nav {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+
+        .wizard-nav .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s;
+        }
+
+        .wizard-nav .nav-link:hover {
+            background-color: var(--phoenix-gray-100);
+        }
+
+        .wizard-nav .nav-link.active {
+            background-color: var(--phoenix-primary);
+            color: white;
+        }
+
+        .wizard-nav .nav-link.completed {
+            color: var(--phoenix-success);
+        }
+
+        .nav-item-circle-parent {
+            margin-right: 0.75rem;
+        }
+
+        .nav-item-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: var(--phoenix-gray-200);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .nav-link.active .nav-item-circle {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .nav-link.completed .nav-item-circle {
+            background-color: var(--phoenix-success);
+            color: white;
+        }
+
+        .progress-wrapper {
+            margin-bottom: 2rem;
+        }
+
+        .progress {
+            height: 0.5rem;
+            background-color: var(--phoenix-gray-200);
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .progress-percentage {
+            font-weight: 600;
+            color: var(--phoenix-primary);
+        }
+
+        .form-question {
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--phoenix-gray-200);
+        }
+
+        .form-question:last-child {
+            border-bottom: none;
+        }
+
+        .question-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .question-required {
+            color: var(--phoenix-danger);
+            font-weight: normal;
+        }
+
+        .question-help {
+            font-size: 0.875rem;
+            color: var(--phoenix-gray-600);
+            margin-top: 0.25rem;
+        }
+
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 0.5rem 1rem;
+            background-color: var(--phoenix-gray-900);
+            color: white;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 1050;
+        }
+
+        .auto-save-indicator.show {
+            display: flex;
+        }
+
+        .auto-save-indicator.saving {
+            background-color: var(--phoenix-info);
+        }
+
+        .auto-save-indicator.saved {
+            background-color: var(--phoenix-success);
+        }
+
+        .auto-save-indicator.error {
+            background-color: var(--phoenix-danger);
+        }
+
+        @@media (max-width: 768px) {
+            .wizard-nav {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                max-height: 200px;
+                background-color: white;
+                border-top: 1px solid var(--phoenix-gray-200);
+                z-index: 1040;
+                padding: 1rem;
+            }
+
+            .wizard-nav .nav {
+                flex-direction: row !important;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+
+            .wizard-nav .nav-link {
+                white-space: nowrap;
+                margin-right: 0.5rem;
+                margin-bottom: 0;
+            }
+
+            .main-content {
+                padding-bottom: 220px;
+            }
+        }
+    </style>
+}
+
+<div class="container-fluid wizard-container">
+    <div class="row">
+        <!-- Progress Bar -->
+        <div class="col-12">
+            <div class="progress-wrapper">
+                <div class="progress">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" id="progressBar"></div>
+                </div>
+                <div class="progress-info">
+                    <span class="progress-percentage" id="progressPercentage">0%</span>
+                    <span class="progress-text" id="progressText">Cargando formulario...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3 col-md-4">
+            <div class="wizard-nav" id="wizardNav">
+                <div class="nav nav-pills flex-column" id="blockNavigation">
+                    <!-- Blocks will be loaded here dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9 col-md-8 main-content">
+            <div id="formContent">
+                <!-- Form blocks will be loaded here -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3">Cargando formulario...</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mt-4" id="actionButtons" style="display: none !important;">
+                <button class="btn btn-falcon-default" id="btnPrevious" disabled>
+                    <i class="fas fa-chevron-left me-1"></i> Anterior
+                </button>
+                <div>
+                    <button class="btn btn-light me-2" id="btnSaveDraft">
+                        <i class="fas fa-save me-1"></i> Guardar Borrador
+                    </button>
+                    <button class="btn btn-primary" id="btnNext">
+                        Siguiente <i class="fas fa-chevron-right ms-1"></i>
+                    </button>
+                    <button class="btn btn-success" id="btnSubmit" style="display: none;">
+                        <i class="fas fa-paper-plane me-1"></i> Enviar Formulario
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Auto-save Indicator -->
+<div class="auto-save-indicator" id="autoSaveIndicator">
+    <span class="spinner-border spinner-border-sm" id="saveSpinner" style="display: none;"></span>
+    <i class="fas fa-check" id="saveCheck" style="display: none;"></i>
+    <i class="fas fa-exclamation-triangle" id="saveError" style="display: none;"></i>
+    <span id="saveText">Guardando...</span>
+</div>
+
+@section Scripts {
+    <script>
+        // Configuration
+        const config = {
+            businessIncubatorId: '@Model.BusinessIncubatorExternalId',
+            projectId: '@Model.ProjectExternalId',
+            projectIdNumeric: @Model.ProjectId,
+            formId: @Model.FormId,
+            submissionId: @(Model.SubmissionId?.ToString() ?? "null"),
+            canSubmit: @(Model.CanSubmit ? "true" : "false")
+        };
+
+        // Initial draft data
+        let draftData = @Html.Raw(Model.DraftData != null ? System.Text.Json.JsonSerializer.Serialize(Model.DraftData) : "null");
+    </script>
+    <script src="~/js/businessincubators/participant-form.js"></script>
+}

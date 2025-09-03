@@ -1,0 +1,459 @@
+@using LinaSys.Web.Models.Shared
+@using LinaSys.Web.Helpers
+@using LinaSys.Shared.Domain.Constants
+@model LinaSys.Web.Areas.Coordination.Models.UserManagement.UserManagementIndexViewModel
+@{
+    ViewData["Title"] = "Administración de Usuarios";
+
+    // Define DataTable columns based on user role
+    var columns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Usuario",
+            Data = "fullName",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "renderUserColumn"
+        },
+        new()
+        {
+            Header = "Email",
+            Data = "email",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "renderEmailColumn"
+        },
+        new()
+        {
+            Header = "Identificación",
+            Data = "identification",
+            RenderType = ColRenderType.Default
+        },
+        new()
+        {
+            Header = "Roles",
+            Data = "roles",
+            RenderType = ColRenderType.Custom,
+            RenderJs = "renderRoleBadges"
+        }
+    };
+
+    // Add incubator column for global admins
+    if (Model.IsGlobalAdmin)
+    {
+        columns.Add(new()
+        {
+            Header = "Incubadora",
+            Data = "incubatorName",
+            RenderType = ColRenderType.Default
+        });
+    }
+
+    // Add status column
+    columns.Add(new()
+    {
+        Header = "Estado",
+        Data = "status",
+        RenderType = ColRenderType.Custom,
+        RenderJs = "renderStatusColumn"
+    });
+
+    // Define hover actions - will be enhanced with context-aware actions in JavaScript
+    var hoverActions = new List<HoverAction>
+    {
+        new()
+        {
+            Text = "Ver detalles",
+            Url = "/Coordination/UserManagement/Details/{{userId}}",
+            IconClass = "fas fa-eye"
+        }
+    };
+
+    if (Model.CanEditUsers)
+    {
+        hoverActions.Add(new()
+        {
+            Text = "Editar",
+            Url = "/Coordination/UserManagement/Edit/{{userId}}",
+            IconClass = "fas fa-edit"
+        });
+        
+        // Audit history button
+        hoverActions.Add(new()
+        {
+            Text = "Historial",
+            Url = "javascript:viewAuditHistory('{{userId}}', '{{fullName}}')",
+            IconClass = "fas fa-history"
+        });
+        
+        // Placeholder for context-aware actions (will be handled in JavaScript)
+        hoverActions.Add(new()
+        {
+            Text = "", // Dynamic text based on status
+            Url = "#",
+            IconClass = "dynamic-action"
+        });
+    }
+
+    // Page header actions
+    var pageHeaderActions = new List<PageHeaderDropdownItem>();
+
+    if (Model.CanCreateUsers)
+    {
+        pageHeaderActions.Add(new()
+        {
+            IconClass = "fa-solid fa-user-plus me-2",
+            Text = "Nuevo Usuario",
+            Url = Url.Action("Create")!
+        });
+        
+        pageHeaderActions.Add(new()
+        {
+            IconClass = "fa-solid fa-file-import me-2",
+            Text = "Importación Masiva",
+            Url = Url.Action("BulkImport")!
+        });
+    }
+
+    pageHeaderActions.Add(new()
+    {
+        IconClass = "fa-solid fa-download me-2",
+        Text = "Exportar Datos",
+        Url = "javascript:$('#exportModal').modal('show')"
+    });
+}
+
+<page-header title="@ViewData["Title"]"
+             icon-class="fa-solid fa-users"
+             dropdown-items="@pageHeaderActions"></page-header>
+
+<datatable ajax-url="@Url.Action("ListUsers")"
+           columns="@columns"
+           hover-actions="@hoverActions"
+           table-id="userManagementTable"
+           show-filter-toggle="true"></datatable>
+
+@* Include Bulk Progress Modal *@
+@await Html.PartialAsync("_BulkProgressModal")
+
+@* Include Export Modal *@
+@await Html.PartialAsync("_ExportModal")
+
+@section Scripts {
+    @* SignalR library *@
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    
+    @* User Management SignalR client *@
+    <script src="~/js/user-management-signalr.js"></script>
+    
+    <script>
+        // User column rendering with avatar and verification badge
+        window.renderUserColumn = function(data, type, row) {
+            if (type !== 'display') {
+                return data;
+            }
+            
+            const avatarUrl = row.avatarUrl || '/images/default-avatar.svg';
+            const initials = row.firstName.charAt(0) + row.lastName.charAt(0);
+            const verifiedBadge = row.emailVerified 
+                ? '<i class="fas fa-check-circle text-success ms-1" title="Email verificado"></i>' 
+                : '';
+            
+            return `
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-2xl me-2">
+                        ${row.avatarUrl 
+                            ? `<img class="rounded-circle" src="${avatarUrl}" alt="${data}" />`
+                            : `<div class="avatar-name rounded-circle"><span>${initials}</span></div>`
+                        }
+                    </div>
+                    <div>
+                        <h6 class="mb-0">${data}${verifiedBadge}</h6>
+                        <small class="text-muted">${row.identification || 'Sin identificación'}</small>
+                    </div>
+                </div>
+            `;
+        };
+        
+        // Email column rendering with verification status
+        window.renderEmailColumn = function(data, type, row) {
+            if (type !== 'display' || !data) {
+                return data || '';
+            }
+            
+            const verificationIcon = row.emailVerified
+                ? '<i class="fas fa-shield-check text-success ms-1" title="Verificado"></i>'
+                : '<i class="fas fa-exclamation-triangle text-warning ms-1" title="No verificado"></i>';
+                
+            return `${data}${verificationIcon}`;
+        };
+        
+        // Status column rendering with invitation countdown
+        window.renderStatusColumn = function(data, type, row) {
+            if (type !== 'display') {
+                return row.isActive ? 'active' : 'inactive';
+            }
+            
+            // Check if user has pending invitation
+            if (row.invitationStatus === 'pending' && row.invitationExpiresAt) {
+                const expiresAt = new Date(row.invitationExpiresAt);
+                const now = new Date();
+                const hoursLeft = Math.floor((expiresAt - now) / (1000 * 60 * 60));
+                
+                if (hoursLeft > 0) {
+                    return `
+                        <span class="badge badge-phoenix-warning">
+                            <i class="fas fa-clock me-1"></i>Invitación pendiente (${hoursLeft}h)
+                        </span>
+                    `;
+                } else {
+                    return `
+                        <span class="badge badge-phoenix-secondary">
+                            <i class="fas fa-times-circle me-1"></i>Invitación expirada
+                        </span>
+                    `;
+                }
+            }
+            
+            // Regular active/inactive status
+            return row.isActive
+                ? '<span class="badge badge-phoenix-success"><i class="fas fa-check me-1"></i>Activo</span>'
+                : '<span class="badge badge-phoenix-danger"><i class="fas fa-ban me-1"></i>Inactivo</span>';
+        };
+        
+        // Role badge rendering function - make it global so DataTable can access it
+        window.renderRoleBadges = function(data, type, row) {
+            if (type !== 'display' || !data || data.length === 0) {
+                return '';
+            }
+
+            const badgeMap = {
+                '@Roles.GlobalAdministrator': {
+                    class: '@RoleBadgeHelper.GetBadgeClass(Roles.GlobalAdministrator)',
+                    text: '@RoleBadgeHelper.GetRoleDisplayName(Roles.GlobalAdministrator)',
+                    icon: '@RoleBadgeHelper.GetRoleIcon(Roles.GlobalAdministrator)'
+                },
+                '@Roles.Administrator': {
+                    class: '@RoleBadgeHelper.GetBadgeClass(Roles.Administrator)',
+                    text: '@RoleBadgeHelper.GetRoleDisplayName(Roles.Administrator)',
+                    icon: '@RoleBadgeHelper.GetRoleIcon(Roles.Administrator)'
+                },
+                '@Roles.Coordinator': {
+                    class: '@RoleBadgeHelper.GetBadgeClass(Roles.Coordinator)',
+                    text: '@RoleBadgeHelper.GetRoleDisplayName(Roles.Coordinator)',
+                    icon: '@RoleBadgeHelper.GetRoleIcon(Roles.Coordinator)'
+                },
+                '@Roles.Mentor': {
+                    class: '@RoleBadgeHelper.GetBadgeClass(Roles.Mentor)',
+                    text: '@RoleBadgeHelper.GetRoleDisplayName(Roles.Mentor)',
+                    icon: '@RoleBadgeHelper.GetRoleIcon(Roles.Mentor)'
+                },
+                '@Roles.Guide': {
+                    class: '@RoleBadgeHelper.GetBadgeClass(Roles.Guide)',
+                    text: '@RoleBadgeHelper.GetRoleDisplayName(Roles.Guide)',
+                    icon: '@RoleBadgeHelper.GetRoleIcon(Roles.Guide)'
+                },
+                '@Roles.Facilitator': {
+                    class: '@RoleBadgeHelper.GetBadgeClass(Roles.Facilitator)',
+                    text: '@RoleBadgeHelper.GetRoleDisplayName(Roles.Facilitator)',
+                    icon: '@RoleBadgeHelper.GetRoleIcon(Roles.Facilitator)'
+                },
+                '@Roles.Starter': {
+                    class: '@RoleBadgeHelper.GetBadgeClass(Roles.Starter)',
+                    text: '@RoleBadgeHelper.GetRoleDisplayName(Roles.Starter)',
+                    icon: '@RoleBadgeHelper.GetRoleIcon(Roles.Starter)'
+                }
+            };
+
+            return data.map(role => {
+                const badge = badgeMap[role] || {
+                    class: 'badge-phoenix-secondary',
+                    text: role,
+                    icon: 'fas fa-user'
+                };
+                return `<span class="badge ${badge.class} me-1">
+                    <i class="${badge.icon} me-1"></i>${badge.text}
+                </span>`;
+            }).join('');
+        }
+
+        // Export functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize DataTable state saving
+            const tableState = localStorage.getItem('userManagementTableState');
+            if (tableState) {
+                console.log('Restoring table state from localStorage');
+            }
+            
+            // Save DataTable state on change
+            $('#userManagementTable').on('stateSaveParams.dt', function(e, settings, data) {
+                localStorage.setItem('userManagementTableState', JSON.stringify(data));
+            });
+            
+            // Enhance hover actions to be context-aware
+            $('#userManagementTable').on('draw.dt', function() {
+                $('.hover-actions-trigger').each(function() {
+                    const row = $(this);
+                    const table = $('#userManagementTable').DataTable();
+                    const data = table.row(row).data();
+                    
+                    if (data) {
+                        // Find dynamic action button
+                        const dynamicAction = row.find('.dynamic-action').parent();
+                        if (dynamicAction.length > 0) {
+                            // Replace with context-aware action
+                            let newAction = '';
+                            
+                            if (!data.isActive) {
+                                newAction = `<a href="/Coordination/UserManagement/Reactivate/${data.userId}" 
+                                              class="btn btn-sm btn-outline-success me-1"
+                                              onclick="return confirm('¿Reactivar este usuario?')">
+                                              <i class="fas fa-user-check"></i> Reactivar
+                                           </a>`;
+                            } else if (data.invitationStatus === 'pending') {
+                                newAction = `<a href="/Coordination/UserManagement/ResendInvitation/${data.userId}" 
+                                              class="btn btn-sm btn-outline-warning me-1"
+                                              onclick="return confirm('¿Reenviar invitación?')">
+                                              <i class="fas fa-envelope"></i> Reenviar
+                                           </a>`;
+                            } else if (data.invitationStatus === 'expired') {
+                                newAction = `<a href="/Coordination/UserManagement/SendNewInvitation/${data.userId}" 
+                                              class="btn btn-sm btn-outline-warning me-1">
+                                              <i class="fas fa-paper-plane"></i> Nueva invitación
+                                           </a>`;
+                            } else {
+                                newAction = `<a href="/Coordination/UserManagement/Deactivate/${data.userId}" 
+                                              class="btn btn-sm btn-outline-danger me-1"
+                                              onclick="return confirm('¿Desactivar este usuario?')">
+                                              <i class="fas fa-user-slash"></i> Desactivar
+                                           </a>`;
+                            }
+                            
+                            dynamicAction.replaceWith(newAction);
+                        }
+                    }
+                });
+            });
+            
+            // Export functionality
+            document.body.addEventListener('click', function(e) {
+                if (e.target.closest('[href="#"]')) {
+                    const link = e.target.closest('a');
+                    if (link && link.textContent.includes('Exportar')) {
+                        e.preventDefault();
+                        exportToExcel();
+                    }
+                }
+            });
+        });
+        
+        // Export to Excel functionality
+        function exportToExcel() {
+            const table = $('#userManagementTable').DataTable();
+            const data = table.data().toArray();
+            
+            if (data.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+            
+            // Prepare CSV content
+            const headers = ['Nombre', 'Email', 'Identificación', 'Roles', 'Estado'];
+            const csvContent = [
+                headers.join(','),
+                ...data.map(row => {
+                    const roles = Array.isArray(row.roles) ? row.roles.join('; ') : '';
+                    const status = row.isActive ? 'Activo' : 'Inactivo';
+                    return [
+                        `"${row.fullName}"`,
+                        `"${row.email || ''}"`,
+                        `"${row.identification || ''}"`,
+                        `"${roles}"`,
+                        `"${status}"`
+                    ].join(',');
+                })
+            ].join('\n');
+            
+            // Create and download file
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            const fileName = `usuarios_${new Date().toISOString().slice(0, 10)}.csv`;
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Show success message
+            const toastHtml = `
+                <div class="toast show position-fixed top-0 end-0 m-3" role="alert">
+                    <div class="toast-header bg-success text-white">
+                        <strong class="me-auto">Exportación exitosa</strong>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+                    </div>
+                    <div class="toast-body">
+                        Archivo descargado: ${fileName}
+                    </div>
+                </div>
+            `;
+            const toastDiv = document.createElement('div');
+            toastDiv.innerHTML = toastHtml;
+            document.body.appendChild(toastDiv);
+            setTimeout(() => toastDiv.remove(), 3000);
+        }
+    </script>
+    
+    <!-- Audit History Modal -->
+    <div class="modal fade" id="auditHistoryModal" tabindex="-1" aria-labelledby="auditHistoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="auditHistoryModalLabel">
+                        <i class="bi bi-clock-history me-2"></i>Historial de Auditoría
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="auditHistoryContent">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-3">Cargando historial...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function viewAuditHistory(userId, userName) {
+            const modal = new bootstrap.Modal(document.getElementById('auditHistoryModal'));
+            const modalTitle = document.getElementById('auditHistoryModalLabel');
+            const modalContent = document.getElementById('auditHistoryContent');
+            
+            // Update modal title
+            modalTitle.innerHTML = `<i class="bi bi-clock-history me-2"></i>Historial de ${userName || 'Usuario'}`;
+            
+            // Show modal with loading state
+            modal.show();
+            
+            // Load audit history via AJAX
+            fetch(`/Coordination/UserManagement/GetAuditHistory?userId=${userId}`)
+                .then(response => response.text())
+                .then(html => {
+                    modalContent.innerHTML = html;
+                })
+                .catch(error => {
+                    modalContent.innerHTML = `
+                        <div class="alert alert-danger" role="alert">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Error al cargar el historial de auditoría
+                        </div>
+                    `;
+                    console.error('Error loading audit history:', error);
+                });
+        }
+    </script>
+}

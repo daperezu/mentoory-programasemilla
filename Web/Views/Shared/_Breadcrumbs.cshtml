@@ -1,0 +1,24 @@
+@model List<LinaSys.Web.Models.BreadcrumbItem>?
+
+@if (Model != null && Model.Any())
+{
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            @foreach (var item in Model)
+            {
+                if (item.IsActive)
+                {
+                    <li class="breadcrumb-item active" aria-current="page">@item.Text</li>
+                }
+                else if (!string.IsNullOrEmpty(item.Url))
+                {
+                    <li class="breadcrumb-item"><a href="@item.Url">@item.Text</a></li>
+                }
+                else
+                {
+                    <li class="breadcrumb-item">@item.Text</li>
+                }
+            }
+        </ol>
+    </nav>
+}

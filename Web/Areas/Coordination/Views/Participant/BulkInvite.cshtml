@@ -1,0 +1,408 @@
+@using LinaSys.Web.Models.Shared
+@model LinaSys.Web.Areas.Coordination.Controllers.CoordinatorBulkInviteViewModel
+
+@{
+    var pageTitle = "Invitación Masiva de Participantes";
+    ViewData["Title"] = pageTitle;
+
+    var pageHeaderActions = new List<PageHeaderDropdownItem>()
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-arrow-left me-2",
+            Text = "Volver a la lista",
+            Url = Url.Action("Index")!
+        },
+    };
+}
+
+@section Styles {
+    <style>
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #0d6efd;
+            background: #e7f1ff;
+        }
+        
+        .upload-area.has-file {
+            border-color: #198754;
+            background: #d1e7dd;
+        }
+        
+        .file-info {
+            background: #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .template-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            text-align: center;
+        }
+        
+        .role-selection {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+        
+        .progress-container {
+            display: none;
+        }
+        
+        .processing-step {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #dee2e6;
+        }
+        
+        .processing-step.active {
+            background: #e7f1ff;
+            border-left-color: #0d6efd;
+        }
+        
+        .processing-step.complete {
+            background: #d1e7dd;
+            border-left-color: #198754;
+        }
+        
+        .processing-step.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+    </style>
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-upload" dropdown-items="@pageHeaderActions"></page-header>
+
+<div class="row g-4">
+    <!-- Upload Section -->
+    <div class="col-12 col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <span class="fas fa-upload me-2"></span>
+                    Cargar Archivo de Participantes
+                </h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="BulkInvite" method="post" enctype="multipart/form-data" id="bulkInviteForm">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    
+                    <!-- File Upload Area -->
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-content" id="uploadContent">
+                            <div class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></div>
+                            <h5 class="mb-2">Arrastra tu archivo aquí o haz clic para seleccionar</h5>
+                            <p class="text-muted mb-0">Archivos CSV o Excel (.csv, .xlsx) hasta 10MB</p>
+                        </div>
+                        
+                        <div class="file-info" id="fileInfo" style="display: none;">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <span class="fas fa-file-alt fa-2x text-success me-3"></span>
+                                    <div>
+                                        <h6 class="mb-0" id="fileName"></h6>
+                                        <small class="text-muted" id="fileSize"></small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" id="removeFile">
+                                    <span class="fas fa-times"></span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <input type="file" 
+                               asp-for="InvitationFile" 
+                               id="fileInput" 
+                               accept=".csv,.xlsx,.xls" 
+                               style="display: none;">
+                        <span asp-validation-for="InvitationFile" class="text-danger"></span>
+                    </div>
+
+                    <!-- Configuration Section -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="role-selection">
+                                <h6 class="mb-3">
+                                    <span class="fas fa-envelope me-2"></span>
+                                    Opciones de Notificación
+                                </h6>
+                                
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           asp-for="SendInvitationEmails" 
+                                           id="sendEmails">
+                                    <label class="form-check-label" for="sendEmails">
+                                        Enviar emails de invitación
+                                    </label>
+                                    <div class="form-text">
+                                        Se enviará un email de bienvenida a cada participante invitado.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex justify-content-end mt-4">
+                        <button type="submit" class="btn btn-phoenix-primary" id="submitBtn" disabled>
+                            <span class="fas fa-paper-plane me-2"></span>
+                            Procesar Invitaciones
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template and Help Section -->
+    <div class="col-12 col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body template-card">
+                <div class="fas fa-download fa-2x mb-3"></div>
+                <h5 class="mb-2">Plantilla Excel</h5>
+                <p class="mb-3 small opacity-90">
+                    Descarga la plantilla con el formato correcto para cargar participantes.
+                </p>
+                <a asp-action="DownloadTemplate" class="btn btn-light btn-sm">
+                    <span class="fas fa-file-excel me-1"></span>
+                    Descargar Plantilla
+                </a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <span class="fas fa-info-circle me-2"></span>
+                    Formato Requerido
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small mb-3">El archivo debe contener las siguientes columnas (en este orden):</p>
+                <ul class="list-unstyled small">
+                    <li class="mb-2">
+                        <span class="badge badge-phoenix badge-phoenix-primary me-2">1. Email</span>
+                        <span class="text-danger">*</span> Requerido
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge badge-phoenix badge-phoenix-primary me-2">2. Nombre</span>
+                        <span class="text-danger">*</span> Requerido
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge badge-phoenix badge-phoenix-primary me-2">3. Apellido</span>
+                        <span class="text-danger">*</span> Requerido
+                    </li>
+                    <li class="mb-2">
+                        <span class="badge badge-phoenix badge-phoenix-primary me-2">4. Identificación</span>
+                        <span class="text-danger">*</span> Requerido
+                    </li>
+                </ul>
+                <hr class="my-3">
+                <div class="alert alert-info small mb-0">
+                    <span class="fas fa-info-circle me-2"></span>
+                    Todos los participantes serán registrados con el rol <strong>"Participante"</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Section (Hidden by default) -->
+<div class="progress-container" id="progressContainer">
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <span class="fas fa-cog fa-spin me-2"></span>
+                Procesando Invitaciones
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="processing-step" id="step1">
+                <div class="d-flex align-items-center">
+                    <span class="fas fa-circle-notch fa-spin me-3"></span>
+                    <span>Validando archivo...</span>
+                </div>
+            </div>
+            <div class="processing-step" id="step2">
+                <div class="d-flex align-items-center">
+                    <span class="fas fa-circle me-3"></span>
+                    <span>Verificando usuarios existentes...</span>
+                </div>
+            </div>
+            <div class="processing-step" id="step3">
+                <div class="d-flex align-items-center">
+                    <span class="fas fa-circle me-3"></span>
+                    <span>Creando invitaciones...</span>
+                </div>
+            </div>
+            <div class="processing-step" id="step4">
+                <div class="d-flex align-items-center">
+                    <span class="fas fa-circle me-3"></span>
+                    <span>Enviando notificaciones...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const uploadArea = $('#uploadArea');
+            const fileInput = $('#fileInput');
+            const fileInfo = $('#fileInfo');
+            const uploadContent = $('#uploadContent');
+            const submitBtn = $('#submitBtn');
+            const form = $('#bulkInviteForm');
+            
+            // Click to upload
+            uploadArea.on('click', function(e) {
+                if (e.target === fileInput[0]) {
+                    return; // Prevent recursion if clicking on the file input itself
+                }
+                fileInput[0].click(); // Use native click instead of jQuery click
+            });
+            
+            // Drag and drop handlers
+            uploadArea.on('dragover dragenter', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.addClass('dragover');
+            });
+            
+            uploadArea.on('dragleave dragend', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.removeClass('dragover');
+            });
+            
+            uploadArea.on('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.removeClass('dragover');
+                
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            });
+            
+            // File input change
+            fileInput.on('change', function() {
+                if (this.files.length > 0) {
+                    handleFileSelect(this.files[0]);
+                }
+            });
+            
+            // Prevent file input clicks from bubbling to upload area
+            fileInput.on('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Remove file
+            $('#removeFile').on('click', function() {
+                fileInput.val('');
+                fileInfo.hide();
+                uploadContent.show();
+                uploadArea.removeClass('has-file');
+                submitBtn.prop('disabled', true);
+            });
+            
+            // Handle file selection
+            function handleFileSelect(file) {
+                const maxSize = 10 * 1024 * 1024; // 10MB
+                const allowedTypes = ['.csv', '.xlsx', '.xls'];
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                
+                // Validate file size
+                if (file.size > maxSize) {
+                    showToast('El archivo es demasiado grande. Máximo 10MB.', 'danger');
+                    return;
+                }
+                
+                // Validate file type
+                if (!allowedTypes.includes(fileExtension)) {
+                    showToast('Tipo de archivo no válido. Solo se permiten CSV y Excel.', 'danger');
+                    return;
+                }
+                
+                // Create a new FileList with the selected file for the input
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput[0].files = dataTransfer.files;
+                
+                // Update UI
+                $('#fileName').text(file.name);
+                $('#fileSize').text(formatFileSize(file.size));
+                
+                uploadContent.hide();
+                fileInfo.show();
+                uploadArea.addClass('has-file');
+                submitBtn.prop('disabled', false);
+            }
+            
+            // Format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+            
+            // Form submission
+            form.on('submit', function(e) {
+                if (!fileInput[0].files.length) {
+                    e.preventDefault();
+                    showToast('Debe seleccionar un archivo', 'danger');
+                    return;
+                }
+                
+                // Show progress
+                $('#progressContainer').show();
+                submitBtn.prop('disabled', true).html('<span class="fas fa-spinner fa-spin me-2"></span>Procesando...');
+                
+                // Let the form submit naturally - don't prevent default
+                // The progress animation will show while the server processes
+            });
+            
+            function simulateProgress() {
+                const steps = ['step1', 'step2', 'step3', 'step4'];
+                let currentStep = 0;
+                
+                const interval = setInterval(() => {
+                    if (currentStep > 0) {
+                        $(`#${steps[currentStep - 1]}`).removeClass('active').addClass('complete');
+                        $(`#${steps[currentStep - 1]} .fa-spin`).removeClass('fa-spin fa-circle-notch').addClass('fa-check text-success');
+                    }
+                    
+                    if (currentStep < steps.length) {
+                        $(`#${steps[currentStep]}`).addClass('active');
+                        currentStep++;
+                    } else {
+                        clearInterval(interval);
+                    }
+                }, 700);
+            }
+        });
+    </script>
+}

@@ -1,0 +1,203 @@
+@model IEnumerable<LinaSys.Core.Domain.AggregatesModel.AuditAggregate.AuditLog>
+@{
+    ViewData["Title"] = "Historial de Entidad";
+    ViewData["PageHeader"] = "Historial de Entidad";
+    ViewData["PageDescription"] = $"{ViewBag.EntityType} - {ViewBag.EntityId}";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h3 class="card-title">
+                            Historial de Cambios
+                            <small class="text-muted">
+                                @ViewBag.EntityType: @ViewBag.EntityId
+                            </small>
+                        </h3>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (!Model.Any())
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No se encontró historial para esta entidad.
+                    </div>
+                }
+                else
+                {
+                    <div class="timeline">
+                        @foreach (var log in Model.OrderByDescending(l => l.Timestamp))
+                        {
+                            <div class="timeline-item">
+                                <div class="timeline-badge @GetTimelineBadgeClass(log.Action)">
+                                    <i class="@GetActionIcon(log.Action)"></i>
+                                </div>
+                                <div class="timeline-panel">
+                                    <div class="timeline-heading">
+                                        <h6 class="timeline-title">
+                                            @log.Action
+                                            <small class="text-muted float-end">
+                                                @log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")
+                                            </small>
+                                        </h6>
+                                        <p>
+                                            <small class="text-muted">
+                                                Por: @(log.UserName ?? log.UserId ?? "Sistema")
+                                                @if (!string.IsNullOrEmpty(log.IpAddress))
+                                                {
+                                                    <span> | IP: @log.IpAddress</span>
+                                                }
+                                            </small>
+                                        </p>
+                                    </div>
+                                    <div class="timeline-body">
+                                        @if (log.OldValues != null && log.NewValues != null)
+                                        {
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <strong>Antes:</strong>
+                                                    <pre class="bg-light p-2 mt-1">@System.Text.Json.JsonSerializer.Serialize(log.OldValues, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <strong>Después:</strong>
+                                                    <pre class="bg-light p-2 mt-1">@System.Text.Json.JsonSerializer.Serialize(log.NewValues, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (log.NewValues != null)
+                                        {
+                                            <strong>Valores:</strong>
+                                            <pre class="bg-light p-2 mt-1">@System.Text.Json.JsonSerializer.Serialize(log.NewValues, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                                        }
+                                        else if (log.OldValues != null)
+                                        {
+                                            <strong>Valores Eliminados:</strong>
+                                            <pre class="bg-light p-2 mt-1">@System.Text.Json.JsonSerializer.Serialize(log.OldValues, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                                        }
+                                        
+                                        @if (!string.IsNullOrEmpty(log.AdditionalData))
+                                        {
+                                            <div class="mt-2">
+                                                <strong>Información Adicional:</strong>
+                                                <pre class="bg-light p-2 mt-1">@log.AdditionalData</pre>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .timeline:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 40px;
+            height: 100%;
+            width: 3px;
+            background: #e9ecef;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-badge {
+            position: absolute;
+            top: 0;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            color: white;
+        }
+        
+        .timeline-badge.success { background-color: #28a745; }
+        .timeline-badge.warning { background-color: #ffc107; }
+        .timeline-badge.danger { background-color: #dc3545; }
+        .timeline-badge.info { background-color: #17a2b8; }
+        .timeline-badge.primary { background-color: #007bff; }
+        
+        .timeline-panel {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            position: relative;
+        }
+        
+        .timeline-panel:before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: -8px;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 8px 8px 8px 0;
+            border-color: transparent #e9ecef transparent transparent;
+        }
+        
+        .timeline-title {
+            margin-top: 0;
+            font-weight: bold;
+        }
+    </style>
+}
+
+@functions {
+    string GetTimelineBadgeClass(string action)
+    {
+        return action switch
+        {
+            "Create" => "success",
+            "Update" => "warning",
+            "Delete" => "danger",
+            "Login" or "Logout" => "info",
+            "Approve" => "success",
+            "Reject" => "danger",
+            _ => "primary"
+        };
+    }
+    
+    string GetActionIcon(string action)
+    {
+        return action switch
+        {
+            "Create" => "fas fa-plus",
+            "Update" => "fas fa-edit",
+            "Delete" => "fas fa-trash",
+            "Login" => "fas fa-sign-in-alt",
+            "Logout" => "fas fa-sign-out-alt",
+            "Approve" => "fas fa-check",
+            "Reject" => "fas fa-times",
+            "View" => "fas fa-eye",
+            _ => "fas fa-circle"
+        };
+    }
+}

@@ -1,0 +1,47 @@
+@model LinaSys.Web.Areas.Diagnostics.Models.Blocks.CreateBlockViewModel
+
+@{
+    ViewData["Title"] = "Crear Bloque";
+}
+
+<page-header title="Crear Bloque" icon-class="fas fa-cube">
+    <breadcrumb>
+        <breadcrumb-item title="Inicio" asp-area="" asp-controller="Home" asp-action="Index"></breadcrumb-item>
+        <breadcrumb-item title="Bloques" asp-area="Diagnostics" asp-controller="Blocks" asp-action="Index"></breadcrumb-item>
+        <breadcrumb-item title="Crear" active="true"></breadcrumb-item>
+    </breadcrumb>
+</page-header>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Información del Bloque</h3>
+            </div>
+            <div class="card-body">
+                <form asp-action="Create" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" placeholder="Ingrese el nombre del bloque" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Volver
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Crear Bloque
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

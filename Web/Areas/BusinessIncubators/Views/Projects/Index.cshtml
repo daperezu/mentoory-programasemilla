@@ -1,0 +1,68 @@
+﻿@model ManageProjectsViewModel
+@{
+    var pageTitle = $"{Model.BusinessIncubatorName} - Gestión de projectos";
+    ViewData["Title"] = pageTitle;
+
+    var pageHeaderActions = new List<PageHeaderDropdownItem>()
+    {
+        new()
+        {
+            IconClass = "fa-solid fa-plus me-2",
+            Text = "Nuevo proyecto",
+            Url = "Create"
+        },
+        new()
+        {
+            IconClass = "fa-solid fa-copy me-2",
+            Text = "Copiar formulario diagnóstico",
+            Url = "CopyDiagnosticsForm"
+        }
+    };
+
+    var dataTablesColumns = new List<DatatableColumn>
+    {
+        new()
+        {
+            Header = "Nombre", Data = "name",
+            RenderType = ColRenderType.Link,
+            LinkUrl = $"/BusinessIncubators/{Model.BusinessIncubatorId:D}/Projects/{{externalId}}/Landing",
+        },
+        new() { Header = "Descripción", Data = "description" },
+        new() { Header = "Llave", Data = "key" },
+        new() {
+            Header = "Estatus", Data = "status",
+            RenderType = ColRenderType.Badge,
+            FilterType = ColFilterType.Select,
+            FilterOptions = new Dictionary<string, string> {
+                { "", "Todos" },
+                { "1", "Activo" },
+                { "2", "Archivado" }
+            },
+            BadgeMap = new Dictionary<string, string> {
+                { "1", "Activo" },
+                { "2", "Archivado" }
+            },
+            BadgeClassMap = new Dictionary<string, string> {
+                { "1", "success" },
+                { "2", "secondary" }
+            }
+        }
+    };
+
+    var dataTablesHoverActions = new List<HoverAction>
+    {
+        new() { Url = $"/BusinessIncubators/{Model.BusinessIncubatorId:D}/Projects/{{externalId}}/Edit", IconClass = "fas fa-edit", Text = "Editar proyecto" },
+        new() { Url = $"/Coordination/Participant/BulkInvite?projectId={{externalId}}", IconClass = "fas fa-users", Text = "Registro masivo de usuarios" },
+        new() { Url = $"/BusinessIncubators/{Model.BusinessIncubatorId:D}/Projects/{{externalId}}/Invitations", IconClass = "fas fa-envelope", Text = "Gestionar invitaciones" },
+        new() { Url = $"/BusinessIncubators/{Model.BusinessIncubatorId:D}/Projects/{{externalId}}/KnowledgeStructure", IconClass = "fas fa-sitemap", Text = "Estructura de Conocimiento" },
+        new() { Url = $"/BusinessIncubators/{Model.BusinessIncubatorId:D}/Projects/{{externalId}}/Dashboard", IconClass = "fas fa-tachometer-alt", Text = "Mi Dashboard" },
+        new() { Url = $"/BusinessIncubators/{Model.BusinessIncubatorId:D}/Projects/{{externalId}}/ParticipantForm", IconClass = "fas fa-file-alt", Text = "Completar formulario" },
+        new() { Url = $"/BusinessIncubators/{Model.BusinessIncubatorId:D}/Projects/{{externalId}}/FormReview", IconClass = "fas fa-tasks", Text = "Revisar formularios" },
+    };
+}
+
+<page-header title="@pageTitle" icon-class="fas fa-wrench" dropdown-items="@pageHeaderActions"></page-header>
+
+<datatable ajax-url="List"
+           columns="@dataTablesColumns"
+           hover-actions="@dataTablesHoverActions"></datatable>

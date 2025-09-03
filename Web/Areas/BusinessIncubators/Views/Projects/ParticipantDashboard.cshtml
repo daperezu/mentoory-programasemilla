@@ -1,0 +1,154 @@
+@model LinaSys.Web.Areas.BusinessIncubators.Models.Projects.ParticipantDashboardViewModel
+@{
+    ViewData["Title"] = $"Mi Participación - {Model.ProjectName}";
+    var breadcrumbs = new[]
+    {
+        ("Incubadoras", Url.Action("Index", "Home", new { area = "BusinessIncubators" })),
+        ("Proyectos", Url.Action("Index", "Projects", new { area = "BusinessIncubators", businessIncubatorId = Model.BusinessIncubatorExternalId })),
+        (Model.ProjectName, null)
+    };
+}
+
+<page-header title="@ViewData["Title"]" icon-class="fas fa-tachometer-alt" breadcrumbs="breadcrumbs"></page-header>
+
+<div class="row g-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-body-tertiary">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-alt text-primary me-2"></i>
+                    Mis Formularios
+                </h5>
+            </div>
+            <div class="card-body">
+                @if (Model.FormSubmissions.Any())
+                {
+                    <div class="table-responsive scrollbar">
+                        <table class="table table-hover table-striped overflow-hidden">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Formulario</th>
+                                    <th scope="col" class="text-center">Estado</th>
+                                    <th scope="col">Fecha de Envío</th>
+                                    <th scope="col">Fecha de Revisión</th>
+                                    <th scope="col" class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var submission in Model.FormSubmissions)
+                                {
+                                    <tr>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-file-invoice text-primary me-2"></i>
+                                                <span class="fw-semi-bold">@submission.FormName</span>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <span class="badge rounded-pill badge-subtle-@submission.StatusBadgeClass">
+                                                @submission.Status
+                                            </span>
+                                        </td>
+                                        <td class="align-middle">
+                                            @if (submission.SubmittedAt.HasValue)
+                                            {
+                                                <span>@submission.SubmittedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="align-middle">
+                                            @if (submission.ReviewedAt.HasValue)
+                                            {
+                                                <span>@submission.ReviewedAt.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="align-middle text-end">
+                                            @if (submission.CanEdit)
+                                            {
+                                                <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId, formId = submission.FormId })"
+                                                   class="btn btn-sm btn-phoenix-primary">
+                                                    <i class="fas fa-edit me-1"></i>
+                                                    Editar
+                                                </a>
+                                            }
+                                            else if (submission.CanView)
+                                            {
+                                                <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId, formId = submission.FormId, readOnly = true })"
+                                                   class="btn btn-sm btn-phoenix-info">
+                                                    <i class="fas fa-eye me-1"></i>
+                                                    Ver
+                                                </a>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-subtle-info d-flex align-items-center" role="alert">
+                        <span class="fas fa-info-circle text-info fs-3 me-3"></span>
+                        <p class="mb-0 flex-1">
+                            No tienes formularios asignados en este momento. Cuando se te asigne un formulario, aparecerá aquí.
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.FormSubmissions.Any(f => f.Status == "Rechazado"))
+{
+    <div class="row g-3 mt-1">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning-subtle border-warning">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                        Formularios que Requieren Corrección
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @foreach (var rejected in Model.FormSubmissions.Where(f => f.Status == "Rechazado"))
+                        {
+                            <div class="col-12">
+                                <div class="alert alert-subtle-warning d-flex align-items-start" role="alert">
+                                    <span class="fas fa-file-excel text-warning fs-3 me-3 mt-1"></span>
+                                    <div class="flex-1">
+                                        <h6 class="alert-heading fs--1">@rejected.FormName</h6>
+                                        <p class="mb-2">
+                                            <strong>Motivo del rechazo:</strong><br />
+                                            @rejected.RejectionReason
+                                        </p>
+                                        <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId, formId = rejected.FormId })"
+                                           class="btn btn-sm btn-warning">
+                                            <i class="fas fa-edit me-1"></i>
+                                            Corregir Ahora
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        // Add any dashboard-specific scripts here if needed
+    </script>
+}

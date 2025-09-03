@@ -1,0 +1,73 @@
+﻿{
+   "CodeGenerationMode": 5,
+   "ContextClassName": "DiagnosticsDbContext",
+   "ContextNamespace": null,
+   "FilterSchemas": true,
+   "IncludeConnectionString": false,
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Models",
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "LinaSys.Diagnostics.Infrastructure.Persistence",
+   "Schemas": [
+      {
+         "Name": "diagnostics"
+      }
+   ],
+   "SelectedHandlebarsLanguage": 2,
+   "SelectedToBeGenerated": 0,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "[diagnostics].[AnswerOptions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[diagnostics].[Blocks]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[diagnostics].[DiagnosisAnswers]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[diagnostics].[FormQuestions]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[diagnostics].[Forms]",
+         "ObjectType": 0
+      },
+      {
+         "Name": "[diagnostics].[Questions]",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDatabaseNamesForRoutines": true,
+   "UseDateOnlyTimeOnly": false,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseInternalAccessModifiersForSprocsAndFunctions": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": false,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": false,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": false,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false,
+   "UseT4Split": false
+}

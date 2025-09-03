@@ -1,0 +1,120 @@
+@model IEnumerable<dynamic>
+@{
+    var tasks = Model ?? Enumerable.Empty<dynamic>();
+    var showHeader = ViewData["ShowHeader"] ?? true;
+    var showFooter = ViewData["ShowFooter"] ?? true;
+    var maxItems = ViewData["MaxItems"] ?? 5;
+}
+
+<div class="card h-100">
+    @if ((bool)showHeader)
+    {
+        <div class="card-header bg-body-tertiary">
+            <div class="row align-items-center g-2">
+                <div class="col">
+                    <h6 class="mb-0">Tareas Pendientes</h6>
+                </div>
+                <div class="col-auto">
+                    <div class="dropdown">
+                        <button class="btn btn-phoenix-secondary btn-icon btn-sm" type="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="fas fa-ellipsis-h"></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" data-filter="all">Todas</a></li>
+                            <li><a class="dropdown-item" href="#" data-filter="high">Alta prioridad</a></li>
+                            <li><a class="dropdown-item" href="#" data-filter="medium">Media prioridad</a></li>
+                            <li><a class="dropdown-item" href="#" data-filter="low">Baja prioridad</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" data-filter="overdue">Vencidas</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            @{
+                int count = 0;
+                foreach (var task in tasks)
+                {
+                    if (count >= (int)maxItems) break;
+                    count++;
+                    
+                    var priorityClass = task.Priority switch
+                    {
+                        "high" => "danger",
+                        "medium" => "warning",
+                        "low" => "info",
+                        _ => "secondary"
+                    };
+                    
+                    var isOverdue = task.DueDate < DateTime.Now && task.Status != "completed";
+                    
+                    <div class="list-group-item px-4 py-3 task-item" data-task-id="@task.Id" data-priority="@task.Priority">
+                        <div class="row align-items-center g-2">
+                            <div class="col-auto">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input task-checkbox" type="checkbox" 
+                                           id="task-widget-@task.Id" 
+                                           data-task-id="@task.Id"
+                                           @(task.Status == "completed" ? "checked" : "")
+                                           @(task.Status == "completed" ? "disabled" : "")>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="@(task.Status == "completed" ? "text-decoration-line-through" : "")">
+                                    <label for="task-widget-@task.Id" class="form-label mb-0 fw-semi-bold text-900">
+                                        @task.Title
+                                    </label>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <span class="badge badge-phoenix badge-phoenix-@priorityClass fs-11">
+                                            @task.Priority
+                                        </span>
+                                        @if (task.Category != null)
+                                        {
+                                            <span class="text-500 fs-10">@task.Category</span>
+                                        }
+                                        @if (task.DueDate != null)
+                                        {
+                                            <span class="text-@(isOverdue ? "danger" : "600") fs-10">
+                                                <span class="far fa-calendar-alt me-1"></span>
+                                                @task.DueDate.ToString("dd MMM")
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-phoenix-secondary btn-icon btn-sm" 
+                                        data-bs-toggle="tooltip" 
+                                        title="Ver detalles">
+                                    <span class="fas fa-eye"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+                
+                if (count == 0)
+                {
+                    <div class="text-center py-5">
+                        <span class="fas fa-check-circle fa-3x text-success mb-3"></span>
+                        <p class="text-700">¡No tienes tareas pendientes!</p>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+    
+    @if ((bool)showFooter && count > 0)
+    {
+        <div class="card-footer bg-body-tertiary text-center py-2">
+            <a href="@Url.Action("Tasks", "StarterDashboard")" class="btn btn-link btn-sm">
+                Ver todas las tareas <span class="fas fa-chevron-right ms-1 fs-10"></span>
+            </a>
+        </div>
+    }
+</div>
