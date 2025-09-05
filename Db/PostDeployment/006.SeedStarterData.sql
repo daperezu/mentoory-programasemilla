@@ -2,6 +2,7 @@
 -- Seed Data for Starter Role Experience
 -- Created: 2025-01-08
 -- Description: Populates StarterProgress and StarterTasks tables with realistic test data
+-- IMPORTANT: This script only affects demo data and is safe to run multiple times
 -- =============================================
 
 -- =============================================
@@ -139,6 +140,10 @@ END;
 DECLARE @CurrentDate DATETIME2 = GETUTCDATE();
 
 -- Tasks for Starter User (Diagnosis Phase)
+-- First, clean up any existing demo tasks to ensure idempotency
+DELETE FROM [businessincubators].[StarterTasks]
+WHERE UserId = @StarterUserId AND ProjectId = @DemoProjectId;
+
 IF NOT EXISTS (SELECT 1 FROM [businessincubators].[StarterTasks] WHERE UserId = @StarterUserId AND ProjectId = @DemoProjectId)
 BEGIN
     INSERT INTO [businessincubators].[StarterTasks]
@@ -340,23 +345,36 @@ END;
 */
 
 -- =============================================
--- Update task completion dates where status is completed
+-- Update task completion dates where status is completed (DEMO TASKS ONLY)
 -- =============================================
 UPDATE [businessincubators].[StarterTasks]
 SET CompletedAt = DATEADD(hour, -CAST(RAND(CHECKSUM(NEWID())) * 72 AS INT), GETUTCDATE()),
     CompletedBy = UserId,
     ActualDuration = EstimatedDuration + CAST(RAND(CHECKSUM(NEWID())) * 60 AS INT) - 30
-WHERE Status = 'completed' AND CompletedAt IS NULL;
+WHERE Status = 'completed' 
+  AND CompletedAt IS NULL
+  AND UserId = @StarterUserId  -- Only update demo user's tasks
+  AND ProjectId = @DemoProjectId;  -- Only update demo project tasks
 
--- Update started dates for in_progress tasks
+-- Update started dates for in_progress tasks (DEMO TASKS ONLY)
 UPDATE [businessincubators].[StarterTasks]
 SET StartedAt = DATEADD(day, -CAST(RAND(CHECKSUM(NEWID())) * 5 AS INT), GETUTCDATE())
-WHERE Status = 'in_progress' AND StartedAt IS NULL;
+WHERE Status = 'in_progress' 
+  AND StartedAt IS NULL
+  AND UserId = @StarterUserId  -- Only update demo user's tasks
+  AND ProjectId = @DemoProjectId;  -- Only update demo project tasks
 
 -- =============================================
 -- Create sample notifications for demo users
 -- =============================================
-IF NOT EXISTS (SELECT 1 FROM [core].[UserNotifications] WHERE UserId = @StarterUserId)
+-- Clean up old demo notifications first to ensure fresh data
+DELETE FROM [core].[UserNotifications]
+WHERE UserId IN (@StarterUserId, @MentorUserId, @CoordinatorUserId)
+  AND ActionUrl LIKE '%/StarterDashboard/Task/%'
+  OR ActionUrl LIKE '%/MentorDashboard%'
+  OR ActionUrl LIKE '%/CoordinatorDashboard%';
+
+IF NOT EXISTS (SELECT 1 FROM [core].[UserNotifications] WHERE UserId = @StarterUserId AND ActionUrl LIKE '%/StarterDashboard/Task/%')
 BEGIN
     INSERT INTO [core].[UserNotifications]
     (UserId, Title, Message, Type, Category, Priority, ActionUrl, ActionText, IsRead, CreatedAt)
@@ -392,6 +410,10 @@ END;
 -- =============================================
 -- Seed StarterResources Records
 -- =============================================
+-- Clean up old demo resources first
+DELETE FROM [businessincubators].[StarterResources]
+WHERE ProjectId = @DemoProjectId;
+
 IF NOT EXISTS (SELECT 1 FROM [businessincubators].[StarterResources] WHERE ProjectId = @DemoProjectId)
 BEGIN
     INSERT INTO [businessincubators].[StarterResources]
@@ -428,34 +450,50 @@ END;
 -- =============================================
 -- Seed ProjectMentorAssignments
 -- =============================================
--- Assign demo mentor to the starter user in the demo project
-IF NOT EXISTS (SELECT 1 FROM [businessincubators].[ProjectMentorAssignments] WHERE ProjectId = @DemoProjectId AND StarterUserId = @StarterUserId AND MentorUserId = @MentorUserId)
+-- Use MERGE to safely manage demo mentor assignment
+MERGE [businessincubators].[ProjectMentorAssignments] AS target
+USING (SELECT 
+    @MentorUserId AS MentorUserId,
+    @DemoProjectId AS ProjectId,
+    @StarterUserId AS StarterUserId,
+    DATEADD(day, -30, GETUTCDATE()) AS AssignedDate,
+    'active' AS Status,
+    12 AS TotalSessions,
+    2 AS CompletedSessions,
+    DATEADD(day, 7, GETUTCDATE()) AS NextSessionDate,
+    'Business Strategy, Marketing, Finance' AS MentorSpecialties,
+    'virtual' AS PreferredMeetingType,
+    @CoordinatorUserId AS CreatedBy
+) AS source
+ON target.ProjectId = source.ProjectId 
+   AND target.StarterUserId = source.StarterUserId 
+   AND target.MentorUserId = source.MentorUserId
+WHEN MATCHED THEN
+    UPDATE SET 
+        AssignedDate = source.AssignedDate,
+        Status = source.Status,
+        TotalSessions = source.TotalSessions,
+        CompletedSessions = source.CompletedSessions,
+        NextSessionDate = source.NextSessionDate,
+        MentorSpecialties = source.MentorSpecialties,
+        PreferredMeetingType = source.PreferredMeetingType
+WHEN NOT MATCHED THEN
+    INSERT (MentorUserId, ProjectId, StarterUserId, AssignedDate, Status, TotalSessions, 
+            CompletedSessions, NextSessionDate, MentorSpecialties, PreferredMeetingType, CreatedBy)
+    VALUES (source.MentorUserId, source.ProjectId, source.StarterUserId, source.AssignedDate, 
+            source.Status, source.TotalSessions, source.CompletedSessions, source.NextSessionDate, 
+            source.MentorSpecialties, source.PreferredMeetingType, source.CreatedBy);
+
+IF @@ROWCOUNT > 0
 BEGIN
-    INSERT INTO [businessincubators].[ProjectMentorAssignments]
-    (MentorUserId, ProjectId, StarterUserId, AssignedDate, Status, TotalSessions, CompletedSessions, 
-     NextSessionDate, MentorSpecialties, PreferredMeetingType, CreatedBy)
-    VALUES (
-        @MentorUserId, -- The demo mentor user
-        @DemoProjectId,
-        @StarterUserId, -- The demo starter user
-        DATEADD(day, -30, GETUTCDATE()),
-        'active',
-        12,
-        2,
-        DATEADD(day, 7, GETUTCDATE()),
-        'Business Strategy, Marketing, Finance',
-        'virtual',
-        @CoordinatorUserId
-    );
-    
-    PRINT '[004.SeedStarterData.sql] Created mentor assignment for demo project';
+    PRINT '[006.SeedStarterData.sql] Created or updated mentor assignment for demo project';
 END
 ELSE
 BEGIN
-    PRINT '[004.SeedStarterData.sql] Mentor assignment already exists for demo project';
+    PRINT '[006.SeedStarterData.sql] Mentor assignment already exists for demo project';
 END
 
-PRINT '[004.SeedStarterData.sql] Finished';
+PRINT '[006.SeedStarterData.sql] Finished (only demo data affected)';
 PRINT 'Starter seed data completed successfully';
 
 GO

@@ -14,7 +14,7 @@ public class UpdateUserAvatarCommandHandler(
 {
     private const int MaxFileSizeInMB = 2;
     private const int MaxFileSizeInBytes = MaxFileSizeInMB * 1024 * 1024;
-    private static readonly string[] AllowedContentTypes = { "image/jpeg", "image/png", "image/gif", "image/webp" };
+    private static readonly string[] AllowedContentTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
     public override async Task<Result<string>> Handle(UpdateUserAvatarCommand request, CancellationToken cancellationToken)
     {

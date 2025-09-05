@@ -132,6 +132,17 @@ public class ApplicationUrlService(
         return GetAbsoluteUrl(relativeUrl);
     }
 
+    /// <inheritdoc/>
+    public string GetLogoutUrl()
+    {
+        var urlHelper = GetUrlHelper();
+        var relativeUrl = urlHelper.Page(
+            "/Account/Logout",
+            values: new { area = "Identity" });
+
+        return GetAbsoluteUrl(relativeUrl);
+    }
+
     private IUrlHelper GetUrlHelper()
     {
         var actionContext = actionContextAccessor.ActionContext;

@@ -614,6 +614,12 @@ WITH SourceData AS (
     UNION ALL
     SELECT NEWID() AS ExternalId, 'Coordination.UserManagement.BatchRoleAssignment.Post' AS Name, 'Coordination' AS Area, 'UserManagement' AS Controller, 'BatchRoleAssignment' AS Action,
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Coordination.UserManagement.GetAllIncubators.Get' AS Name, 'Coordination' AS Area, 'UserManagement' AS Controller, 'GetAllIncubators' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Coordination.UserManagement.GetProjectsByIncubator.Get' AS Name, 'Coordination' AS Area, 'UserManagement' AS Controller, 'GetProjectsByIncubator' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     
     -- Email Template Module (Coordination Area)
     UNION ALL

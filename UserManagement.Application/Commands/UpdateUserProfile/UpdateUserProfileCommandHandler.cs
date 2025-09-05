@@ -1,4 +1,4 @@
-using LinaSys.Shared.Application;
+﻿using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.SeedWork;
 using LinaSys.UserManagement.Domain.Repositories;
@@ -29,7 +29,7 @@ public class UpdateUserProfileCommandHandler(
             {
                 return Failure(
                     result.ErrorCode ?? ResultErrorCodes.GenericError,
-                    result.ErrorMessages ?? new[] { ("UpdateUserProfile", "Error al actualizar el perfil") });
+                    result.ErrorMessages ?? [("UpdateUserProfile", "Error al actualizar el perfil")]);
             }
 
             userProfileRepository.Update(userProfile);

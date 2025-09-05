@@ -13,6 +13,7 @@ public class ContextSelectionViewModel
     public long? SelectedIncubatorId { get; set; }
     public long? SelectedProjectId { get; set; }
     public string? SelectedRole { get; set; }
+    public string LogoutUrl { get; set; } = string.Empty;
 }
 
 public class SelectContextRequest

@@ -10,11 +10,9 @@ namespace LinaSys.Core.Infrastructure.Persistence.Repositories;
 /// </summary>
 public class UserActivityRepository(CoreDbContext context) : AbstractRepository<UserActivity>(context), IUserActivityRepository
 {
-    private readonly CoreDbContext dbContext = context;
-
     public async Task<List<UserActivity>> GetRecentActivitiesAsync(string userId, int count = 20)
     {
-        return await dbContext.UserActivities
+        return await context.UserActivities
             .Where(a => a.UserId == userId)
             .OrderByDescending(a => a.CreatedDate)
             .Take(count)
@@ -23,7 +21,7 @@ public class UserActivityRepository(CoreDbContext context) : AbstractRepository<
 
     public async Task<List<UserActivity>> GetByEntityAsync(string entityType, long entityId)
     {
-        return await dbContext.UserActivities
+        return await context.UserActivities
             .Where(a => a.EntityType == entityType && a.EntityId == entityId)
             .OrderByDescending(a => a.CreatedDate)
             .ToListAsync();
@@ -31,7 +29,7 @@ public class UserActivityRepository(CoreDbContext context) : AbstractRepository<
 
     public async Task<List<UserActivity>> GetByDateRangeAsync(string userId, DateTime startDate, DateTime endDate)
     {
-        return await dbContext.UserActivities
+        return await context.UserActivities
             .Where(a => a.UserId == userId && a.CreatedDate >= startDate && a.CreatedDate <= endDate)
             .OrderByDescending(a => a.CreatedDate)
             .ToListAsync();

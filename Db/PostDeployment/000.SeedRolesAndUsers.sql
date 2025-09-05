@@ -2,7 +2,7 @@
 -- Post-Deployment Script for Seeding LinaSys Roles and Admin User
 -- ==========================================================================================
 
--- Insert, Update, or Delete Roles Using MERGE
+-- Insert or Update Roles Using MERGE (Never delete roles to preserve custom ones)
 MERGE INTO AspNetRoles AS target
 USING (VALUES 
     ('Global Administrator', 'GLOBALADMINISTRATOR'),
@@ -15,11 +15,11 @@ USING (VALUES
     ('Liaison', 'LIAISON')
 ) AS source (RoleName, NormalizedRoleName)
 ON target.Name = source.RoleName
+WHEN MATCHED THEN
+    UPDATE SET NormalizedName = source.NormalizedRoleName
 WHEN NOT MATCHED THEN
     INSERT (Id, Name, NormalizedName, ConcurrencyStamp)
     VALUES (NEWID(), source.RoleName, source.NormalizedRoleName, NEWID())
-WHEN NOT MATCHED BY SOURCE THEN
-    DELETE; -- Remove roles that are no longer in the predefined list
 
 ; -- Sepparator semicolon after MERGE statement
 

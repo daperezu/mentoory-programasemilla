@@ -291,37 +291,51 @@ SET @WelcomeEmailWithPasswordHTML = N'<!DOCTYPE html>
 </body>
 </html>';
 
--- Seed welcome-email template (for users who set their own password)
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'welcome-email')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-        'welcome-email',
-        'Correo de Bienvenida',
-        '¡Bienvenido a {{ApplicationName}}!',
-        @WelcomeEmailHTML,
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update welcome-email template (for users who set their own password)
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'welcome-email' AS [Key],
+    'Correo de Bienvenida' AS [Name],
+    '¡Bienvenido a {{ApplicationName}}!' AS [Subject],
+    @WelcomeEmailHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
--- Seed welcome-email-with-password template (for users with temporary password)
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'welcome-email-with-password')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-        'welcome-email-with-password',
-        'Correo de Bienvenida con Contraseña Temporal',
-        '¡Bienvenido a {{ApplicationName}}! - Credenciales de Acceso',
-        @WelcomeEmailWithPasswordHTML,
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update welcome-email-with-password template (for users with temporary password)
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'welcome-email-with-password' AS [Key],
+    'Correo de Bienvenida con Contraseña Temporal' AS [Name],
+    '¡Bienvenido a {{ApplicationName}}! - Credenciales de Acceso' AS [Subject],
+    @WelcomeEmailWithPasswordHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
 -- Welcome Email Template with Email Confirmation Required
 SET @WelcomeEmailConfirmRequiredHTML = N'<!DOCTYPE html>
@@ -461,21 +475,28 @@ SET @WelcomeEmailConfirmRequiredHTML = N'<!DOCTYPE html>
 </body>
 </html>';
 
--- Seed welcome-email-confirm-required template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'welcome-email-confirm-required')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-        'welcome-email-confirm-required',
-        'Correo de Bienvenida - Confirmación Requerida',
-        '🚀 ¡Bienvenido a {{ApplicationName}}! - Confirma tu cuenta',
-        @WelcomeEmailConfirmRequiredHTML,
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update welcome-email-confirm-required template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'welcome-email-confirm-required' AS [Key],
+    'Correo de Bienvenida - Confirmación Requerida' AS [Name],
+    '🚀 ¡Bienvenido a {{ApplicationName}}! - Confirma tu cuenta' AS [Subject],
+    @WelcomeEmailConfirmRequiredHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
 -- Password Reset Template
 SET @PasswordResetHTML = N'<!DOCTYPE html>
@@ -624,22 +645,28 @@ SET @PasswordResetHTML = N'<!DOCTYPE html>
 </body>
 </html>';
 
--- Seed password-reset template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'password-reset')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-
-        'password-reset',
-        'Restablecer Contraseña',
-        'Solicitud de restablecimiento de contraseña - {{ApplicationName}}',
-        @PasswordResetHTML,
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update password-reset template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'password-reset' AS [Key],
+    'Restablecer Contraseña' AS [Name],
+    'Solicitud de restablecimiento de contraseña - {{ApplicationName}}' AS [Subject],
+    @PasswordResetHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
 -- Form Approved Template
 SET @FormApprovedHTML = N'<!DOCTYPE html>
@@ -772,22 +799,28 @@ SET @FormApprovedHTML = N'<!DOCTYPE html>
 </body>
 </html>';
 
--- Seed form-approved template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'form-approved')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-
-        'form-approved',
-        'Formulario Aprobado',
-        '¡Felicitaciones! Tu formulario ha sido aprobado',
-        @FormApprovedHTML,
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update form-approved template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'form-approved' AS [Key],
+    'Formulario Aprobado' AS [Name],
+    '¡Felicitaciones! Tu formulario ha sido aprobado' AS [Subject],
+    @FormApprovedHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
 -- Form Rejected Template
 SET @FormRejectedHTML = N'<!DOCTYPE html>
@@ -919,144 +952,192 @@ SET @FormRejectedHTML = N'<!DOCTYPE html>
 </body>
 </html>';
 
--- Seed form-rejected template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'form-rejected')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-
-        'form-rejected',
-        'Formulario Requiere Correcciones',
-        'Tu formulario requiere correcciones',
-        @FormRejectedHTML,
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update form-rejected template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'form-rejected' AS [Key],
+    'Formulario Requiere Correcciones' AS [Name],
+    'Tu formulario requiere correcciones' AS [Subject],
+    @FormRejectedHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
 -- Additional templates
 -- For brevity, using simplified versions. In production, these would contain full HTML with styles like the templates above.
 
--- Project Invitation Template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'project-invitation')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
+-- Seed/Update project-invitation template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'project-invitation' AS [Key],
+    'Invitación a Proyecto' AS [Name],
+    'Has sido invitado al proyecto {{ProjectName}}' AS [Subject],
+    N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Invitación a Proyecto</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>¡Hola {{FullName}}!</h1><p>Has sido invitado a participar en el proyecto <strong>{{ProjectName}}</strong>.</p><p style="text-align: center;"><a href="{{InvitationLink}}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Aceptar Invitación</a></p><p>Esta invitación expirará en 72 horas.</p></div></body></html>' AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
-        'project-invitation',
-        'Invitación a Proyecto',
-        'Has sido invitado al proyecto {{ProjectName}}',
-        N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Invitación a Proyecto</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>¡Hola {{FullName}}!</h1><p>Has sido invitado a participar en el proyecto <strong>{{ProjectName}}</strong>.</p><p style="text-align: center;"><a href="{{InvitationLink}}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Aceptar Invitación</a></p><p>Esta invitación expirará en 72 horas.</p></div></body></html>',
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update invitation-reminder template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'invitation-reminder' AS [Key],
+    'Recordatorio de Invitación' AS [Name],
+    'Recordatorio: Tu invitación al proyecto {{ProjectName}} expira pronto' AS [Subject],
+    N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Recordatorio de Invitación</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{FullName}},</h1><p>Te recordamos que tienes una invitación pendiente para el proyecto <strong>{{ProjectName}}</strong>.</p><p>Tu invitación expirará en <strong>{{DaysRemaining}} días</strong>.</p><p style="text-align: center;"><a href="{{InvitationLink}}" style="background-color: #ffc107; color: #333; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Aceptar Invitación Ahora</a></p></div></body></html>' AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
--- Invitation Reminder Template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'invitation-reminder')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
+-- Seed/Update form-submission-confirmation template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'form-submission-confirmation' AS [Key],
+    'Confirmación de Envío de Formulario' AS [Name],
+    'Confirmación: Formulario recibido - {{ProjectName}}' AS [Subject],
+    N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Confirmación de Envío</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{ParticipantName}},</h1><p>Hemos recibido exitosamente tu formulario para el proyecto <strong>{{ProjectName}}</strong>.</p><div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0;"><p><strong>Detalles del envío:</strong></p><p>ID de envío: {{SubmissionId}}<br>Fecha y hora: {{SubmissionDateTime}}</p></div><p>Tu formulario será revisado pronto y te notificaremos el resultado.</p></div></body></html>' AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
-        'invitation-reminder',
-        'Recordatorio de Invitación',
-        'Recordatorio: Tu invitación al proyecto {{ProjectName}} expira pronto',
-        N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Recordatorio de Invitación</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{FullName}},</h1><p>Te recordamos que tienes una invitación pendiente para el proyecto <strong>{{ProjectName}}</strong>.</p><p>Tu invitación expirará en <strong>{{DaysRemaining}} días</strong>.</p><p style="text-align: center;"><a href="{{InvitationLink}}" style="background-color: #ffc107; color: #333; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Aceptar Invitación Ahora</a></p></div></body></html>',
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update form-submission-admin-notification template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'form-submission-admin-notification' AS [Key],
+    'Notificación de Envío para Administrador' AS [Name],
+    'Nuevo formulario recibido - {{ProjectName}}' AS [Subject],
+    N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Nuevo Formulario Recibido</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{ReviewerName}},</h1><p>Se ha recibido un nuevo formulario para revisión.</p><div style="background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0;"><p><strong>Detalles:</strong></p><p>Proyecto: {{ProjectName}}<br>Participante: {{ParticipantName}} ({{ParticipantEmail}})<br>Fecha: {{SubmissionDateTime}}<br>ID: {{SubmissionId}}</p></div><div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;"><p><strong>Estadísticas:</strong></p><p>Pendientes: {{PendingCount}}<br>Revisados hoy: {{ReviewedToday}}<br>Total: {{TotalSubmissions}}<br>Tiempo promedio: {{AverageReviewTime}} horas</p></div><p style="text-align: center;"><a href="{{ReviewDashboardUrl}}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Revisar Formulario</a></p></div></body></html>' AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
--- Form Submission Confirmation Template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'form-submission-confirmation')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
+-- Seed/Update account-creation-with-project template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'account-creation-with-project' AS [Key],
+    'Cuenta Creada con Invitación a Proyecto' AS [Name],
+    'Bienvenido a {{ApplicationName}} - Invitación al proyecto {{ProjectName}}' AS [Subject],
+    N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Cuenta Creada e Invitación</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>¡Bienvenido {{FullName}}!</h1><p>Se ha creado una cuenta para ti en {{ApplicationName}} y has sido invitado al proyecto <strong>{{ProjectName}}</strong>.</p><div style="background-color: #e7f1ff; padding: 20px; border-radius: 5px; margin: 20px 0;"><p><strong>Credenciales de acceso:</strong></p><p>Email: {{Email}}<br>Contraseña temporal: {{TemporaryPassword}}</p></div><p style="text-align: center;"><a href="{{ActivationLink}}" style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Activar Cuenta y Aceptar Invitación</a></p></div></body></html>' AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
-        'form-submission-confirmation',
-        'Confirmación de Envío de Formulario',
-        'Confirmación: Formulario recibido - {{ProjectName}}',
-        N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Confirmación de Envío</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{ParticipantName}},</h1><p>Hemos recibido exitosamente tu formulario para el proyecto <strong>{{ProjectName}}</strong>.</p><div style="background-color: #d4edda; padding: 15px; border-radius: 5px; margin: 20px 0;"><p><strong>Detalles del envío:</strong></p><p>ID de envío: {{SubmissionId}}<br>Fecha y hora: {{SubmissionDateTime}}</p></div><p>Tu formulario será revisado pronto y te notificaremos el resultado.</p></div></body></html>',
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update email-change-verification template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'email-change-verification' AS [Key],
+    'Verificación de Cambio de Email' AS [Name],
+    'Verifica tu nuevo correo electrónico' AS [Subject],
+    N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Verificación de Email</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{FullName}},</h1><p>Has solicitado cambiar tu correo electrónico de <strong>{{OldEmail}}</strong> a <strong>{{NewEmail}}</strong>.</p><p>Para confirmar este cambio, haz clic en el siguiente enlace:</p><p style="text-align: center;"><a href="{{VerificationLink}}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Verificar Nuevo Email</a></p><p>Si no solicitaste este cambio, ignora este mensaje.</p></div></body></html>' AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
--- Form Submission Admin Notification Template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'form-submission-admin-notification')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-
-        'form-submission-admin-notification',
-        'Notificación de Envío para Administrador',
-        'Nuevo formulario recibido - {{ProjectName}}',
-        N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Nuevo Formulario Recibido</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{ReviewerName}},</h1><p>Se ha recibido un nuevo formulario para revisión.</p><div style="background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0;"><p><strong>Detalles:</strong></p><p>Proyecto: {{ProjectName}}<br>Participante: {{ParticipantName}} ({{ParticipantEmail}})<br>Fecha: {{SubmissionDateTime}}<br>ID: {{SubmissionId}}</p></div><div style="background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;"><p><strong>Estadísticas:</strong></p><p>Pendientes: {{PendingCount}}<br>Revisados hoy: {{ReviewedToday}}<br>Total: {{TotalSubmissions}}<br>Tiempo promedio: {{AverageReviewTime}} horas</p></div><p style="text-align: center;"><a href="{{ReviewDashboardUrl}}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Revisar Formulario</a></p></div></body></html>',
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
-
--- Account Creation with Project Template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'account-creation-with-project')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-
-        'account-creation-with-project',
-        'Cuenta Creada con Invitación a Proyecto',
-        'Bienvenido a {{ApplicationName}} - Invitación al proyecto {{ProjectName}}',
-        N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Cuenta Creada e Invitación</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>¡Bienvenido {{FullName}}!</h1><p>Se ha creado una cuenta para ti en {{ApplicationName}} y has sido invitado al proyecto <strong>{{ProjectName}}</strong>.</p><div style="background-color: #e7f1ff; padding: 20px; border-radius: 5px; margin: 20px 0;"><p><strong>Credenciales de acceso:</strong></p><p>Email: {{Email}}<br>Contraseña temporal: {{TemporaryPassword}}</p></div><p style="text-align: center;"><a href="{{ActivationLink}}" style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Activar Cuenta y Aceptar Invitación</a></p></div></body></html>',
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
-
--- Email Change Verification Template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'email-change-verification')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-
-        'email-change-verification',
-        'Verificación de Cambio de Email',
-        'Verifica tu nuevo correo electrónico',
-        N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Verificación de Email</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{FullName}},</h1><p>Has solicitado cambiar tu correo electrónico de <strong>{{OldEmail}}</strong> a <strong>{{NewEmail}}</strong>.</p><p>Para confirmar este cambio, haz clic en el siguiente enlace:</p><p style="text-align: center;"><a href="{{VerificationLink}}" style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">Verificar Nuevo Email</a></p><p>Si no solicitaste este cambio, ignora este mensaje.</p></div></body></html>',
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
-
--- Identification Change Notification Template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'identification-change-notification')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-
-        'identification-change-notification',
-        'Notificación de Cambio de Identificación',
-        'Tu identificación ha sido actualizada',
-        N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Cambio de Identificación</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{FullName}},</h1><p>Te informamos que tu identificación ha sido actualizada en nuestro sistema.</p><div style="background-color: #f8d7da; padding: 15px; border-radius: 5px; margin: 20px 0;"><p><strong>Detalles del cambio:</strong></p><p>Identificación anterior: {{OldIdentification}}<br>Nueva identificación: {{NewIdentification}}<br>Fecha del cambio: {{ChangeDateTime}}<br>Solicitado por: {{RequestedBy}}</p></div><p>Si no autorizaste este cambio, contacta inmediatamente a <a href="{{SupportUrl}}">soporte</a>.</p></div></body></html>',
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update identification-change-notification template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'identification-change-notification' AS [Key],
+    'Notificación de Cambio de Identificación' AS [Name],
+    'Tu identificación ha sido actualizada' AS [Subject],
+    N'<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Cambio de Identificación</title></head><body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;"><div style="max-width: 600px; margin: 0 auto; padding: 20px;"><h1>Hola {{FullName}},</h1><p>Te informamos que tu identificación ha sido actualizada en nuestro sistema.</p><div style="background-color: #f8d7da; padding: 15px; border-radius: 5px; margin: 20px 0;"><p><strong>Detalles del cambio:</strong></p><p>Identificación anterior: {{OldIdentification}}<br>Nueva identificación: {{NewIdentification}}<br>Fecha del cambio: {{ChangeDateTime}}<br>Solicitado por: {{RequestedBy}}</p></div><p>Si no autorizaste este cambio, contacta inmediatamente a <a href="{{SupportUrl}}">soporte</a>.</p></div></body></html>' AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
 -- Review Request Template
 DECLARE @ReviewRequestHTML NVARCHAR(MAX);
@@ -1213,19 +1294,25 @@ SET @ReviewRequestHTML = N'<!DOCTYPE html>
 </body>
 </html>';
 
--- Seed review-request template
-IF NOT EXISTS (SELECT 1 FROM [notification].[EmailTemplates] WHERE [Key] = 'review-request')
-BEGIN
-    INSERT INTO [notification].[EmailTemplates] ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
-    VALUES (
-
-        'review-request',
-        'Solicitud de Revisión',
-        'Se requiere tu revisión - {{ProjectName}}',
-        @ReviewRequestHTML,
-        'es',
-        1,
-        GETDATE(),
-        GETDATE()
-    );
-END
+-- Seed/Update review-request template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'review-request' AS [Key],
+    'Solicitud de Revisión' AS [Name],
+    'Se requiere tu revisión - {{ProjectName}}' AS [Subject],
+    @ReviewRequestHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());

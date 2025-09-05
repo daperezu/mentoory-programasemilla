@@ -212,13 +212,14 @@ public class CoreDbContext : SharedAbstractDbContext
             entity.ToTable("UserActivities", "core");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.UserId).IsRequired().HasMaxLength(450);
-            entity.Property(e => e.ActivityType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ActivityType).IsRequired().HasMaxLength(50).HasColumnName("Type");
             entity.Property(e => e.Description).IsRequired().HasMaxLength(500);
             entity.Property(e => e.EntityType).HasMaxLength(100);
-            entity.Property(e => e.EntityId);
+            entity.Property(e => e.EntityId).HasColumnType("NVARCHAR(100)");
             entity.Property(e => e.Metadata);
+            entity.Property(e => e.CreatedDate).IsRequired().HasColumnName("CreatedAt");
             entity.Property(e => e.UserName).HasMaxLength(256);
-            entity.Property(e => e.CreatedDate).IsRequired();
+
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.CreatedDate);
             entity.HasIndex(e => new { e.EntityType, e.EntityId });

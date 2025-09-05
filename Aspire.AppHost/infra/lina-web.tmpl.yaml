@@ -1,0 +1,67 @@
+api-version: 2024-02-02-preview
+location: {{ .Env.AZURE_LOCATION }}
+identity:
+  type: UserAssigned
+  userAssignedIdentities:
+    ? "{{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}"
+    : {}
+properties:
+  environmentId: {{ .Env.AZURE_CONTAINER_APPS_ENVIRONMENT_ID }}
+  configuration:
+    activeRevisionsMode: single
+    runtime:
+      dotnet:
+        autoConfigureDataProtection: true
+    ingress:
+      external: true
+      targetPort: {{ targetPortOrDefault 8080 }}
+      transport: http
+      allowInsecure: false
+      customDomains:
+        - name: www.mentoory.com
+          bindingType: SniEnabled
+          certificateId: "/subscriptions/721927fe-7a42-45e2-bb6a-784c35c4cc69/resourceGroups/rg-LinaSys-P/providers/Microsoft.App/managedEnvironments/cae-htejpd7l3itk6/managedCertificates/www.mentoory.com-cae-htej-250824063201"
+    registries:
+      - server: {{ .Env.AZURE_CONTAINER_REGISTRY_ENDPOINT }}
+        identity: {{ .Env.AZURE_CONTAINER_REGISTRY_MANAGED_IDENTITY_ID }}
+    secrets:
+      - name: connectionstrings--defaultconnection
+        value: Server=tcp:{{ .Env.LINA_DBSERVER_SQLSERVERFQDN }},1433;Encrypt=True;Authentication="Active Directory Default";Database=LinaDb
+      - name: connectionstrings--blobs
+        value: '{{ .Env.LINA_STORAGE_BLOBENDPOINT }}'
+      - name: mailgun--apikey
+        value: '{{ securedParameter "mailgun_apikey" }}'
+  template:
+    containers:
+      - image: {{ .Image }}
+        name: lina-web
+        env:
+          - name: AZURE_CLIENT_ID
+            value: {{ .Env.MANAGED_IDENTITY_CLIENT_ID }}
+          - name: APPSETTINGS_HASH
+            value: 154CD975A695D9E9C6AFA9D9113634AAFEB2FAE6965717B727013E8A4A8052C1
+          - name: ASPNETCORE_FORWARDEDHEADERS_ENABLED
+            value: "true"
+          - name: AspireAppsettings
+            value: eyJNZWRpYXRSOkxpY2Vuc2VLZXkiOiJleUpoYkdjaU9pSlNVekkxTmlJc0ltdHBaQ0k2SWt4MVkydDVVR1Z1Ym5sVGIyWjBkMkZ5WlV4cFkyVnVjMlZMWlhrdlltSmlNVE5oWTJJMU9Ua3dOR1E0T1dJMFkySXhZemcxWmpBNE9HTmpaamtpTENKMGVYQWlPaUpLVjFRaWZRLmV5SnBjM01pT2lKb2RIUndjem92TDJ4MVkydDVjR1Z1Ym5semIyWjBkMkZ5WlM1amIyMGlMQ0poZFdRaU9pSk1kV05yZVZCbGJtNTVVMjltZEhkaGNtVWlMQ0psZUhBaU9pSXhOemd6TnpJNE1EQXdJaXdpYVdGMElqb2lNVGMxTWpJd056a3hNQ0lzSW1GalkyOTFiblJmYVdRaU9pSXdNVGszWmpkaVlURXpPVGczWlRBellqVXdaRGcyTUdVeU9EZzJNV0V5WkNJc0ltTjFjM1J2YldWeVgybGtJam9pWTNSdFh6QXhhbnAyZG01ellXczNkM2h0ZEhwdE1HNWljVGN5YUhSMElpd2ljM1ZpWDJsa0lqb2lMU0lzSW1Wa2FYUnBiMjRpT2lJd0lpd2lkSGx3WlNJNklqSWlmUS53S09PSkhUM21hcExPWm9sdUl5X3lFd21wWDEyMmxyOHU2ZkhteDJiaEZxQlEzYlZpdklVTTJoNnVsaXgzTm9QVzVONWR0RWViMzFXS01fTktFNEhBTW9tZmpFS18yei1pdTJheXpoMzRUWkhIMVEtaU1PSDNlZnhxUWRYR1owbWh4LWZ0cjd3QnI0LW1zekRZNmM2VWJ6MkpkXzVoSVhyX09LSkFmdXVKbmtrMXRHNnNId1UxZk41c2lFR3ZYU2RrOVlkU29keHV4RkJFUjR2akJNWEtWbjNsY1BnTXNpWWU3Vm12alNCMG9URXVtV1BqOXNyNEZrTEVMcWQ5bGRSZmFEMDA4Y3pyVUM3bGRpSWp4MGFib0Q1Qmc3QmEzYzdteEkxLVBhSkM1a3VhSnpldWw2WjlnQmlUNkNPd244eTlEUDNRQXNTS0FjZzBOaXlUQzN0Q1EiLCJNYWlsZ3VuOlRpbWVvdXQiOiIwMDowMDoxMCIsIk1haWxndW46VGVzdE1vZGUiOiJGYWxzZSIsIk1haWxndW46RnJvbU5hbWUiOiJNZW50b29yeSIsIk1haWxndW46RnJvbUFkZHJlc3MiOiJNZW50b29yeSBcdTAwM0NoZWxsb0BtZW50b29yeS5jb21cdTAwM0UiLCJBcHBsaWNhdGlvbjpXZWJzaXRlVXJsIjoiaHR0cDovL3d3dy5tZW50b29yeS5jb20iLCJBcHBsaWNhdGlvbjpTdXBwb3J0RW1haWwiOiJzdXBwb3J0QG1lbnRvb3J5LmNvbSIsIkFwcGxpY2F0aW9uOk5hbWUiOiJNZW50b29yeSIsIkFwcGxpY2F0aW9uOkxvZ29VcmwiOiJodHRwOi8vd3d3Lm1lbnRvb3J5LmNvbS9pbWcvbG9nby1mdWxsLWNvbG9yLTEyMC5wbmciLCJBcHBsaWNhdGlvbjpCYXNlVXJsIjoiaHR0cDovL3d3dy5tZW50b29yeS5jb20ifQ==
+          - name: HTTP_PORTS
+            value: '{{ targetPortOrDefault 0 }}'
+          - name: Mailgun__Domain
+            value: '{{ parameter "mailgun_domain" }}'
+          - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES
+            value: "true"
+          - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES
+            value: "true"
+          - name: OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY
+            value: in_memory
+          - name: ConnectionStrings__DefaultConnection
+            secretRef: connectionstrings--defaultconnection
+          - name: ConnectionStrings__blobs
+            secretRef: connectionstrings--blobs
+          - name: Mailgun__ApiKey
+            secretRef: mailgun--apikey
+    scale:
+      minReplicas: 1
+tags:
+  azd-service-name: lina-web
+  aspire-resource-name: lina-web

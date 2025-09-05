@@ -157,3 +157,6 @@
         };
     </script>
 }
+
+@* Include the session timeout component for authenticated users *@
+@await Html.PartialAsync("_SessionTimeoutPrompt", (300, 10, Model.LogoutUrl))

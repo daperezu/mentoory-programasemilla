@@ -1,13 +1,17 @@
 ﻿using LinaSys.Auth.Application.Commands.Context;
 using LinaSys.Auth.Application.Queries.Context;
 using LinaSys.Orchestration.Application.Context;
+using LinaSys.Shared.Application.Services;
 using LinaSys.Web.Models.Context;
 using LinaSys.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Controllers;
 
-public class ContextSelectionController(ILogger<ContextSelectionController> logger, MediatorExecutor mediatorExecutor)
+public class ContextSelectionController(
+    ILogger<ContextSelectionController> logger,
+    MediatorExecutor mediatorExecutor,
+    IApplicationUrlService applicationUrlService)
     : AuthorizedBaseController(logger, mediatorExecutor)
 {
     public const string IndexUrl = "/ContextSelection/Index";
@@ -124,7 +128,8 @@ public class ContextSelectionController(ILogger<ContextSelectionController> logg
             Incubators = incubators ?? [],
             Projects = projects ?? [],
             SelectedIncubatorId = selectedIncubatorId,
-            SelectedProjectId = selectedProjectId
+            SelectedProjectId = selectedProjectId,
+            LogoutUrl = applicationUrlService.GetLogoutUrl()
         };
 
         logger.LogInformation("User {UserId} needs to select context, showing selection page", CurrentUserId);

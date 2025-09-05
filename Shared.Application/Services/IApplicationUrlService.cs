@@ -87,4 +87,10 @@ public interface IApplicationUrlService
     /// <param name="token">The confirmation token.</param>
     /// <returns>The absolute URL for email confirmation.</returns>
     string GetEmailConfirmationUrl(string userId, string token);
+
+    /// <summary>
+    /// Gets the URL for the logout page.
+    /// </summary>
+    /// <returns>The absolute URL for the logout page.</returns>
+    string GetLogoutUrl();
 }

@@ -231,7 +231,7 @@ public class AzureBlobFileStorageService(
         try
         {
             var containers = category.HasValue
-                ? new[] { GetContainerName(category.Value) }
+                ? [GetContainerName(category.Value)]
                 : _containerMapping.Values.ToArray();
 
             foreach (var containerName in containers)

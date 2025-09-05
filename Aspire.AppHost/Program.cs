@@ -4,19 +4,23 @@ using Projects;
 
 const string defaultConnectionName = "DefaultConnection";
 
-var builder = DistributedApplication.CreateBuilder(args);
-
 IResourceBuilder<IResourceWithConnectionString> dbDefaultConnection;
 IResourceBuilder<AzureBlobStorageResource> blobs;
+IResourceBuilder<ParameterResource>? mailgunDomain = null;
+IResourceBuilder<ParameterResource>? mailgunApiKey = null;
 
-if (builder.ExecutionContext.IsRunMode)
+var builder = DistributedApplication.CreateBuilder(args);
+
+if (builder.ExecutionContext.IsRunMode) //// Running locally
 {
     dbDefaultConnection = builder.AddConnectionString(defaultConnectionName);
-    var storage = builder.AddAzureStorage("storage")
+
+    var storage = builder
+        .AddAzureStorage("storage")
         .RunAsEmulator();
     blobs = storage.AddBlobs("blobs");
 }
-else
+else //// Running in Azure
 {
     dbDefaultConnection = builder
         .AddAzureSqlServer(name: "lina-dbserver")
@@ -24,15 +28,26 @@ else
 
     var storage = builder.AddAzureStorage("lina-storage");
     blobs = storage.AddBlobs("blobs");
+
+    mailgunDomain = builder.AddParameter("mailgun-domain");
+    mailgunApiKey = builder.AddParameter("mailgun-apikey", secret: true);
 }
 
-var appSettingsJson = AppsettingsLoader.SerializeUserJsonConfiguration();
+var appSettingsJson = AppsettingsLoader.SerializeUserJsonConfiguration(builder.ExecutionContext.IsRunMode, out var appSettingsJsonHash);
 
-builder.AddProject<LinaSys_Web>("lina-web")
+var webProject = builder.AddProject<LinaSys_Web>("lina-web")
     .WithReference(dbDefaultConnection)
     .WithReference(blobs)
     .WithEnvironment("AspireAppsettings", appSettingsJson)
+    .WithEnvironment("APPSETTINGS_HASH", appSettingsJsonHash) // <— forces a spec change
     .WithExternalHttpEndpoints()
     .WaitFor(dbDefaultConnection);
+
+if (mailgunDomain != null && mailgunApiKey != null)
+{
+    webProject
+        .WithEnvironment("Mailgun__Domain", mailgunDomain)
+        .WithEnvironment("Mailgun__ApiKey", mailgunApiKey);
+}
 
 builder.Build().Run();

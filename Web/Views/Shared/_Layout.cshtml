@@ -1,4 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using LinaSys.Shared.Application.Services
+@inject IApplicationUrlService ApplicationUrlService
 <!DOCTYPE html>
 <html lang="en-US" dir="ltr" data-navigation-type="default" data-navbar-horizontal-shape="default">
 
@@ -55,6 +57,6 @@
     
     @await Html.PartialAsync("_ToastContainerPartial")
 
-    @await Html.PartialAsync("_SessionTimeoutPrompt", (300, 10, "/Identity/Account/Logout"))
+    @await Html.PartialAsync("_SessionTimeoutPrompt", (300, 10, ApplicationUrlService.GetLogoutUrl()))
     </body>
 </html>

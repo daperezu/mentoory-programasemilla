@@ -21,6 +21,11 @@ public class ProjectDto
     public long Id { get; set; }
 
     /// <summary>
+    /// Gets or sets the project external identifier.
+    /// </summary>
+    public Guid ExternalId { get; set; }
+
+    /// <summary>
     /// Gets or sets the project name.
     /// </summary>
     public string Name { get; set; } = string.Empty;
@@ -61,6 +66,7 @@ public class GetProjectByIdQueryHandler(IBusinessIncubatorRepository repository)
         var dto = new ProjectDto
         {
             Id = project.Id,
+            ExternalId = project.ExternalId,
             Name = project.Name,
             Key = project.Key,
             IsDeleted = project.IsDeleted

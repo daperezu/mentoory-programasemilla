@@ -25,8 +25,7 @@
 | Creating features | [architecture.md](.claude/architecture.md), [web-patterns.md](.claude/web-patterns.md) |
 | Domain changes | [ddd-patterns.md](.claude/ddd-patterns.md), [domain-reference.md](.claude/domain-reference.md) |
 | Build errors | [coding-standards.md](.claude/coding-standards.md), [common-issues.md](.claude/common-issues.md) |
-| Cross-domain work | [ADR-001-integration-events.md](.claude/architecture-decisions/ADR-001-integration-events.md) |
-| E2E error analysis | [E2E_ERROR_ANALYSIS.md](.claude/debugging/E2E_ERROR_ANALYSIS.md) |
+| Cross-domain work | [ADR-001-integration-events.md](.claude/architecture-decisions/ADR-001-integration-events.md) 
 
 ## 📋 Requirements
 - **Active**: `.claude/requirements/active/` ← Current work items
@@ -36,11 +35,15 @@
 ### Currently Active
 - 📋 **Awaiting Requirements** - No active tasks
 
+### Pending Implementation
+- 📝 **REQ-001**: Enhanced User Creation with Role-Based Access Assignment
+
 ### Recently Completed
-- ✅ All previous features completed and stable
+- ✅ Inactivity logout component for ContextSelection page
+- ✅ IApplicationUrlService GetLogoutUrl method implementation
 
 ## 🎯 Current Context
-- **Branch**: `feature/user-administration`
+- **Branch**: `develop`
 - **Status**: Ready for new requirements
 - **Build Status**: ✅ Clean build - 0 errors, 0 warnings
 - **Session File**: `.claude/CURRENT_SESSION.md` ← *Start here for today's work*
