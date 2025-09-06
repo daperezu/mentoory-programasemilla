@@ -126,7 +126,7 @@ public class CreateUserViewModel : IValidatableObject
                     break;
 
                 case Roles.Coordinator:
-                    // Coordinator can be at incubator or project level
+                    // Coordinator requires both incubator and project
                     if (SelectedIncubatorId is not > 0)
                     {
                         yield return new ValidationResult(
@@ -134,7 +134,13 @@ public class CreateUserViewModel : IValidatableObject
                             [nameof(SelectedIncubatorId)]);
                     }
 
-                    // Project is optional for Coordinator
+                    if (SelectedProjectId is not > 0)
+                    {
+                        yield return new ValidationResult(
+                            "El proyecto es requerido para el rol Coordinador",
+                            [nameof(SelectedProjectId)]);
+                    }
+
                     break;
 
                 case Roles.Starter:

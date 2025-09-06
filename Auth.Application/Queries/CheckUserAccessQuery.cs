@@ -1,6 +1,8 @@
+using LinaSys.Auth.Application.Interfaces;
 using LinaSys.Auth.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
+using LinaSys.Shared.Domain.Constants;
 
 namespace LinaSys.Auth.Application.Queries;
 
@@ -10,7 +12,9 @@ public sealed record CheckUserAccessQuery(
     long? ResourceId = null) : IBaseRequest<bool>;
 
 public sealed class CheckUserAccessQueryHandler(
-    IAuthRepository authRepository) : BaseCommandHandler<CheckUserAccessQuery, bool>
+    IAuthRepository authRepository,
+    IProjectAccessService projectAccessService,
+    IIncubatorAccessService incubatorAccessService) : BaseCommandHandler<CheckUserAccessQuery, bool>
 {
     public override async Task<Result<bool>> Handle(CheckUserAccessQuery request, CancellationToken cancellationToken)
     {
@@ -21,13 +25,24 @@ public sealed class CheckUserAccessQueryHandler(
             return Success(false);
         }
 
+        // Check for global administrator role
+        var userRoles = await authRepository.GetUserRolesAsync(request.UserId, cancellationToken);
+        if (userRoles.Contains(Roles.GlobalAdministrator))
+        {
+            return Success(true);
+        }
+
         // Check access based on type
         var hasAccess = request.AccessType.ToLower() switch
         {
             "project" when request.ResourceId.HasValue =>
-                await authRepository.GetUserProjectAccessAsync(request.UserId, request.ResourceId.Value, cancellationToken) is not null,
+                await projectAccessService.ValidateProjectAccessAsync(request.UserId, request.ResourceId.Value, 0, cancellationToken),
             "incubator" when request.ResourceId.HasValue =>
-                await authRepository.GetUserIncubatorAccessAsync(request.UserId, request.ResourceId.Value, cancellationToken) is not null,
+                await incubatorAccessService.ValidateIncubatorAccessAsync(
+                    request.UserId,
+                    userRoles.FirstOrDefault() ?? string.Empty,
+                    request.ResourceId.Value,
+                    cancellationToken),
             _ => false
         };
 

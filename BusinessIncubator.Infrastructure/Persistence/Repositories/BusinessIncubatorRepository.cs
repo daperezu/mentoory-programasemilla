@@ -904,7 +904,7 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
     public async Task<Project?> GetProjectWithStagesAsync(long projectId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Set<Project>()
-            .Include(p => p.ProjectStages)
+            .Include("_projectStages")
             .FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken)
             .ConfigureAwait(false);
     }

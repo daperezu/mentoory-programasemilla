@@ -64,6 +64,7 @@ PRINT '[007.SeedAuthAccessTables.sql] Inserted ' + CAST(@ProjectAccessCount AS N
 
 -- =============================================
 -- UserIncubatorAccess: Create incubator-level access
+-- Note: All users with project access need incubator access too
 -- =============================================
 PRINT '[007.SeedAuthAccessTables.sql] Seeding UserIncubatorAccess';
 
@@ -72,21 +73,21 @@ DELETE FROM [dbo].[UserIncubatorAccess]
 WHERE UserId IN (@DemoStarterId, @DemoMentorId, @DemoCoordinatorId, @DemoAdminId)
    OR IncubatorId = @DemoIncubatorId;
 
--- Use MERGE for safe incubator access sync (demo coordinators only)
+-- Use MERGE for safe incubator access sync (all demo users with project access)
 MERGE [dbo].[UserIncubatorAccess] AS target
 USING (
     SELECT DISTINCT
         pu.UserId,
         p.BusinessIncubatorId AS IncubatorId,
-        'Coordinator' AS Role,
+        pu.Role AS Role,
         1 AS IsActive,
         '2024-01-01 00:00:00' AS LastSyncedAt
     FROM [businessincubators].[ProjectUsers] pu
     INNER JOIN [businessincubators].[Projects] p ON pu.ProjectId = p.Id
     INNER JOIN [dbo].[AspNetUsers] u ON pu.UserId = u.Id
-    WHERE pu.Role = 'Coordinator' AND pu.IsActive = 1
-      -- Only sync demo coordinators to demo incubator
-      AND pu.UserId IN (@DemoCoordinatorId)
+    WHERE pu.IsActive = 1
+      -- Sync all demo users to their respective incubators
+      AND pu.UserId IN (@DemoStarterId, @DemoMentorId, @DemoCoordinatorId)
       AND p.BusinessIncubatorId = @DemoIncubatorId
 ) AS source ON target.UserId = source.UserId AND target.IncubatorId = source.IncubatorId
 WHEN MATCHED THEN
@@ -106,7 +107,7 @@ BEGIN
         SELECT 
             @DemoAdminId AS UserId,
             @DemoIncubatorId AS IncubatorId,
-            'Global Administrator' AS Role,
+            'Administrator' AS Role,
             1 AS IsActive,
             '2024-01-01 00:00:00' AS LastSyncedAt
     ) AS source ON target.UserId = source.UserId AND target.IncubatorId = source.IncubatorId

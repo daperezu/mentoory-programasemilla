@@ -1,112 +1,105 @@
-﻿using System.Security.Claims;
-using LinaSys.Permissions.Domain.Constants;
-using LinaSys.Permissions.Domain.Repositories;
-using LinaSys.Shared.Application.Auth;
+﻿using LinaSys.Auth.Application.Queries;
+using LinaSys.BusinessIncubator.Application.Queries;
+using LinaSys.Web.Services;
+using Microsoft.Extensions.Logging;
 
 namespace LinaSys.Web.Auth;
 
 /// <summary>
-/// Implementation of IAccessChecker using ProtectedResource for authorization.
-/// This is domain-agnostic and only uses resource types and IDs.
+/// Implementation of IAccessChecker using CQRS for authorization.
+/// Provides project and incubator access validation through queries and commands.
 /// </summary>
 /// <remarks>
 /// Initializes a new instance of the <see cref="AccessChecker"/> class.
 /// </remarks>
-/// <param name="protectedResourceRepository">The protected resource repository.</param>
-public class AccessChecker(IProtectedResourceRepository protectedResourceRepository) : IAccessChecker
+/// <param name="mediatorExecutor">The mediator executor for CQRS operations.</param>
+/// <param name="logger">The logger.</param>
+public class AccessChecker(
+    MediatorExecutor mediatorExecutor,
+    ILogger<AccessChecker> logger) : IAccessChecker
 {
-
-    /// <inheritdoc/>
-    public async Task<bool> HasAccessToResourceAsync(ClaimsPrincipal principal, Guid resourceExternalId, CancellationToken cancellationToken = default)
-    {
-        if (!principal.Identity?.IsAuthenticated ?? true)
-        {
-            return false;
-        }
-
-        var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        var roleIds = principal.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
-
-        if (string.IsNullOrEmpty(userId))
-        {
-            return false;
-        }
-
-        // Check if user has direct access or role-based access to the resource
-        var resource = await protectedResourceRepository.GetProtectedResourceByExternalIdAsync(resourceExternalId, cancellationToken).ConfigureAwait(false);
-        if (resource is null)
-        {
-            return false;
-        }
-
-        // Check user permissions
-        if (await protectedResourceRepository.UserHasAccessAsync(userId, resource.Id, cancellationToken).ConfigureAwait(false))
-        {
-            return true;
-        }
-
-        // Check role permissions
-        if (roleIds.Count > 0 && await protectedResourceRepository.RoleHasAccessAsync(roleIds, resource.Id, cancellationToken).ConfigureAwait(false))
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <inheritdoc/>
-    public async Task<bool> HasProjectRoleAsync(string userId, Guid projectExternalId, string role, CancellationToken cancellationToken = default)
-    {
-        // Projects are ProtectedResources of type Project
-        // The role information would need to be stored in the ProtectedResource metadata
-        // or in a separate authorization context
-        // For now, check if user has access to the project resource
-        var resource = await protectedResourceRepository.GetProtectedResourceByExternalIdAsync(projectExternalId, cancellationToken).ConfigureAwait(false);
-        if (resource is null || resource.ResourceType != ResourceTypes.Project)
-        {
-            return false;
-        }
-
-        // Check if user has access to this project resource
-        return await protectedResourceRepository.UserHasAccessAsync(userId, resource.Id, cancellationToken).ConfigureAwait(false);
-    }
 
     /// <inheritdoc/>
     public async Task<bool> HasProjectAccessAsync(string userId, Guid projectExternalId, CancellationToken cancellationToken = default)
     {
-        var resource = await protectedResourceRepository.GetProtectedResourceByExternalIdAsync(projectExternalId, cancellationToken).ConfigureAwait(false);
-        if (resource is null || resource.ResourceType != ResourceTypes.Project)
+        try
         {
+            // First get the internal project ID from the external ID
+            var projectQuery = new GetProjectByExternalIdQuery(projectExternalId);
+            var projectResult = await mediatorExecutor.SendOrThrowAsync(projectQuery, cancellationToken).ConfigureAwait(false);
+
+            // Check user access to the project with the internal ID
+            var accessQuery = new CheckUserAccessQuery(userId, "project", projectResult.Id);
+            var hasAccess = await mediatorExecutor.SendOrThrowAsync(accessQuery, cancellationToken).ConfigureAwait(false);
+
+            logger.LogDebug("User {UserId} access to project {ProjectId}: {HasAccess}", userId, projectResult.Id, hasAccess);
+            return hasAccess;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error checking project access for user {UserId}", userId);
             return false;
         }
-
-        return await protectedResourceRepository.UserHasAccessAsync(userId, resource.Id, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
     public async Task<bool> HasBusinessIncubatorAccessAsync(string userId, Guid businessIncubatorExternalId, CancellationToken cancellationToken = default)
     {
-        var resource = await protectedResourceRepository.GetProtectedResourceByExternalIdAsync(businessIncubatorExternalId, cancellationToken).ConfigureAwait(false);
-        if (resource is null || resource.ResourceType != ResourceTypes.BusinessIncubator)
+        try
         {
+            // First get the internal incubator ID from the external ID
+            var incubatorQuery = new GetIncubatorByExternalIdQuery(businessIncubatorExternalId);
+            var incubatorResult = await mediatorExecutor.SendOrThrowAsync(incubatorQuery, cancellationToken).ConfigureAwait(false);
+
+            // Check user access to the incubator with the internal ID
+            var accessQuery = new CheckUserAccessQuery(userId, "incubator", incubatorResult.Id);
+            var hasAccess = await mediatorExecutor.SendOrThrowAsync(accessQuery, cancellationToken).ConfigureAwait(false);
+
+            logger.LogDebug("User {UserId} access to incubator {IncubatorId}: {HasAccess}", userId, incubatorResult.Id, hasAccess);
+            return hasAccess;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error checking incubator access for user {UserId}", userId);
             return false;
         }
-
-        return await protectedResourceRepository.UserHasAccessAsync(userId, resource.Id, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc/>
-    public async Task<List<Guid>> GetProjectsWithRoleAsync(string userId, string role, CancellationToken cancellationToken = default)
+    public async Task<bool> HasProjectAccessAsync(string userId, long projectId, CancellationToken cancellationToken = default)
     {
-        // Get all project resources the user has access to
-        // Note: Role-specific filtering would require metadata in ProtectedResource
-        // or a separate authorization context
-        var resources = await protectedResourceRepository.GetResourcesByUserAndRoleAsync(
-            userId,
-            string.Empty, // We don't have roleId here
-            ResourceTypes.Project,
-            cancellationToken).ConfigureAwait(false);
+        try
+        {
+            // Use the CheckUserAccessQuery with internal project ID
+            var accessQuery = new CheckUserAccessQuery(userId, "project", projectId);
+            var hasAccess = await mediatorExecutor.SendOrThrowAsync(accessQuery, cancellationToken).ConfigureAwait(false);
 
-        return resources.Select(r => r.ExternalId).ToList();
+            logger.LogDebug("User {UserId} access to project {ProjectId}: {HasAccess}", userId, projectId, hasAccess);
+            return hasAccess;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error checking project access for user {UserId} and project {ProjectId}", userId, projectId);
+            return false;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> HasBusinessIncubatorAccessAsync(string userId, long businessIncubatorId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Use the CheckUserAccessQuery with internal incubator ID
+            var accessQuery = new CheckUserAccessQuery(userId, "incubator", businessIncubatorId);
+            var hasAccess = await mediatorExecutor.SendOrThrowAsync(accessQuery, cancellationToken).ConfigureAwait(false);
+
+            logger.LogDebug("User {UserId} access to incubator {IncubatorId}: {HasAccess}", userId, businessIncubatorId, hasAccess);
+            return hasAccess;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error checking incubator access for user {UserId} and incubator {IncubatorId}", userId, businessIncubatorId);
+            return false;
+        }
     }
 }

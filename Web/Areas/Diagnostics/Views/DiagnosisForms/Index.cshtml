@@ -103,47 +103,132 @@
                                         break;
 
                                     default:
-
-                                        var inputType = question.AnswerType switch
+                                        @* Handle all other answer types *@
+                                        @switch (question.AnswerType)
                                         {
-                                            AnswerTypeViewModel.Numeric => "number",
-                                            AnswerTypeViewModel.Date => "date",
-                                            _ => "text"
-                                        };
+                                            case AnswerTypeViewModel.IdType:
+                                                <select class="form-select" name="answers[@questionIndex].UserInput" required="@question.IsRequired">
+                                                    <option value="">Seleccione tipo de identificación...</option>
+                                                    <option value="cedula">Cédula</option>
+                                                    <option value="pasaporte">Pasaporte</option>
+                                                    <option value="dimex">DIMEX</option>
+                                                    <option value="otro">Otro</option>
+                                                </select>
+                                                break;
 
-                                        if (question.AnswerType
-                                            is AnswerTypeViewModel.IdType
-                                            or AnswerTypeViewModel.Gender
-                                            or AnswerTypeViewModel.MaritalStatus)
-                                        {
-                                            <select class="form-select" name="answers[@questionIndex].UserInput">
-                                                <option value="">Select...</option>
-                                                @switch (question.AnswerType)
-                                                {
-                                                    case AnswerTypeViewModel.IdType:
-                                                        <option value="cedula">Cédula</option>
-                                                        <option value="passport">Passport</option>
-                                                        <option value="dimex">DIMEX</option>
-                                                        break;
-                                                    case AnswerTypeViewModel.Gender:
-                                                        <option value="M">Male</option>
-                                                        <option value="F">Female</option>
-                                                        <option value="O">Other</option>
-                                                        break;
-                                                    default:
-                                                        <option value="single">Single</option>
-                                                        <option value="married">Married</option>
-                                                        <option value="divorced">Divorced</option>
-                                                        <option value="widowed">Widowed</option>
-                                                        break;
-                                                }
-                                            </select>
+                                            case AnswerTypeViewModel.Gender:
+                                                <select class="form-select" name="answers[@questionIndex].UserInput" required="@question.IsRequired">
+                                                    <option value="">Seleccione género...</option>
+                                                    <option value="M">Masculino</option>
+                                                    <option value="F">Femenino</option>
+                                                    <option value="O">Otro</option>
+                                                    <option value="P">Prefiero no decir</option>
+                                                </select>
+                                                break;
+
+                                            case AnswerTypeViewModel.MaritalStatus:
+                                                <select class="form-select" name="answers[@questionIndex].UserInput" required="@question.IsRequired">
+                                                    <option value="">Seleccione estado civil...</option>
+                                                    <option value="soltero">Soltero(a)</option>
+                                                    <option value="casado">Casado(a)</option>
+                                                    <option value="divorciado">Divorciado(a)</option>
+                                                    <option value="viudo">Viudo(a)</option>
+                                                    <option value="union_libre">Unión Libre</option>
+                                                    <option value="separado">Separado(a)</option>
+                                                </select>
+                                                break;
+
+                                            case AnswerTypeViewModel.Nationality:
+                                                <select class="form-select" name="answers[@questionIndex].UserInput" required="@question.IsRequired">
+                                                    <option value="">Seleccione nacionalidad...</option>
+                                                    <option value="CR">Costa Rica</option>
+                                                    <option value="NI">Nicaragua</option>
+                                                    <option value="PA">Panamá</option>
+                                                    <option value="GT">Guatemala</option>
+                                                    <option value="HN">Honduras</option>
+                                                    <option value="SV">El Salvador</option>
+                                                    <option value="MX">México</option>
+                                                    <option value="US">Estados Unidos</option>
+                                                    <option value="CO">Colombia</option>
+                                                    <option value="VE">Venezuela</option>
+                                                    <option value="EC">Ecuador</option>
+                                                    <option value="PE">Perú</option>
+                                                    <option value="BR">Brasil</option>
+                                                    <option value="AR">Argentina</option>
+                                                    <option value="CL">Chile</option>
+                                                    <option value="UY">Uruguay</option>
+                                                    <option value="PY">Paraguay</option>
+                                                    <option value="BO">Bolivia</option>
+                                                    <option value="ES">España</option>
+                                                    <option value="FR">Francia</option>
+                                                    <option value="IT">Italia</option>
+                                                    <option value="DE">Alemania</option>
+                                                    <option value="GB">Reino Unido</option>
+                                                    <option value="CN">China</option>
+                                                    <option value="JP">Japón</option>
+                                                    <option value="KR">Corea del Sur</option>
+                                                    <option value="IN">India</option>
+                                                    <option value="OTHER">Otra</option>
+                                                </select>
+                                                break;
+
+                                            case AnswerTypeViewModel.Email:
+                                                <input type="email" 
+                                                       class="form-control" 
+                                                       name="answers[@questionIndex].UserInput" 
+                                                       placeholder="correo@ejemplo.com"
+                                                       required="@question.IsRequired"/>
+                                                break;
+
+                                            case AnswerTypeViewModel.PhoneNumber:
+                                                <input type="tel" 
+                                                       class="form-control" 
+                                                       name="answers[@questionIndex].UserInput" 
+                                                       placeholder="8888-8888 o +506 8888-8888"
+                                                       pattern="[+]?[0-9\s\-()]+"
+                                                       required="@question.IsRequired"/>
+                                                break;
+
+                                            case AnswerTypeViewModel.PersonId:
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       name="answers[@questionIndex].UserInput" 
+                                                       placeholder="Número de identificación"
+                                                       pattern="[0-9A-Za-z\-]+"
+                                                       required="@question.IsRequired"/>
+                                                break;
+
+                                            case AnswerTypeViewModel.Numeric:
+                                                <input type="number" 
+                                                       class="form-control" 
+                                                       name="answers[@questionIndex].UserInput"
+                                                       step="any"
+                                                       required="@question.IsRequired"/>
+                                                break;
+
+                                            case AnswerTypeViewModel.Date:
+                                                <input type="date" 
+                                                       class="form-control" 
+                                                       name="answers[@questionIndex].UserInput"
+                                                       required="@question.IsRequired"/>
+                                                break;
+
+                                            case AnswerTypeViewModel.FreeText:
+                                                <textarea class="form-control" 
+                                                          name="answers[@questionIndex].UserInput" 
+                                                          rows="3"
+                                                          placeholder="Ingrese su respuesta..."
+                                                          required="@question.IsRequired"></textarea>
+                                                break;
+
+                                            default:
+                                                @* Fallback to text input *@
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       name="answers[@questionIndex].UserInput"
+                                                       required="@question.IsRequired"/>
+                                                break;
                                         }
-                                        else
-                                        {
-                                            <input type="@inputType" class="form-control" name="answers[@questionIndex].UserInput"/>
-                                        }
-
                                         break;
                                 }
                             </div>

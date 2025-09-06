@@ -24,11 +24,11 @@ WHEN NOT MATCHED THEN
 ; -- Sepparator semicolon after MERGE statement
 
 -- Ensure Default Admin User Exists
-DECLARE @AdminUserId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetUsers WHERE UserName = '00119922883377446655');
+DECLARE @GlobalAdminUserId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetUsers WHERE UserName = '00119922883377446655');
 
-IF @AdminUserId IS NULL
+IF @GlobalAdminUserId IS NULL
 BEGIN
-    SET @AdminUserId = NEWID(); -- Generate a unique ID
+    SET @GlobalAdminUserId = NEWID(); -- Generate a unique ID
     INSERT INTO AspNetUsers (
         Id, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed, 
         PasswordHash, 
@@ -36,7 +36,7 @@ BEGIN
         PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled
     )
     VALUES (
-        @AdminUserId, '00119922883377446655', '00119922883377446655', 'globaladmin@mentoory.com', 'GLOBALADMIN@MENTOORY.COM', 1, 
+        @GlobalAdminUserId, '00119922883377446655', '00119922883377446655', 'globaladmin@mentoory.com', 'GLOBALADMIN@MENTOORY.COM', 1, 
         'AQAAAAIAAYagAAAAELtrv8uTJ3doJ0w6TF1NjAb/1opJilLBd3Hk1FpVpgmSpkg4lDkoBQ6SLww8EOfMag==', -- adminlinasys!0
         'XDXFG5AKFNQM3QRBXIIZKM3AWS2SWFS2', '0eede1d6-fb77-47a6-8987-0cd77abbacc2', 0, 1,
         NULL, 0, 0
@@ -44,7 +44,7 @@ BEGIN
 END
 ELSE
 BEGIN
-    SET @AdminUserId = (SELECT TOP 1 Id FROM AspNetUsers WHERE UserName = '00119922883377446655');
+    SET @GlobalAdminUserId = (SELECT TOP 1 Id FROM AspNetUsers WHERE UserName = '00119922883377446655');
 END
 
 -- Ensure Main Developer User Exists
@@ -140,26 +140,53 @@ BEGIN
 END
 ELSE
 BEGIN
-    SET @DemoCoordinatorUserId = (SELECT TOP 1 Id FROM AspNetUsers WHERE UserName = 'demo.coordinator');
+    SET @DemoCoordinatorUserId = (SELECT TOP 1 Id FROM AspNetUsers WHERE UserName = 'demo.admin');
 END
 
+-- Ensure Demo Administrator User Exists
+DECLARE @DemoAdminUserId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetUsers WHERE UserName = 'demo.admin');
+
+IF @DemoAdminUserId IS NULL
+    BEGIN
+        SET @DemoAdminUserId = NEWID();
+        INSERT INTO AspNetUsers (
+            Id, UserName, NormalizedUserName, Email, NormalizedEmail, EmailConfirmed,
+            PasswordHash,
+            SecurityStamp, ConcurrencyStamp, AccessFailedCount, LockoutEnabled,
+            PhoneNumber, PhoneNumberConfirmed, TwoFactorEnabled
+        )
+        VALUES (
+                   @DemoAdminUserId, 'demo.admin', 'DEMO.ADMIN', 'admin@demo.com', 'ADMIN@DEMO.COM', 1,
+                   'AQAAAAIAAYagAAAAEHPpTthM1IL+SpKJnP54JifeHGN0QaqSP+oK/hp3eKbhRMBlLyn20b2FhZL/8UoVMw==', -- Nvxcrsm19!
+                   'JCMXF47PDD75LJFQMMJV2VBN7NBB2PDK', 'c9876b9b-aa1d-46c0-8897-eb827a38168e', 0, 1,
+                   NULL, 0, 0
+               );
+    END
+ELSE
+    BEGIN
+        SET @DemoAdminUserId = (SELECT TOP 1 Id FROM AspNetUsers WHERE UserName = 'demo.admin');
+    END
+
 -- Assign Roles using MERGE
-DECLARE @AdminRoleId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetRoles WHERE Name = 'Global Administrator');
+DECLARE @GlobalAdminRoleId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetRoles WHERE Name = 'Global Administrator');
 DECLARE @StarterRoleId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetRoles WHERE Name = 'Starter');
 DECLARE @MentorRoleId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetRoles WHERE Name = 'Mentor');
 DECLARE @CoordinatorRoleId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetRoles WHERE Name = 'Coordinator');
+DECLARE @AdminRoleId NVARCHAR(450) = (SELECT TOP 1 Id FROM AspNetRoles WHERE Name = 'Administrator');
 
 MERGE INTO AspNetUserRoles AS target
 USING (
-    SELECT @AdminUserId AS UserId, @AdminRoleId AS RoleId
+    SELECT @GlobalAdminUserId AS UserId, @GlobalAdminRoleId AS RoleId
     UNION ALL
-    SELECT @MainDeveloperUserId AS UserId, @AdminRoleId AS RoleId
+    SELECT @MainDeveloperUserId AS UserId, @GlobalAdminRoleId AS RoleId
     UNION ALL
     SELECT @DemoStarterUserId AS UserId, @StarterRoleId AS RoleId
     UNION ALL
     SELECT @DemoMentorUserId AS UserId, @MentorRoleId AS RoleId
     UNION ALL
     SELECT @DemoCoordinatorUserId AS UserId, @CoordinatorRoleId AS RoleId
+    UNION ALL
+    SELECT @DemoAdminUserId AS UserId, @AdminRoleId AS RoleId
 ) AS source
 ON target.UserId = source.UserId AND target.RoleId = source.RoleId
 WHEN NOT MATCHED THEN
@@ -168,10 +195,10 @@ WHEN NOT MATCHED THEN
 ; -- Sepparator semicolon after MERGE statement
 
 -- Ensure User Profiles Exist in new UserManagement schema
-IF NOT EXISTS (SELECT 1 FROM [usermanagement].[UserProfiles] WHERE UserId = @AdminUserId)
+IF NOT EXISTS (SELECT 1 FROM [usermanagement].[UserProfiles] WHERE UserId = @GlobalAdminUserId)
 BEGIN
     INSERT INTO [usermanagement].[UserProfiles] (UserId, FirstName, LastName, Identification, IsActive, CreatedAt, CreatedBy) 
-    VALUES (@AdminUserId, 'Global Admin', 'User', '00119922883377446655', 1, GETUTCDATE(), 'SYSTEM');
+    VALUES (@GlobalAdminUserId, 'Global Admin', 'User', '00119922883377446655', 1, GETUTCDATE(), 'SYSTEM');
 END
 
 IF NOT EXISTS (SELECT 1 FROM [usermanagement].[UserProfiles] WHERE UserId = @MainDeveloperUserId)
@@ -196,4 +223,10 @@ IF NOT EXISTS (SELECT 1 FROM [usermanagement].[UserProfiles] WHERE UserId = @Dem
 BEGIN
     INSERT INTO [usermanagement].[UserProfiles] (UserId, FirstName, LastName, Identification, IsActive, CreatedAt, CreatedBy) 
     VALUES (@DemoCoordinatorUserId, 'Coordinador', 'Demo', 'DEMO-COORD-001', 1, GETUTCDATE(), 'SYSTEM');
+END
+
+IF NOT EXISTS (SELECT 1 FROM [usermanagement].[UserProfiles] WHERE UserId = @DemoAdminUserId)
+BEGIN
+    INSERT INTO [usermanagement].[UserProfiles] (UserId, FirstName, LastName, Identification, IsActive, CreatedAt, CreatedBy) 
+    VALUES (@DemoAdminUserId, 'Admin', 'Demo', 'DEMO-ADMIN-001', 1, GETUTCDATE(), 'SYSTEM');
 END

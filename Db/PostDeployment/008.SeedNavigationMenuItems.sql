@@ -154,6 +154,8 @@ USING (SELECT
     SELECT 304, 'TOPICS', 'Temas', 300, 3, NULL, '/KnowledgeStructure/Topics', 0, 1, 1, 0, 0, 'Global Administrator'
     UNION ALL
     SELECT 305, 'SUBJECTS', 'Materias', 300, 4, NULL, '/KnowledgeStructure/Subjects', 0, 1, 1, 0, 0, 'Global Administrator'
+    UNION ALL
+    SELECT 306, 'PROJECT_KNOWLEDGE', 'Estructura del Proyecto', 300, 5, NULL, '/BusinessIncubators/{incubatorId}/Projects/{projectId}/KnowledgeStructure', 0, 1, 1, 1, 1, 'Administrator,Global Administrator'
 ) AS source
 ON target.Code = source.Code
 WHEN MATCHED THEN

@@ -1,6 +1,9 @@
 ﻿using LinaSys.Diagnostics.Application.Block.Queries;
 using LinaSys.Diagnostics.Application.Form.Commands;
 using LinaSys.Diagnostics.Application.Form.Queries;
+using LinaSys.Diagnostics.Application.Question.Commands;
+using LinaSys.Diagnostics.Application.Question.Queries;
+using LinaSys.Diagnostics.Domain.Enums;
 using LinaSys.KnowledgeStructure.Application.KnowledgeStructure.Queries;
 using LinaSys.Orchestration.Application.Diagnostics.Commands;
 using LinaSys.Web.Areas.Diagnostics.Models.Forms;
@@ -149,6 +152,54 @@ public class FormsController(ILogger<FormsController> logger, MediatorExecutor m
         return Json(new { success = true });
     }
 
+    [HttpPost("Forms/UpdateQuestion")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateQuestion([FromBody] UpdateQuestionViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new { success = false, message = "Datos inválidos." });
+        }
+
+        var answerOptions = MapAnswerOptions(model.AnswerOptions);
+
+        var command = new UpdateQuestionCommand(
+            model.QuestionId,
+            model.QuestionText,
+            (AnswerType)model.AnswerType,
+            (LinaSys.Diagnostics.Domain.Enums.QuestionPhase)model.QuestionPhase,
+            model.IsUsedForMentoringPlan,
+            model.IsUsedForDiagnosis,
+            answerOptions);
+
+        var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+
+        if (result.IsSuccess)
+        {
+            return Json(new { success = true });
+        }
+
+        return Json(new { success = false, message = "Error al actualizar la pregunta." });
+    }
+
+    [HttpGet("Forms/GetQuestion/{questionId:long}")]
+    public async Task<IActionResult> GetQuestion(long questionId)
+    {
+        var query = new GetQuestionByIdQuery(questionId);
+        var result = await MediatorExecutor.SendAndLogIfFailureAsync(query);
+
+        if (result.IsSuccess && result.Value != null)
+        {
+            return Json(new
+            {
+                success = true,
+                question = result.Value
+            });
+        }
+
+        return Json(new { success = false, message = "Pregunta no encontrada." });
+    }
+
     [HttpPost("Forms/ReorderQuestions")]
     [ValidateAntiForgeryToken]
     public Task<IActionResult> ReorderQuestions([FromBody] ReorderQuestionsViewModel model)
@@ -156,5 +207,25 @@ public class FormsController(ILogger<FormsController> logger, MediatorExecutor m
         // This would require a new command to be implemented
         // For now, return success
         return Task.FromResult<IActionResult>(Json(new { success = true }));
+    }
+
+    private static List<UpdateAnswerOptionDto>? MapAnswerOptions(List<UpdateAnswerOptionViewModel>? viewModels)
+    {
+        if (viewModels == null || viewModels.Count == 0)
+        {
+            return null;
+        }
+
+        return viewModels.Select(vm => new UpdateAnswerOptionDto(
+            vm.Id,
+            vm.Text,
+            vm.Score,
+            (FodaType)vm.Foda,
+            vm.FodaExplanation,
+            (OdsrType)vm.Odsr,
+            vm.OdsrExplanation,
+            vm.FollowupQuestionText,
+            vm.Order,
+            vm.IsDeleted)).ToList();
     }
 }

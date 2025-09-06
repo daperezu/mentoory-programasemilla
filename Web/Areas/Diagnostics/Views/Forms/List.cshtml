@@ -18,13 +18,13 @@
         {
             Header = "Nombre", Data = "name",
             RenderType = ColRenderType.Link,
-            LinkUrl = Url.Action("Landing", "Forms", new { area = "Diagnostics", id = "{id}" })!
+            LinkUrl = Url.Action("Builder", "Forms", new { area = "Diagnostics", id = "{id}" })!
         }
     };
 
     var dataTablesHoverActions = new List<HoverAction>
     {
-        new() { Url = Url.Action("Edit", "Forms", new { area = "Diagnostics", id = "{id}" })!, IconClass = "fas fa-edit" },
+        new() { Url = Url.Action("Builder", "Forms", new { area = "Diagnostics", id = "{id}" })!, IconClass = "fas fa-edit" },
         new() { Url = "/Diagnostics/Questions/Form/{id}/", IconClass = "fas fa-layer-group" },
     };
 }

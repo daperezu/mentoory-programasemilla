@@ -141,6 +141,12 @@ WITH SourceData AS (
     UNION ALL
     SELECT NEWID() AS ExternalId, 'Diagnostics.Forms.ReorderQuestions.Post' AS Name, 'Diagnostics' AS Area, 'Forms' AS Controller, 'ReorderQuestions' AS Action, 
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Diagnostics.Forms.UpdateQuestion.Post' AS Name, 'Diagnostics' AS Area, 'Forms' AS Controller, 'UpdateQuestion' AS Action, 
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Diagnostics.Forms.GetQuestion.Get' AS Name, 'Diagnostics' AS Area, 'Forms' AS Controller, 'GetQuestion' AS Action, 
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     -- Commented out duplicate: Diagnostics.Questions.List already defined below
     -- UNION ALL
     -- SELECT NEWID() AS ExternalId, 'Diagnostics.Questions.List.Page+Post' AS Name, 'Diagnostics' AS Area, 'Questions' AS Controller, 'List' AS Action, 

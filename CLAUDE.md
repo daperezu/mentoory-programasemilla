@@ -37,14 +37,15 @@
 
 ### Pending Implementation
 - 📝 **REQ-001**: Enhanced User Creation with Role-Based Access Assignment
+- 📝 **REQ-002**: Seed Data for Project Knowledge Structure
 
 ### Recently Completed
 - ✅ Inactivity logout component for ContextSelection page
 - ✅ IApplicationUrlService GetLogoutUrl method implementation
 
 ## 🎯 Current Context
-- **Branch**: `develop`
-- **Status**: Ready for new requirements
+- **Branch**: `feature/create-user-improve`
+- **Status**: Troubleshooting form submission issues
 - **Build Status**: ✅ Clean build - 0 errors, 0 warnings
 - **Session File**: `.claude/CURRENT_SESSION.md` ← *Start here for today's work*
 - **Full History**: `.claude/WORK_LOG.md` ← *Detailed progress archive*
@@ -99,3 +100,23 @@ var command = new Command(file.OpenReadStream(), file.FileName);
 - **System Status**: Not in production yet - direct schema changes allowed, no migration scripts needed
 - **Base Branch**: Always work from `develop`, not `main`
 - **Documentation Updates**: When learning new patterns, update the appropriate `.claude/` documentation file
+
+## Known Issues & Solutions
+
+### Form Submission Requirements
+For participants (Starters) to see and fill forms on the Dashboard, the project requires:
+
+1. **ProjectKnowledgeStructure** (Missing from seed data):
+   - The demo project needs a ProjectKnowledgeStructure entity
+   - At least one ProjectBlock with ProjectQuestions configured
+   - ProjectQuestions must have appropriate QuestionPhase values (Start/Final/Both)
+   - Each question needs ProjectAnswerOptions
+   - **Current Status**: No seed data exists - must be created via UI or new seed file
+   
+2. **Active ProjectStage** (User-managed):
+   - Stage type must match phase: `InitialFormCollection` (Start) or `FinalFormCollection` (Final)
+   - `IsActive = true` in ProjectStages table
+   - Current date within StartDate and EndDate range
+   - **Note**: User manually configures stages after deployment
+
+**Root Cause**: The `GetOrCreateFormSubmissionCommand` fails at line 70-78 when no ProjectKnowledgeStructure exists, preventing form creation. The `GetPendingFormsQuery` also finds no forms because none can be created without the knowledge structure.

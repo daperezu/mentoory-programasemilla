@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
             icon: 'fas fa-users-cog',
             color: 'primary',
             requiresIncubator: true,
-            requiresProject: false // Optional for coordinators
+            requiresProject: true // Required for coordinators
         },
         'Liaison': {
             displayName: 'Enlace',

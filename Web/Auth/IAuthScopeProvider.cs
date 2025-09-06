@@ -1,4 +1,4 @@
-﻿namespace LinaSys.Shared.Application.Auth;
+namespace LinaSys.Web.Auth;
 
 /// <summary>
 /// Provides authorization scope information following the repository pattern.

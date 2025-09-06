@@ -398,7 +398,7 @@ public class DatatableTagHelper : TagHelper
                 .ToList();
 
             var replacementChain = string.Join(".", tokenMatches.Select(token =>
-                $"replace('{{{{{token}}}}}', data.{token})"));
+                $"replace('{{{token}}}', data.{token})"));
 
             var urlJs = tokenMatches.Count > 0
                 ? $"`{url}`.{replacementChain}"

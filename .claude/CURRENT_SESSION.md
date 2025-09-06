@@ -1,66 +1,43 @@
 # Current Working Session
 
-## 🎯 Current Status: Planning Enhanced User Creation Feature
-**Branch**: develop  
+## 🎯 Current Status: Troubleshooting Form Submission for Starters
+**Branch**: feature/create-user-improve  
 **Build**: ✅ Clean build (0 errors, 0 warnings)
-**Session Date**: 2025-09-03
-**Focus**: Documented requirement for enhanced user creation with role-based access
-
-### Today's Progress
-**Completed ✅:**
-
-#### 1. Added Inactivity Logout to ContextSelection Page
-- **Implementation**: Added session timeout component to ContextSelection page
-- **Approach**: Used IApplicationUrlService instead of hardcoded URLs
-- **Changes**:
-  - Added `GetLogoutUrl()` method to IApplicationUrlService interface
-  - Implemented method in ApplicationUrlService
-  - Updated ContextSelectionController to inject service and pass URL to view
-  - Updated _Layout.cshtml to use IApplicationUrlService
-  - Component now uses proper URL generation for logout
-- **Configuration**: 5 minutes idle timeout, 10 seconds countdown
-
-#### 2. Documented Enhanced User Creation Requirement
-- **File**: `.claude/requirements/pending/REQ-001-user-creation-with-role-access.md`
-- **Scope**: Transform plain user creation into comprehensive onboarding with:
-  - Mandatory role selection
-  - Conditional incubator/project requirements based on role
-  - Modern UI with Phoenix Admin Template components
-  - Single transaction for all operations
-- **Status**: Documented and pending implementation
+**Session Date**: 2025-09-06
+**Focus**: Diagnosed missing ProjectKnowledgeStructure preventing forms
 
 ### Progress Status
 
 **Completed Today ✅:**
-- Inactivity logout component for ContextSelection page
-- IApplicationUrlService enhancement with GetLogoutUrl method
-- Comprehensive requirement documentation for user creation enhancement
+- Fixed EF Core Include error in BusinessIncubatorRepository
+- Fixed UserIncubatorAccess seed data for demo.starter
+- Diagnosed root cause of missing forms on Participant Dashboard
+- Created REQ-002 for ProjectKnowledgeStructure seed data
+
+**In Progress ⚠️:**
+- None
 
 **Pending 📋:**
-- Implementation of enhanced user creation feature (REQ-001)
-- Testing of inactivity logout on ContextSelection page
+- REQ-001: Enhanced User Creation with Role-Based Access
+- REQ-002: Seed Data for Project Knowledge Structure
 
-### Next Steps for Enhanced User Creation (REQ-001)
-1. **Create new orchestration command** with role and access assignment
-2. **Update CreateUserViewModel** with role/incubator/project properties
-3. **Enhance UI** with modern card-based wizard design
-4. **Implement dynamic JavaScript** for role-based requirements
-5. **Test transaction rollback** scenarios
+### Today's Focus
+Investigated why demo.starter user couldn't see forms on Participant Dashboard. Found two critical issues:
+1. Missing ProjectKnowledgeStructure seed data (documented as REQ-002)
+2. ProjectStages timing/activation (user handles manually)
 
-### Key Context
-- **Existing Commands Available**:
-  - `AssignRolesToUserOrchestrationCommand` - Assigns roles
-  - `AssignUserToIncubatorCommand` - Grants incubator access
-  - `AssignUserToProjectCommand` - Grants project access
-- **Validation Rules by Role**:
-  - GlobalAdministrator: Optional incubator/project
-  - Administrator: Required incubator, optional project
-  - Other roles: Required incubator AND project
+### Key Fixes Applied
+1. **BusinessIncubatorRepository.cs:907** - Changed `.Include(p => p.ProjectStages)` to `.Include("_projectStages")` for private field
+2. **007.SeedAuthAccessTables.sql:75-99** - Updated to include ALL demo users in UserIncubatorAccess, not just Coordinators
 
-### System Status
-- Build: ✅ Clean (0 errors, 0 warnings)
-- New Requirement: `.claude/requirements/pending/REQ-001-user-creation-with-role-access.md`
-- Ready for implementation when approved
+### Blocking Issues
+- **No ProjectKnowledgeStructure seed data**: Projects have no questions/blocks defined
+- Forms cannot be created without knowledge structure (fails at GetOrCreateFormSubmissionCommand:70-78)
+
+### Next Session Priorities
+1. Implement REQ-002 seed data for ProjectKnowledgeStructure
+2. Verify form creation flow after seed data added
+3. Consider REQ-001 implementation if approved
 
 ---
-*Session focused on planning and documentation. Implementation pending approval.*
+*Session focused on troubleshooting and root cause analysis.*

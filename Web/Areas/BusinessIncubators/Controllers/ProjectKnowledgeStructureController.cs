@@ -28,10 +28,15 @@ using LinaSys.BusinessIncubator.Application.ProjectKnowledgeStructure.Queries.Ge
 using LinaSys.BusinessIncubator.Application.ProjectKnowledgeStructure.Queries.GetProjectsWithKnowledgeStructure;
 using LinaSys.Diagnostics.Application.Form.Queries;
 using LinaSys.Orchestration.Application.BusinessIncubator.Commands;
+using LinaSys.Shared.Domain.Constants;
 using LinaSys.Shared.Infrastructure.Extensions;
 using LinaSys.Web.Areas.BusinessIncubators.Models.ProjectKnowledgeStructure;
+using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
+using LinaSys.Web.Filters;
+using LinaSys.Web.Services;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
@@ -42,10 +47,16 @@ namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 /// <remarks>
 /// Initializes a new instance of the <see cref="ProjectKnowledgeStructureController"/> class.
 /// </remarks>
+/// <param name="logger">The logger.</param>
+/// <param name="mediatorExecutor">The mediator executor.</param>
 /// <param name="mediator">The mediator.</param>
 [Area("BusinessIncubators")]
 [Route("BusinessIncubators/{businessIncubatorId:guid}/Projects/{projectId:guid}/KnowledgeStructure")]
-public class ProjectKnowledgeStructureController(IMediator mediator) : Controller
+[Authorize(Roles = $"{Roles.GlobalAdministrator},{Roles.Administrator}")]
+public class ProjectKnowledgeStructureController(
+    ILogger<ProjectKnowledgeStructureController> logger,
+    MediatorExecutor mediatorExecutor,
+    IMediator mediator) : AuthorizedBaseController(logger, mediatorExecutor)
 {
 
     /// <summary>
@@ -58,7 +69,7 @@ public class ProjectKnowledgeStructureController(IMediator mediator) : Controlle
     public async Task<IActionResult> Index(Guid businessIncubatorId, Guid projectId)
     {
         // Get knowledge structure details
-        var query = new GetProjectKnowledgeStructureQuery(businessIncubatorId, projectId);
+        var query = new GetProjectKnowledgeStructureQuery(projectId);
         var result = await mediator.Send(query);
 
         var model = new ProjectKnowledgeStructureViewModel

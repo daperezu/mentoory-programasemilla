@@ -42,7 +42,7 @@ internal static class EmailTransportsRegistration
         services.Configure<MailgunOptions>(configuration.GetSection(MailgunOptions.SectionName));
 
         // Core transports
-        services.AddScoped<SmtpEmailTransport>();
+        services.AddSingleton<SmtpEmailTransport>();
         services.AddHttpClient<MailgunApiEmailTransport>();
 
         // Strategy:
@@ -57,7 +57,7 @@ internal static class EmailTransportsRegistration
         {
             if (enableFallbackInProd)
             {
-                services.AddScoped<IEmailTransport>(sp =>
+                services.AddSingleton<IEmailTransport>(sp =>
                 {
                     var primary = sp.GetRequiredService<MailgunApiEmailTransport>();
                     var fallback = sp.GetRequiredService<SmtpEmailTransport>();
@@ -67,12 +67,12 @@ internal static class EmailTransportsRegistration
             }
             else
             {
-                services.AddScoped<IEmailTransport>(sp => sp.GetRequiredService<MailgunApiEmailTransport>());
+                services.AddSingleton<IEmailTransport>(sp => sp.GetRequiredService<MailgunApiEmailTransport>());
             }
         }
         else
         {
-            services.AddScoped<IEmailTransport>(sp => sp.GetRequiredService<SmtpEmailTransport>());
+            services.AddSingleton<IEmailTransport>(sp => sp.GetRequiredService<SmtpEmailTransport>());
         }
 
         return services;

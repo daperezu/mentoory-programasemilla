@@ -57,3 +57,43 @@ public class QuestionOrderItem
 
     public int Order { get; set; }
 }
+
+public class UpdateQuestionViewModel
+{
+    public long QuestionId { get; set; }
+
+    public string QuestionText { get; set; } = string.Empty;
+
+    public int AnswerType { get; set; }
+
+    public int QuestionPhase { get; set; }
+
+    public bool IsUsedForMentoringPlan { get; set; }
+
+    public bool IsUsedForDiagnosis { get; set; }
+
+    public List<UpdateAnswerOptionViewModel>? AnswerOptions { get; set; }
+}
+
+public class UpdateAnswerOptionViewModel
+{
+    public long? Id { get; set; }
+
+    public string Text { get; set; } = string.Empty;
+
+    public int Score { get; set; }
+
+    public int Foda { get; set; }
+
+    public string FodaExplanation { get; set; } = string.Empty;
+
+    public int Odsr { get; set; }
+
+    public string OdsrExplanation { get; set; } = string.Empty;
+
+    public string? FollowupQuestionText { get; set; }
+
+    public int Order { get; set; }
+
+    public bool IsDeleted { get; set; }
+}

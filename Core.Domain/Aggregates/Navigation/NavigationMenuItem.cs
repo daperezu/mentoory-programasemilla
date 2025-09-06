@@ -200,9 +200,27 @@ namespace LinaSys.Core.Domain.Aggregates.Navigation
             return true;
         }
 
-        public string GetUrl()
+        public string GetUrl(long? incubatorId = null, long? projectId = null)
         {
-            return string.IsNullOrWhiteSpace(Url) ? "#" : Url;
+            if (string.IsNullOrWhiteSpace(Url))
+            {
+                return "#";
+            }
+
+            var result = Url;
+
+            // Replace placeholders with actual values
+            if (incubatorId.HasValue && result.Contains("{incubatorId}"))
+            {
+                result = result.Replace("{incubatorId}", incubatorId.Value.ToString());
+            }
+
+            if (projectId.HasValue && result.Contains("{projectId}"))
+            {
+                result = result.Replace("{projectId}", projectId.Value.ToString());
+            }
+
+            return result;
         }
     }
 }
