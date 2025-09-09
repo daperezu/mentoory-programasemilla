@@ -1,0 +1,123 @@
+@model LinaSys.Web.Areas.BusinessIncubators.Models.ProjectStages.EditStageViewModel
+@{
+    var pageTitle = $"Editar Etapa - {Model.Title}";
+    ViewData["Title"] = pageTitle;
+}
+
+<div class="mb-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Projects", new { businessIncubatorId = Model.BusinessIncubatorId })">@Model.BusinessIncubatorName</a></li>
+            <li class="breadcrumb-item"><a href="#">@Model.ProjectName</a></li>
+            <li class="breadcrumb-item"><a href="@Url.Action("Index", new { businessIncubatorId = Model.BusinessIncubatorId, projectId = Model.ProjectId })">Etapas</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Editar</li>
+        </ol>
+    </nav>
+    <h1 class="h3 mb-3">@pageTitle</h1>
+</div>
+
+<div class="row">
+    <div class="col-12 col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Información de la Etapa</h3>
+            </div>
+            <form asp-action="Edit" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="StageId" />
+                <input type="hidden" asp-for="Type" />
+                
+                <div class="card-body">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label">Tipo de Etapa</label>
+                                <input type="text" class="form-control-plaintext" value="@Model.TypeDisplay" readonly />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Title" class="form-label required"></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label asp-for="Description" class="form-label"></label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="StartDate" class="form-label required"></label>
+                                <input asp-for="StartDate" type="date" class="form-control" />
+                                <span asp-validation-for="StartDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label asp-for="EndDate" class="form-label required"></label>
+                                <input asp-for="EndDate" type="date" class="form-control" />
+                                <span asp-validation-for="EndDate" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label">
+                                Etapa Activa
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Si activa esta etapa, se enviará una notificación a todos los participantes del proyecto.
+                        </small>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Cambios
+                    </button>
+                    <a href="@Url.Action("Index", new { businessIncubatorId = Model.BusinessIncubatorId, projectId = Model.ProjectId })" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-12 col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Información</h3>
+            </div>
+            <div class="card-body">
+                <h5>Tipos de Etapa</h5>
+                <ul>
+                    <li><strong>Formulario Inicial:</strong> Permite a los participantes completar formularios al inicio del proyecto.</li>
+                    <li><strong>Formulario Final:</strong> Permite a los participantes completar formularios al final del proyecto.</li>
+                    <li><strong>Ejecución:</strong> Etapa de desarrollo del proyecto.</li>
+                </ul>
+                
+                <h5 class="mt-3">Notificaciones</h5>
+                <p>Cuando una etapa se activa, el sistema envía automáticamente notificaciones por correo electrónico a todos los participantes del proyecto.</p>
+                
+                <h5 class="mt-3">Fechas</h5>
+                <p>Las fechas de inicio y fin determinan el período durante el cual la etapa puede estar activa. Los formularios solo pueden ser completados durante este período.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

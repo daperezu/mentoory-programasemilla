@@ -1,0 +1,122 @@
+@model LinaSys.Web.Areas.BusinessIncubators.Models.ProjectStages.ProjectStagesViewModel
+@{
+    var pageTitle = $"{Model.ProjectName} - Gestión de Etapas";
+    ViewData["Title"] = pageTitle;
+}
+
+<div class="mb-3">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="@Url.Action("Index", "Projects", new { businessIncubatorId = Model.BusinessIncubatorId })">@Model.BusinessIncubatorName</a></li>
+            <li class="breadcrumb-item"><a href="#">@Model.ProjectName</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Etapas</li>
+        </ol>
+    </nav>
+    <h1 class="h3 mb-3">@pageTitle</h1>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Etapas del Proyecto</h3>
+            </div>
+            <div class="card-body">
+                @if (Model.Stages.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Título</th>
+                                    <th>Fecha Inicio</th>
+                                    <th>Fecha Fin</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var stage in Model.Stages)
+                                {
+                                    <tr>
+                                        <td>@stage.TypeDisplay</td>
+                                        <td>@stage.Title</td>
+                                        <td>@stage.StartDate.ToString("dd/MM/yyyy")</td>
+                                        <td>@stage.EndDate.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <span class="badge @stage.StatusBadgeClass">
+                                                @stage.StatusDisplay
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a asp-action="Edit" 
+                                                   asp-route-businessIncubatorId="@Model.BusinessIncubatorId"
+                                                   asp-route-projectId="@Model.ProjectId"
+                                                   asp-route-stageType="@stage.Type"
+                                                   class="btn btn-outline-primary"
+                                                   title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                
+                                                @if (stage.CanActivate)
+                                                {
+                                                    <form asp-action="Activate" 
+                                                          asp-route-businessIncubatorId="@Model.BusinessIncubatorId"
+                                                          asp-route-projectId="@Model.ProjectId"
+                                                          asp-route-stageType="@stage.Type"
+                                                          method="post" 
+                                                          class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" 
+                                                                class="btn btn-outline-success btn-sm"
+                                                                title="Activar etapa"
+                                                                onclick="return confirm('¿Está seguro que desea activar esta etapa? Se enviará una notificación a todos los participantes.');">
+                                                            <i class="fas fa-play"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                                
+                                                @if (stage.CanDeactivate)
+                                                {
+                                                    <form asp-action="Deactivate" 
+                                                          asp-route-businessIncubatorId="@Model.BusinessIncubatorId"
+                                                          asp-route-projectId="@Model.ProjectId"
+                                                          asp-route-stageType="@stage.Type"
+                                                          method="post" 
+                                                          class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" 
+                                                                class="btn btn-outline-warning btn-sm"
+                                                                title="Desactivar etapa"
+                                                                onclick="return confirm('¿Está seguro que desea desactivar esta etapa?');">
+                                                            <i class="fas fa-pause"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> No hay etapas configuradas para este proyecto.
+                    </div>
+                }
+            </div>
+            <div class="card-footer">
+                <a href="@Url.Action("Index", "Projects", new { businessIncubatorId = Model.BusinessIncubatorId })" 
+                   class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a Proyectos
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

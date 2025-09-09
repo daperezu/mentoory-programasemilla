@@ -1,6 +1,7 @@
 CREATE TABLE [core].[UserActivities] (
     [Id] BIGINT IDENTITY(1,1) NOT NULL,
     [UserId] NVARCHAR(450) NOT NULL,
+    [UserName] NVARCHAR(256) NULL, -- User display name for quick reference
     [Type] NVARCHAR(50) NOT NULL, -- 'login', 'logout', 'form_submit', 'task_complete', 'document_access', etc.
     [Category] NVARCHAR(50) NOT NULL, -- 'authentication', 'form', 'task', 'document', 'communication', etc.
     [Action] NVARCHAR(100) NOT NULL, -- Specific action performed

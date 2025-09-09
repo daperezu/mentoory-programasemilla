@@ -11,9 +11,4 @@ public sealed record GetProjectFormStructureQuery : IBaseRequest<ProjectFormStru
     /// Gets the project ID.
     /// </summary>
     public long ProjectId { get; init; }
-
-    /// <summary>
-    /// Gets the form ID (currently not used but reserved for future multi-form support).
-    /// </summary>
-    public long FormId { get; init; }
 }

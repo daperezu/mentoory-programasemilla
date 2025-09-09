@@ -1,8 +1,4 @@
-﻿// <copyright file="UserAddedToIncubatorIntegrationEventHandler.cs" company="LinaSys">
-// Copyright (c) LinaSys. All rights reserved.
-// </copyright>
-
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using LinaSys.Auth.Domain.AggregatesModel.Access;

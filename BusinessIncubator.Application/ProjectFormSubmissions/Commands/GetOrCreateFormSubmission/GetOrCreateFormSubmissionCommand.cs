@@ -138,7 +138,6 @@ public class GetOrCreateFormSubmissionCommandHandler(IBusinessIncubatorRepositor
             submission = ProjectFormSubmission.CreateForPhase(
                 project.Id,
                 request.UserId,
-                knowledgeStructure.Id,
                 knowledgeStructure.CurrentVersion,
                 request.Phase,
                 currentStage?.Id,
@@ -155,7 +154,6 @@ public class GetOrCreateFormSubmissionCommandHandler(IBusinessIncubatorRepositor
             ExternalId = submission.ExternalId,
             ProjectId = submission.ProjectId,
             ParticipantUserId = submission.ParticipantUserId,
-            FormId = submission.FormId,
             FormSchemaVersion = submission.FormSchemaVersion,
             StatusEnum = submission.Status,
             Status = submission.Status.ToString(),

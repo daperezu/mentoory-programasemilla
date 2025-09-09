@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using LinaSys.Shared.Application.Auth;
 
 namespace LinaSys.Web.Auth;
 

@@ -6,6 +6,7 @@ using LinaSys.Orchestration.Application.UserContext.Commands;
 using LinaSys.Shared.Application;
 using LinaSys.Web.Attributes;
 using LinaSys.Web.Extensions;
+using LinaSys.Web.Filters;
 using LinaSys.Web.Middleware;
 using LinaSys.Web.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LinaSys.Web.Controllers;
 
 [Authorize]
+[ResourceAccessAuthorizationFilter.ResourceAccessAuthorization]
 public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor mediatorExecutor) : Controller
 {
     private EnrichedUserContextDto? _currentUserContext;

@@ -13,11 +13,6 @@ public sealed record StartFormSubmissionCommand : IBaseRequest<long>
     public long ProjectId { get; init; }
 
     /// <summary>
-    /// Gets the form ID.
-    /// </summary>
-    public long FormId { get; init; }
-
-    /// <summary>
     /// Gets the participant user ID.
     /// </summary>
     public string ParticipantUserId { get; init; } = string.Empty;

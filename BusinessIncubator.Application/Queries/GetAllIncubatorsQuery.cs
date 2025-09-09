@@ -6,11 +6,11 @@ namespace LinaSys.BusinessIncubator.Application.Queries;
 
 public record GetAllIncubatorsQuery() : IBaseRequest<List<IncubatorDto>>;
 
-public class GetAllIncubatorsQueryHandler(IBusinessIncubatorRepository repository) : BaseCommandHandler<GetIncubatorsByIdsQuery, List<IncubatorDto>>
+public class GetAllIncubatorsQueryHandler(IBusinessIncubatorRepository repository) : BaseCommandHandler<GetAllIncubatorsQuery, List<IncubatorDto>>
 {
 
     /// <inheritdoc/>
-    public override async Task<Result<List<IncubatorDto>>> Handle(GetIncubatorsByIdsQuery request, CancellationToken cancellationToken)
+    public override async Task<Result<List<IncubatorDto>>> Handle(GetAllIncubatorsQuery request, CancellationToken cancellationToken)
     {
         var incubators = await repository.GetAllIncubators(cancellationToken);
 

@@ -284,9 +284,55 @@ public class GetSubmissionForReviewQueryHandler(
                 CompletionPercentage = 0 // TODO: Calculate completion percentage if needed
             };
 
-            // TODO: Map blocks and questions from draft data if needed
-            // For now, returning empty blocks
-            dto.Blocks = [];
+            // Map blocks and questions from draft data
+            if (!string.IsNullOrEmpty(submission.DraftData))
+            {
+                try
+                {
+                    var draftData = System.Text.Json.JsonSerializer.Deserialize<ProjectFormSubmissions.Commands.SaveDraft.DraftDataDto>(
+                        submission.DraftData,
+                        new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    if (draftData?.BlockResponses != null)
+                    {
+                        dto.Blocks = draftData.BlockResponses.Select(block => new BlockReviewDto
+                        {
+                            BlockId = block.BlockId,
+                            BlockName = block.BlockName,
+                            BlockDescription = null, // Description not stored in draft
+                            Order = 0, // Order not stored in draft
+                            Questions = block.QuestionResponses?.Select(q => new QuestionReviewDto
+                            {
+                                QuestionId = q.QuestionId,
+                                QuestionText = q.QuestionText,
+                                QuestionType = MapAnswerTypeToString(q.AnswerType),
+                                IsRequired = true, // Not stored in draft, assume required
+                                Answer = q.Answer,
+                                Feedback = [] // No feedback initially
+                            }).ToList() ?? [],
+                            Feedback = [] // No feedback initially
+                        }).ToList();
+
+                        // Calculate completion percentage
+                        var totalQuestions = dto.Blocks.Sum(b => b.Questions.Count);
+                        var answeredQuestions = dto.Blocks.Sum(b => b.Questions.Count(q => !string.IsNullOrEmpty(q.Answer)));
+                        dto.CompletionPercentage = totalQuestions > 0 ? (answeredQuestions * 100) / totalQuestions : 0;
+                    }
+                    else
+                    {
+                        dto.Blocks = [];
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Error deserializing draft data for submission {SubmissionId}", submission.Id);
+                    dto.Blocks = [];
+                }
+            }
+            else
+            {
+                dto.Blocks = [];
+            }
 
             // Get review history
             var reviews = await repository.GetReviewsBySubmissionIdAsync(
@@ -329,6 +375,23 @@ public class GetSubmissionForReviewQueryHandler(
         }
     }
 
-    // TODO: Implement mapping methods when proper navigation properties are available
-    // These methods will need to parse DraftData JSON and map to DTOs
+    private static string MapAnswerTypeToString(int answerType)
+    {
+        return answerType switch
+        {
+            1 => "SingleChoice",
+            2 => "MultiChoice",
+            3 => "FreeText",
+            4 => "Numeric",
+            5 => "Date",
+            6 => "PersonId",
+            7 => "IdType",
+            8 => "Gender",
+            9 => "MaritalStatus",
+            10 => "Email",
+            11 => "PhoneNumber",
+            12 => "Nationality",
+            _ => "Text"
+        };
+    }
 }

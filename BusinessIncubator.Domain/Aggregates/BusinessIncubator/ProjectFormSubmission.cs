@@ -17,7 +17,6 @@ public class ProjectFormSubmission : Entity
     private ProjectFormSubmission(
         long projectId,
         string participantUserId,
-        long formId,
         int formSchemaVersion,
         QuestionPhase phase,
         long? projectStageId,
@@ -26,7 +25,6 @@ public class ProjectFormSubmission : Entity
         ExternalId = Guid.NewGuid();
         ProjectId = projectId;
         ParticipantUserId = participantUserId;
-        FormId = formId;
         FormSchemaVersion = formSchemaVersion;
         Phase = phase;
         ProjectStageId = projectStageId;
@@ -51,11 +49,6 @@ public class ProjectFormSubmission : Entity
     /// Gets the participant user identifier.
     /// </summary>
     public string ParticipantUserId { get; private set; }
-
-    /// <summary>
-    /// Gets the form identifier.
-    /// </summary>
-    public long FormId { get; private set; }
 
     /// <summary>
     /// Gets the form schema version at the time of submission creation.
@@ -171,7 +164,6 @@ public class ProjectFormSubmission : Entity
     public static ProjectFormSubmission CreateForPhase(
         long projectId,
         string participantUserId,
-        long formId,
         int formSchemaVersion,
         QuestionPhase phase,
         long? projectStageId,
@@ -185,7 +177,6 @@ public class ProjectFormSubmission : Entity
         return new ProjectFormSubmission(
             projectId,
             participantUserId,
-            formId,
             formSchemaVersion,
             phase,
             projectStageId,
@@ -458,7 +449,6 @@ public class ProjectFormSubmission : Entity
     internal static ProjectFormSubmission Create(
         long projectId,
         string participantUserId,
-        long formId,
         int formSchemaVersion,
         DateTime startedAt)
     {
@@ -466,7 +456,6 @@ public class ProjectFormSubmission : Entity
         return new ProjectFormSubmission(
             projectId,
             participantUserId,
-            formId,
             formSchemaVersion,
             QuestionPhase.Start,
             null,

@@ -218,19 +218,7 @@ window.ReviewNotifications = (function() {
                 timeOut: 5000
             };
             
-            switch (type) {
-                case 'success':
-                    toastr.success(message, 'Notificación', options);
-                    break;
-                case 'error':
-                    toastr.error(message, 'Notificación', options);
-                    break;
-                case 'warning':
-                    toastr.warning(message, 'Notificación', options);
-                    break;
-                default:
-                    toastr.info(message, 'Notificación', options);
-            }
+            showToast(message, type, 'Notificación');
         } else {
             // Fallback to custom notification
             createCustomNotification(message, type, icon);

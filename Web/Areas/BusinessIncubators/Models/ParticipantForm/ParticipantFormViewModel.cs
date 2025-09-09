@@ -1,5 +1,6 @@
-﻿using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.DTOs;
+﻿using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraft;
 using LinaSys.BusinessIncubator.Application.ProjectKnowledgeStructure.Queries.GetProjectFormStructure;
+using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission;
 using LinaSys.Web.Models;
 
 namespace LinaSys.Web.Areas.BusinessIncubators.Models.ParticipantForm;
@@ -23,11 +24,6 @@ public class ParticipantFormViewModel
     /// Gets or sets the project ID.
     /// </summary>
     public long ProjectId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the form ID.
-    /// </summary>
-    public long FormId { get; set; }
 
     /// <summary>
     /// Gets or sets the submission ID if it exists.
@@ -55,6 +51,16 @@ public class ParticipantFormViewModel
     public bool CanSubmit { get; set; }
 
     /// <summary>
+    /// Gets or sets a value indicating whether the form is in read-only mode.
+    /// </summary>
+    public bool IsReadOnly { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether feedback interactions are read-only.
+    /// </summary>
+    public bool FeedbackReadOnly { get; set; }
+
+    /// <summary>
     /// Gets or sets the form structure (will be loaded via AJAX).
     /// </summary>
     public ProjectFormStructureDto? FormStructure { get; set; }
@@ -63,4 +69,9 @@ public class ParticipantFormViewModel
     /// Gets or sets the breadcrumb navigation items.
     /// </summary>
     public List<BreadcrumbItem>? Breadcrumbs { get; set; }
+
+    /// <summary>
+    /// Gets or sets the feedback conversations for this submission.
+    /// </summary>
+    public List<FeedbackConversationDto> FeedbackConversations { get; set; } = new();
 }

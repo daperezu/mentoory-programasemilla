@@ -11,12 +11,4 @@
     <CreateNewDatabase>False</CreateNewDatabase>
     <AllowTableRecreation>True</AllowTableRecreation>
   </PropertyGroup>
-  <ItemGroup>
-    <SqlCmdVariable Include="RunPostDeploymentRolesUsersSeed">
-      <Value>True</Value>
-    </SqlCmdVariable>
-    <SqlCmdVariable Include="RunPostDeploymentRolesWebFeatures">
-      <Value>True</Value>
-    </SqlCmdVariable>
-  </ItemGroup>
 </Project>

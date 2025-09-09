@@ -131,4 +131,16 @@ public interface IEmailTemplateService
         string changeDateTime,
         string requestedBy,
         string supportUrl);
+
+    /// <summary>
+    /// Generates a project stage activated email.
+    /// </summary>
+    string GenerateProjectStageActivatedEmail(
+        string participantName,
+        string projectName,
+        string stageName,
+        string stageType,
+        DateTime startDate,
+        DateTime endDate,
+        string dashboardUrl);
 }

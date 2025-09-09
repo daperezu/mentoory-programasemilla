@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.DTOs;
+using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraft;
 using LinaSys.BusinessIncubator.Domain.Enums;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
@@ -62,8 +62,7 @@ public sealed class GetSubmissionsForReviewQueryHandler(IBusinessIncubatorReposi
                 ParticipantUserId = submission.ParticipantUserId,
                 ParticipantName = invitation?.FullName ?? "Desconocido",
                 ParticipantEmail = invitation?.Email ?? string.Empty,
-                FormId = submission.FormId,
-                FormName = $"Formulario {submission.FormId}", // TODO: Get actual form name
+                FormName = "Formulario de Diagnóstico", // Generic name for now
                 Status = GetStatusDisplay(submission.Status),
                 StatusCode = (int)submission.Status,
                 StartedAt = submission.StartedAt,

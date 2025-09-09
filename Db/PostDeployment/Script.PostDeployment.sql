@@ -1,40 +1,18 @@
 ﻿-- Enable SQLCMD mode in project settings for this to work.
 -- This script will be executed after the main deployment script.
 -- It is useful for seeding data, etc.
-
--- Remember to set the variables in the project file .sqldb aswell.
 -- --------------------------------------------------------------------------------------
-
--- When running the script directly, you can set the variables here:
--- :setvar RunPostDeploymentRolesUsersSeed False
--- :setvar RunPostDeploymentRolesWebFeatures True
 
 PRINT '[Script.PostDeployment.sql] Starting';
 
-PRINT 'RunPostDeploymentRolesUsersSeed is $(RunPostDeploymentRolesUsersSeed)';
-PRINT 'RunPostDeploymentRolesWebFeatures is $(RunPostDeploymentRolesWebFeatures)';
+-- All scripts now run unconditionally for consistent deployment
+PRINT '[000.SeedRolesAndUsers.sql] Starting';
+:r .\000.SeedRolesAndUsers.sql
+PRINT '[000.SeedRolesAndUsers.sql] Finished';
 
-IF '$(RunPostDeploymentRolesUsersSeed)' = 'True'
-BEGIN
-    PRINT '[000.SeedRolesAndUsers.sql] Starting';
-    :r .\000.SeedRolesAndUsers.sql
-    PRINT '[000.SeedRolesAndUsers.sql] Finished';
-END
-ELSE
-BEGIN
-    PRINT '[000.SeedRolesAndUsers.sql] Skipped';
-END
-
-IF '$(RunPostDeploymentRolesWebFeatures)' = 'True'
-BEGIN
-    PRINT '[001.SeedWebFeatures.sql] Starting';
-    :r .\001.SeedWebFeatures.sql
-    PRINT '[001.SeedWebFeatures.sql] Finished';
-END
-ELSE
-BEGIN
-    PRINT '[001.SeedWebFeatures.sql] Skipped';
-END
+PRINT '[001.SeedWebFeatures.sql] Starting';
+:r .\001.SeedWebFeatures.sql
+PRINT '[001.SeedWebFeatures.sql] Finished';
 
 PRINT '[002.SeedPackagesLimits.sql] Starting';
 :r .\002.SeedPackagesLimits.sql
@@ -64,12 +42,20 @@ PRINT '[008.SeedNavigationMenuItems.sql] Starting';
 :r .\008.SeedNavigationMenuItems.sql
 PRINT '[008.SeedNavigationMenuItems.sql] Finished';
 
-PRINT '[010.SeedProjectStages.sql] Starting';
-:r .\010.SeedProjectStages.sql
-PRINT '[010.SeedProjectStages.sql] Finished';
+PRINT '[009.SeedProjectStages.sql] Starting';
+:r .\009.SeedProjectStages.sql
+PRINT '[009.SeedProjectStages.sql] Finished';
 
-PRINT '[013.SeedEmailTemplates.sql] Starting';
-:r .\013.SeedEmailTemplates.sql
-PRINT '[013.SeedEmailTemplates.sql] Finished';
+PRINT '[010.SeedEmailTemplates.sql] Starting';
+:r .\010.SeedEmailTemplates.sql
+PRINT '[010.SeedEmailTemplates.sql] Finished';
+
+PRINT '[011.SeedProjectKnowledgeStructure.sql] Starting';
+:r .\011.SeedProjectKnowledgeStructure.sql
+PRINT '[011.SeedProjectKnowledgeStructure.sql] Finished';
+
+PRINT '[012.SeedProjectFormSubmissions.sql] Starting';
+:r .\012.SeedProjectFormSubmissions.sql
+PRINT '[012.SeedProjectFormSubmissions.sql] Finished';
 
 PRINT '[Script.PostDeployment.sql] Finished';

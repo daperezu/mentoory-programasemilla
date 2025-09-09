@@ -26,11 +26,6 @@ public class SubmissionForReviewDto
     public string ParticipantEmail { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the form ID.
-    /// </summary>
-    public long FormId { get; set; }
-
-    /// <summary>
     /// Gets or sets the form name.
     /// </summary>
     public string FormName { get; set; } = string.Empty;

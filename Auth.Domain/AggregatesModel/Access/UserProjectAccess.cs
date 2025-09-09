@@ -1,7 +1,3 @@
-// <copyright file="UserProjectAccess.cs" company="LinaSys">
-// Copyright (c) LinaSys. All rights reserved.
-// </copyright>
-
 using System;
 using LinaSys.Shared.Domain.SeedWork;
 

@@ -10,7 +10,6 @@ namespace LinaSys.BusinessIncubator.Application.IntegrationEvents;
 public sealed record ProjectFormSubmissionApproved(
     long ProjectId,
     string ParticipantUserId,
-    long FormId,
     string DraftData,
     DateTime ApprovedAt,
     string ApprovedByUserId) : IntegrationEvent, INotification;

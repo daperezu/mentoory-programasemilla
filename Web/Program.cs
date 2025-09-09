@@ -32,6 +32,7 @@ using LinaSys.SystemFeatures.Application;
 using LinaSys.SystemFeatures.Infrastructure;
 using LinaSys.UserManagement.Application;
 using LinaSys.UserManagement.Infrastructure;
+using LinaSys.Web.Auth;
 using LinaSys.Web.Hubs;
 using LinaSys.Web.Infrastructure.Persistence;
 using LinaSys.Web.Infrastructure.Services;
@@ -76,6 +77,8 @@ builder.Services.AddScoped<IAuditContext>(provider =>
     return new AuditContext(timeProvider.UtcNow, currentUserService.UserName);
 });
 
+builder.Services.AddScoped<IAccessChecker, AccessChecker>();
+builder.Services.AddScoped<IAuthScopeProvider, AuthScopeProvider>();
 builder.Services.AddScoped<MediatorExecutor>();
 
 builder.Services.AddSingleton<IVersionProvider, VersionProvider>();
@@ -88,9 +91,6 @@ builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
 // Register ApplicationUrlService for generating URLs in the application layer
 builder.Services.AddScoped<IApplicationUrlService, ApplicationUrlService>();
-
-// Register cross-domain services
-builder.Services.AddScoped<LinaSys.UserManagement.Application.Services.IUserCrossDomainService, UserCrossDomainService>();
 
 #region Modules dependencies registration
 

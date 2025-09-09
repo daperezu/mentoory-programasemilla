@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using LinaSys.Shared.Domain.Constants;
+using LinaSys.Web.Attributes;
 
 namespace LinaSys.Web.Areas.Coordination.Models.UserManagement;
 
-public class CreateUserViewModel
+public class CreateUserViewModel : IValidatableObject
 {
     [Required(ErrorMessage = "El correo electrónico es requerido")]
     [EmailAddress(ErrorMessage = "El formato del correo electrónico no es válido")]
@@ -37,6 +39,22 @@ public class CreateUserViewModel
     [Compare("Password", ErrorMessage = "Las contraseñas no coinciden")]
     public string? ConfirmPassword { get; set; }
 
+    // Role and Access Assignment Fields
+    [Required(ErrorMessage = "El rol es requerido")]
+    [Display(Name = "Rol del Usuario")]
+    public string SelectedRole { get; set; } = string.Empty;
+
+    [Display(Name = "Incubadora")]
+    [RequiredIfRole("Coordinator,Administrator,Liaison,Mentor,Guide,Facilitator",
+        ErrorMessage = "La incubadora es requerida para el rol seleccionado")]
+    public long? SelectedIncubatorId { get; set; }
+
+    [Display(Name = "Proyecto")]
+    [RequiredIfRole("Starter,Coordinator,Mentor,Guide,Facilitator",
+        ErrorMessage = "El proyecto es requerido para el rol seleccionado")]
+    public long? SelectedProjectId { get; set; }
+
+    // Location Fields
     [Display(Name = "País")]
     public string? Country { get; set; }
 
@@ -53,6 +71,7 @@ public class CreateUserViewModel
     [MaxLength(500, ErrorMessage = "La dirección no puede exceder 500 caracteres")]
     public string? FullAddress { get; set; }
 
+    // Account Settings
     [Display(Name = "Confirmar email automáticamente")]
     public bool EmailConfirmed { get; set; } = false;
 
@@ -62,6 +81,107 @@ public class CreateUserViewModel
     // Email Preferences
     [Display(Name = "Preferencias de Email")]
     public EmailPreferencesViewModel EmailPreferences { get; set; } = new();
+
+    // Collections for dropdowns
+    public List<RoleSelectItem> AvailableRoles { get; set; } = [];
+    public List<IncubatorSelectItem> AvailableIncubators { get; set; } = [];
+    public List<ProjectSelectItem> AvailableProjects { get; set; } = [];
+
+    // Custom validation
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        // Password validation when not generating temporary password
+        if (!GenerateTemporaryPassword)
+        {
+            if (string.IsNullOrWhiteSpace(Password))
+            {
+                yield return new ValidationResult("La contraseña es requerida", [nameof(Password)]);
+            }
+
+            if (string.IsNullOrWhiteSpace(ConfirmPassword))
+            {
+                yield return new ValidationResult("La confirmación de contraseña es requerida", [nameof(ConfirmPassword)]);
+            }
+        }
+
+        // Role-based validation for incubator and project
+        if (!string.IsNullOrEmpty(SelectedRole))
+        {
+            switch (SelectedRole)
+            {
+                case Roles.GlobalAdministrator:
+                    // Global Administrator doesn't need incubator or project
+                    break;
+
+                case Roles.Administrator:
+                case Roles.Liaison:
+                    // Administrator and Liaison need incubator only
+                    if (SelectedIncubatorId is not > 0)
+                    {
+                        yield return new ValidationResult(
+                            $"La incubadora es requerida para el rol {GetRoleDisplayName(SelectedRole)}",
+                            [nameof(SelectedIncubatorId)]);
+                    }
+
+                    break;
+
+                case Roles.Coordinator:
+                    // Coordinator requires both incubator and project
+                    if (SelectedIncubatorId is not > 0)
+                    {
+                        yield return new ValidationResult(
+                            "La incubadora es requerida para el rol Coordinador",
+                            [nameof(SelectedIncubatorId)]);
+                    }
+
+                    if (SelectedProjectId is not > 0)
+                    {
+                        yield return new ValidationResult(
+                            "El proyecto es requerido para el rol Coordinador",
+                            [nameof(SelectedProjectId)]);
+                    }
+
+                    break;
+
+                case Roles.Starter:
+                case Roles.Mentor:
+                case Roles.Guide:
+                case Roles.Facilitator:
+                    // These roles need both incubator and project
+                    if (SelectedIncubatorId is not > 0)
+                    {
+                        yield return new ValidationResult(
+                            $"La incubadora es requerida para el rol {GetRoleDisplayName(SelectedRole)}",
+                            [nameof(SelectedIncubatorId)]);
+                    }
+
+                    if (SelectedProjectId is not > 0)
+                    {
+                        yield return new ValidationResult(
+                            $"El proyecto es requerido para el rol {GetRoleDisplayName(SelectedRole)}",
+                            [nameof(SelectedProjectId)]);
+                    }
+
+                    break;
+            }
+        }
+    }
+
+    private string GetRoleDisplayName(string role)
+    {
+        return role switch
+        {
+            "Starter" => "Emprendedor",
+            "Coordinator" => "Coordinador",
+            "Mentor" => "Mentor",
+            "Guide" => "Guía",
+            "Facilitator" => "Facilitador",
+            "Liaison" => "Enlace",
+            "Administrator" => "Administrador",
+            "GlobalAdministrator" => "Administrador Global",
+            _ => role
+        };
+    }
 }
 
 public class EmailPreferencesViewModel
@@ -95,4 +215,30 @@ public class EmailPreferencesViewModel
 
     [Display(Name = "Resumen diario")]
     public bool Digest { get; set; } = false;
+}
+
+// Select list item classes
+public class RoleSelectItem
+{
+    public string Value { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public bool RequiresIncubator { get; set; }
+    public bool RequiresProject { get; set; }
+}
+
+public class IncubatorSelectItem
+{
+    public long Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Key { get; set; } = string.Empty;
+}
+
+public class ProjectSelectItem
+{
+    public long Id { get; set; }
+    public Guid ExternalId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Key { get; set; } = string.Empty;
+    public long IncubatorId { get; set; }
 }

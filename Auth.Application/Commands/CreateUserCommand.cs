@@ -115,17 +115,8 @@ public class CreateUserCommandHandler(
             logger.LogInformation("User created successfully for {Email} with UserName: {UserName}, UserId: {UserId}",
                 request.Email, user.UserName, user.Id);
 
-            // Assign default role (Starter) to the new user
-            var roleResult = await authRepository.AddToRoleAsync(user, "Starter", cancellationToken);
-            if (!roleResult.Success)
-            {
-                logger.LogWarning("Failed to assign default role to user {UserId}: {Errors}",
-                    user.Id, string.Join("; ", roleResult.Errors));
-            }
-            else
-            {
-                logger.LogInformation("Assigned default role 'Starter' to user {UserId}", user.Id);
-            }
+            // NOTE: Default role assignment removed - roles are now assigned explicitly during user creation process
+            // The calling code (e.g., CreateUserWithProfileOrchestrationCommand) is responsible for assigning the appropriate role
 
             // Generate email confirmation token if email is not confirmed
             string? emailConfirmationToken = null;

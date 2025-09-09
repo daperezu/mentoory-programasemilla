@@ -25,8 +25,7 @@
 | Creating features | [architecture.md](.claude/architecture.md), [web-patterns.md](.claude/web-patterns.md) |
 | Domain changes | [ddd-patterns.md](.claude/ddd-patterns.md), [domain-reference.md](.claude/domain-reference.md) |
 | Build errors | [coding-standards.md](.claude/coding-standards.md), [common-issues.md](.claude/common-issues.md) |
-| Cross-domain work | [ADR-001-integration-events.md](.claude/architecture-decisions/ADR-001-integration-events.md) |
-| E2E error analysis | [E2E_ERROR_ANALYSIS.md](.claude/debugging/E2E_ERROR_ANALYSIS.md) |
+| Cross-domain work | [ADR-001-integration-events.md](.claude/architecture-decisions/ADR-001-integration-events.md) 
 
 ## 📋 Requirements
 - **Active**: `.claude/requirements/active/` ← Current work items
@@ -36,12 +35,20 @@
 ### Currently Active
 - 📋 **Awaiting Requirements** - No active tasks
 
+### Pending Implementation
+- 📝 **REQ-001**: Enhanced User Creation with Role-Based Access Assignment
+- 📝 **REQ-002**: Seed Data for Project Knowledge Structure
+- 📝 **REQ-003**: Automated Form Availability Notifications
+
 ### Recently Completed
-- ✅ All previous features completed and stable
+- ✅ **REQ-005**: Modern Phoenix-Aligned Form Experience (2025-09-08)
+- ✅ **REQ-004**: Modern Toast Notification System (2025-09-08)
+- ✅ Inactivity logout component for ContextSelection page
+- ✅ IApplicationUrlService GetLogoutUrl method implementation
 
 ## 🎯 Current Context
-- **Branch**: `feature/user-administration`
-- **Status**: Ready for new requirements
+- **Branch**: `feature/create-user-improve`
+- **Status**: Form system modernized and production-ready
 - **Build Status**: ✅ Clean build - 0 errors, 0 warnings
 - **Session File**: `.claude/CURRENT_SESSION.md` ← *Start here for today's work*
 - **Full History**: `.claude/WORK_LOG.md` ← *Detailed progress archive*
@@ -96,3 +103,28 @@ var command = new Command(file.OpenReadStream(), file.FileName);
 - **System Status**: Not in production yet - direct schema changes allowed, no migration scripts needed
 - **Base Branch**: Always work from `develop`, not `main`
 - **Documentation Updates**: When learning new patterns, update the appropriate `.claude/` documentation file
+
+## Known Issues & Solutions
+
+### Form Submission Flow
+
+#### Prerequisites for Forms to Appear
+1. **ProjectKnowledgeStructure**: Project must have configured questions and answer options
+2. **Active ProjectStage**: Stage must be active with current date within its window
+3. **User Access**: User must be a project participant with incubator access
+
+#### Current System Design (Lazy Creation)
+Forms are **NOT automatically created** when stages activate. Instead:
+1. Coordinator activates stage manually
+2. User visits dashboard (no forms shown initially)
+3. User navigates to form editor
+4. System creates form on-demand via `GetOrCreateFormSubmissionCommand`
+5. Form appears in dashboard after creation
+
+#### Missing Components for Proactive Notifications
+- No background monitoring of stage activations
+- No automatic notification when forms become available
+- No integration events for stage lifecycle changes
+- See **REQ-003** for planned notification system implementation
+
+**Note**: The system uses lazy form creation by design. Users must access the form editor for forms to be created, which is why they don't appear immediately on the dashboard.

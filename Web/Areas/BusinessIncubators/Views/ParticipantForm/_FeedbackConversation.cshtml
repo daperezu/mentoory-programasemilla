@@ -1,0 +1,83 @@
+@model LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.FeedbackConversationDto
+@{
+    var statusClass = Model.Status == LinaSys.BusinessIncubator.Domain.Enums.FeedbackStatus.ReviewClosed ? "feedback-closed" : "feedback-open";
+    var statusBadge = Model.Status == LinaSys.BusinessIncubator.Domain.Enums.FeedbackStatus.ReviewClosed 
+        ? "<span class='badge bg-success'>Cerrado</span>" 
+        : "<span class='badge bg-warning'>Requiere Revisión</span>";
+    var isReadOnly = ViewData["IsReadOnly"] as bool? ?? false;
+}
+
+<div class="feedback-conversation card mb-3 @statusClass" id="feedback-@Model.Id" data-feedback-id="@Model.Id">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-comment-dots text-warning me-2"></i>
+                <strong>Retroalimentación</strong>
+                @Html.Raw(statusBadge)
+            </div>
+            <small class="text-muted">
+                @if (!string.IsNullOrEmpty(Model.QuestionText))
+                {
+                    <span>Pregunta: @Model.QuestionText</span>
+                }
+                else if (!string.IsNullOrEmpty(Model.BlockName))
+                {
+                    <span>Bloque: @Model.BlockName</span>
+                }
+            </small>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="feedback-messages">
+            @* Original feedback *@
+            <div class="feedback-message mb-3 p-3 rounded @(Model.IsFromParticipant ? "bg-primary-subtle" : "bg-warning-subtle")">
+                <div class="feedback-author">
+                    <strong>@Model.AuthorName</strong>
+                    <small class="text-muted ms-2">
+                        <i class="far fa-clock"></i> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    </small>
+                </div>
+                <div class="feedback-content mt-2">
+                    @Model.FeedbackText
+                </div>
+            </div>
+            
+            @* Replies *@
+            @foreach (var reply in Model.Replies)
+            {
+                <div class="feedback-message mb-3 ms-4 p-3 rounded @(reply.IsFromParticipant ? "bg-primary-subtle" : "bg-warning-subtle")">
+                    <div class="feedback-author">
+                        <strong>@reply.AuthorName</strong>
+                        <small class="text-muted ms-2">
+                            <i class="far fa-clock"></i> @reply.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </small>
+                    </div>
+                    <div class="feedback-content mt-2">
+                        @reply.FeedbackText
+                    </div>
+                </div>
+            }
+        </div>
+        
+        @* Reply form - only show if not closed and not read-only *@
+        @if (Model.Status != LinaSys.BusinessIncubator.Domain.Enums.FeedbackStatus.ReviewClosed && !isReadOnly)
+        {
+            <div class="feedback-actions mt-3">
+                <form asp-action="ReplyToFeedback" method="post" class="feedback-reply-form">
+                    <input type="hidden" name="parentFeedbackId" value="@Model.Id" />
+                    <div class="input-group">
+                        <input type="text" 
+                               name="feedbackText" 
+                               class="form-control" 
+                               placeholder="Escribir respuesta..." 
+                               required />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Enviar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+    </div>
+</div>

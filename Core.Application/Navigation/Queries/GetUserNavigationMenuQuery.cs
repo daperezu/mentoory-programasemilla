@@ -54,7 +54,7 @@ namespace LinaSys.Core.Application.Navigation.Queries
                 .ToList();
 
             // Build hierarchy
-            var menuTree = BuildMenuTree(filteredItems);
+            var menuTree = BuildMenuTree(filteredItems, request.IncubatorId, request.ProjectId);
 
             // Create context
             var context = new NavigationContextDto(
@@ -68,6 +68,8 @@ namespace LinaSys.Core.Application.Navigation.Queries
 
         private List<NavigationMenuItemDto> BuildMenuTree(
             IEnumerable<NavigationMenuItem> items,
+            long? incubatorId = null,
+            long? projectId = null,
             long? parentId = null)
         {
             return items
@@ -78,10 +80,10 @@ namespace LinaSys.Core.Application.Navigation.Queries
                     item.Code,
                     item.DisplayText,
                     item.Icon,
-                    item.GetUrl(),
+                    item.GetUrl(incubatorId, projectId),
                     item.CssClass,
                     item.IsSection,
-                    BuildMenuTree(items, item.Id)))
+                    BuildMenuTree(items, incubatorId, projectId, item.Id)))
                 .ToList();
         }
     }

@@ -1,6 +1,8 @@
-﻿using LinaSys.BusinessIncubator.Application.Queries;
+﻿using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.GetOrCreateFormSubmission;
+using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.Core.Application.Activities.Queries;
 using LinaSys.Shared.Application;
+using LinaSys.Shared.Application.Services;
 using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Areas.Participant.Models;
 using LinaSys.Web.Controllers;
@@ -15,38 +17,90 @@ namespace LinaSys.Web.Areas.Participant.Controllers;
 [Authorize(Roles = Roles.Starter)]
 public class DashboardController(
     ILogger<DashboardController> logger,
-    MediatorExecutor mediator) : AuthorizedBaseController(logger, mediator)
+    MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService) : AuthorizedBaseController(logger, mediator)
 {
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        // Get current user's context
+        // Require project context for Starters
+        var context = DemandCurrentUserContext(requireProject: true,
+            errorMessage: "Debe seleccionar un proyecto para ver el panel de control");
+
         var userId = CurrentUserId;
-        var userContext = CurrentUserContext;
+        var projectId = context.ProjectId!.Value;
 
-        // Get user's projects from BusinessIncubator domain
-        var projectsQuery = new GetParticipantProjectsQuery(userId);
-        var projectsResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectsQuery);
+        // Get single project details instead of all projects
+        var projectQuery = new GetProjectDetailsQuery(projectId);
+        var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
 
-        // Get pending forms from BusinessIncubator domain
-        var pendingFormsQuery = new GetPendingFormsQuery(userId);
-        var pendingFormsResult = await MediatorExecutor.SendAndLogIfFailureAsync(pendingFormsQuery);
+        // Get available forms for this specific project
+        var availableFormsQuery = new GetAvailableFormsQuery(userId, projectId);
+        var availableFormsResult = await MediatorExecutor.SendAndLogIfFailureAsync(availableFormsQuery);
 
-        // Get recent activities from audit system
-        var activitiesQuery = new GetUserActivitiesQuery(userId, 10);
+        // Get project-specific activities
+        var activitiesQuery = new GetProjectActivitiesQuery(userId, projectId, 10);
         var activitiesResult = await MediatorExecutor.SendAndLogIfFailureAsync(activitiesQuery);
 
-        // TODO: Get open convocations - needs separate implementation
-        var viewModel = new DashboardViewModel
+        var viewModel = new LinaSys.Web.Areas.Participant.Models.ProjectDashboardViewModel
         {
             UserName = User.Identity?.Name ?? "Usuario",
-            Projects = MapProjectsToViewModel(projectsResult),
-            PendingForms = MapPendingFormsToViewModel(pendingFormsResult),
+            Project = MapProjectToViewModel(projectResult),
+            AvailableForms = MapAvailableFormsToViewModel(
+                availableFormsResult,
+                projectResult.Value?.IncubatorExternalId,
+                projectResult.Value?.ExternalId),
             RecentActivities = MapActivitiesToViewModel(activitiesResult),
-            OpenConvocations = new List<ConvocationViewModel>() // TODO: Implement when convocations are available
+            SelectedProjectName = projectResult.Value?.Name ?? "Proyecto"
         };
 
         return View(viewModel);
+    }
+
+    [HttpGet("Forms/Start")]
+    public async Task<IActionResult> StartForm(BusinessIncubator.Domain.Enums.QuestionPhase phase)
+    {
+        var context = DemandCurrentUserContext(requireProject: true);
+
+        // Get project details including business incubator external ID
+        var projectDetailsQuery = new GetProjectDetailsQuery(context.ProjectId!.Value);
+        var projectDetailsResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectDetailsQuery);
+
+        if (!projectDetailsResult.IsSuccess || projectDetailsResult.Value == null)
+        {
+            this.SetErrorToast("Proyecto no encontrado");
+            return RedirectToAction("Index");
+        }
+
+        // Get project external ID for the command
+        var projectQuery = new GetProjectByIdQuery(context.ProjectId!.Value);
+        var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
+
+        if (!projectResult.IsSuccess || projectResult.Value == null)
+        {
+            this.SetErrorToast("Proyecto no encontrado");
+            return RedirectToAction("Index");
+        }
+
+        // Trigger lazy form creation
+        var command = new GetOrCreateFormSubmissionCommand(
+            projectResult.Value.ExternalId,
+            CurrentUserId,
+            phase);
+        var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+
+        if (result.IsSuccess && projectDetailsResult.Value.IncubatorExternalId.HasValue)
+        {
+            // Use ApplicationUrlService to generate the correct URL
+            var url = applicationUrlService.GetParticipantFormUrl(
+                projectDetailsResult.Value.IncubatorExternalId.Value,
+                projectResult.Value.ExternalId);
+
+            return Redirect(url);
+        }
+
+        this.SetErrorToast("No se pudo iniciar el formulario");
+        return RedirectToAction("Index");
     }
 
     [HttpGet]
@@ -128,63 +182,139 @@ public class DashboardController(
         };
     }
 
-    private List<ProjectCardViewModel> MapProjectsToViewModel(Result<List<ParticipantProjectDto>> result)
+    private ProjectDetailsViewModel MapProjectToViewModel(Result<ProjectDetailsDto> result)
     {
         if (!result.IsSuccess || result.Value == null)
         {
-            return new List<ProjectCardViewModel>();
+            return new ProjectDetailsViewModel();
         }
 
-        return result.Value.Select(p => new ProjectCardViewModel
+        var project = result.Value;
+        return new ProjectDetailsViewModel
         {
-            ProjectId = p.Id,
-            ProjectName = p.Name,
-            Description = string.Empty, // Not available in DTO
-            CurrentStage = p.CurrentStageName ?? "Sin etapa",
-            Progress = (int)p.ProgressPercentage,
-            IncubatorName = p.IncubatorName,
-            Status = p.Status == "active" ? "Activo" : "Inactivo",
-            StatusColor = p.Status == "active" ? "success" : "secondary",
-            StartDate = p.JoinedAt,
-            EndDate = null,
-            IsActive = p.Status == "active",
-            MentorName = string.Empty // TODO: Get mentor from project assignments
-        }).ToList();
+            ProjectId = project.ProjectId,
+            ExternalId = project.ExternalId,
+            Name = project.Name,
+            Description = project.Description,
+            Status = project.Status,
+            CurrentStage = project.CurrentStage,
+            StageEndDate = project.StageEndDate,
+            Progress = project.Progress,
+            IncubatorName = project.IncubatorName,
+            IncubatorExternalId = project.IncubatorExternalId,
+            MentorName = project.MentorName,
+            StartDate = project.StartDate,
+            EndDate = project.EndDate
+        };
     }
 
-    private List<PendingFormViewModel> MapPendingFormsToViewModel(Result<List<PendingFormDto>> result)
+    private List<AvailableFormViewModel> MapAvailableFormsToViewModel(
+        Result<List<AvailableFormDto>> result,
+        Guid? businessIncubatorExternalId,
+        Guid? projectExternalId)
     {
         if (!result.IsSuccess || result.Value == null)
         {
-            return new List<PendingFormViewModel>();
+            return new List<AvailableFormViewModel>();
         }
 
-        return result.Value.Select(f => new PendingFormViewModel
+        return result.Value.Select(f => new AvailableFormViewModel
         {
-            FormId = f.Id,
+            ExistingFormId = f.ExistingFormId,
             FormName = GetFormTitle(f.Phase),
-            ProjectName = f.ProjectName,
-            DueDate = f.DueDate ?? DateTime.UtcNow.AddDays(7), // Default to 7 days if no due date
-            FormType = GetPhaseDisplayName(f.Phase),
-            FormUrl = $"/ProjectFormSubmission/Edit/{f.ExternalId}" // TODO: Verify actual URL pattern
+            Phase = f.Phase,
+            StageName = f.StageName,
+            DueDate = f.DueDate,
+            IsCreated = f.IsCreated,
+            Status = f.Status ?? BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Draft,
+            CompletionPercentage = f.CompletionPercentage,
+            PendingFeedbackCount = f.PendingFeedbackCount,
+            ActionUrl = GetFormActionUrl(f, businessIncubatorExternalId, projectExternalId),
+            ActionText = f.IsCreated
+                ? (f.Status == BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Draft
+                    ? "Continuar"
+                    : f.PendingFeedbackCount > 0
+                        ? "Responder Retroalimentación"
+                        : "Ver Formulario")
+                : "Iniciar Formulario",
+            ActionClass = f.IsCreated
+                ? (f.Status == BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Draft
+                    ? "btn-warning"
+                    : f.PendingFeedbackCount > 0
+                        ? "btn-danger"
+                        : "btn-info")
+                : "btn-primary"
         }).ToList();
     }
 
-    private List<ActivityViewModel> MapActivitiesToViewModel(Result<List<UserActivityDto>> result)
+    private string GetFormActionUrl(AvailableFormDto form, Guid? businessIncubatorExternalId, Guid? projectExternalId)
+    {
+        // For submitted forms, always show them in read-only mode
+        if (form.Status == BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Submitted ||
+            form.Status == BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Approved ||
+            form.Status == BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Rejected)
+        {
+            // If we have all required IDs, generate the ParticipantForm URL with read-only parameter
+            if (businessIncubatorExternalId.HasValue && projectExternalId.HasValue)
+            {
+                var url = applicationUrlService.GetParticipantFormUrl(
+                    businessIncubatorExternalId.Value,
+                    projectExternalId.Value);
+
+                // Add read-only parameter for submitted/approved forms ONLY if there's no pending feedback
+                // Forms with pending feedback need to allow responses even if submitted
+                if ((form.Status == BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Submitted ||
+                     form.Status == BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Approved) &&
+                    form.PendingFeedbackCount == 0)
+                {
+                    url = url.Contains('?') ? $"{url}&readOnly=true" : $"{url}?readOnly=true";
+                }
+
+                return url;
+            }
+        }
+
+        // If form is already created and we have all required IDs, use the ParticipantForm URL
+        if (form.IsCreated && businessIncubatorExternalId.HasValue && projectExternalId.HasValue)
+        {
+            return applicationUrlService.GetParticipantFormUrl(
+                businessIncubatorExternalId.Value,
+                projectExternalId.Value);
+        }
+
+        // If form is created but missing IDs (shouldn't happen, but handle gracefully)
+        if (form.IsCreated)
+        {
+            // Log warning about missing data
+            logger.LogWarning(
+                "Form {FormId} is marked as created but missing required IDs. Status: {Status}, BusinessIncubatorId: {BusinessIncubatorId}, ProjectId: {ProjectId}",
+                form.ExistingFormId,
+                form.Status,
+                businessIncubatorExternalId,
+                projectExternalId);
+
+            // Return a placeholder URL or the dashboard
+            return Url.Action("Index", "Dashboard", new { area = "Participant" }) ?? "#";
+        }
+
+        // For forms that haven't been created yet, use the StartForm action
+        return Url.Action("StartForm", "Dashboard", new { area = "Participant", phase = form.Phase }) ?? "#";
+    }
+
+    private List<LinaSys.Web.Areas.Participant.Models.ProjectActivityViewModel> MapActivitiesToViewModel(Result<List<ProjectActivityDto>> result)
     {
         if (!result.IsSuccess || result.Value == null)
         {
-            return new List<ActivityViewModel>();
+            return new List<LinaSys.Web.Areas.Participant.Models.ProjectActivityViewModel>();
         }
 
-        return result.Value.Select(a => new ActivityViewModel
+        return result.Value.Select(a => new LinaSys.Web.Areas.Participant.Models.ProjectActivityViewModel
         {
-            Timestamp = a.CreatedDate,
-            Type = a.ActivityType,
-            Category = GetActivityTypeForDisplay(a.ActivityType),
-            Description = GetActivityDescription(a.ActivityType, a.EntityType),
-            Icon = GetActivityIcon(a.ActivityType),
-            IconColor = GetActivityColor(a.ActivityType)
+            Category = a.Category,
+            Description = a.Description,
+            Timestamp = a.Timestamp,
+            Icon = a.Icon,
+            IconColor = a.IconColor
         }).ToList();
     }
 

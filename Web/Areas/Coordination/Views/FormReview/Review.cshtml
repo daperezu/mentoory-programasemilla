@@ -1,7 +1,7 @@
 @{
     ViewData["Title"] = "Revisar Formulario";
-    Layout = "~/Views/Shared/_CoordinatorLayout.cshtml";
     var submissionId = ViewData["SubmissionId"];
+    var feedbackConversations = ViewData["FeedbackConversations"] as List<LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.FeedbackConversationDto> ?? new List<LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.FeedbackConversationDto>();
 }
 
 @section Styles {
@@ -628,6 +628,9 @@
     <script>
         // Initialize with submission ID
         window.submissionId = @submissionId;
+        
+        // Initialize feedback conversations
+        window.feedbackConversations = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(feedbackConversations, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
         
         // Initialize review system
         document.addEventListener('DOMContentLoaded', async function() {

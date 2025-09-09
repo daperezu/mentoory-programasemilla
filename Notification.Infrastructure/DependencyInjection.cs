@@ -35,7 +35,7 @@ public static class DependencyInjection
         services.AddHostedService<EmailSenderWorker>(); // Background worker for processing queued emails
 
         // Email transports
-        services.AddEmailTransports(configuration);
+        services.AddEmailTransports(configuration, false);
 
         // Notification domain services
         services.AddScoped<IEmailPreferenceService, EmailPreferenceService>();

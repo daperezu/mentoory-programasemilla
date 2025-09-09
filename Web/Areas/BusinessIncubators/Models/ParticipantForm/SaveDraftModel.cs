@@ -1,4 +1,4 @@
-﻿using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.DTOs;
+﻿using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraft;
 
 namespace LinaSys.Web.Areas.BusinessIncubators.Models.ParticipantForm;
 
@@ -11,11 +11,6 @@ public class SaveDraftModel
     /// Gets or sets the project ID.
     /// </summary>
     public long ProjectId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the form ID.
-    /// </summary>
-    public long FormId { get; set; }
 
     /// <summary>
     /// Gets or sets the submission ID.

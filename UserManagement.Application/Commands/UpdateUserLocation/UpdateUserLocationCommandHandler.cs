@@ -1,4 +1,4 @@
-using LinaSys.Shared.Application;
+﻿using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.SeedWork;
 using LinaSys.UserManagement.Domain.Repositories;
@@ -35,7 +35,7 @@ public class UpdateUserLocationCommandHandler(
             {
                 return Failure(
                     result.ErrorCode ?? ResultErrorCodes.GenericError,
-                    result.ErrorMessages ?? new[] { ("UpdateUserLocation", "Error al actualizar la ubicación") });
+                    result.ErrorMessages ?? [("UpdateUserLocation", "Error al actualizar la ubicación")]);
             }
 
             userProfileRepository.Update(userProfile);

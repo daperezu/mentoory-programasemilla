@@ -1,7 +1,6 @@
 ﻿using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.BusinessIncubator.Application.Queries;
 
@@ -33,6 +32,7 @@ public class GetProjectsByIncubatorQueryHandler(IBusinessIncubatorRepository rep
             .Select(p => new ProjectDto
             {
                 Id = p.Id,
+                ExternalId = p.ExternalId,
                 Name = p.Name,
                 Key = p.Key,
                 IsDeleted = p.IsDeleted

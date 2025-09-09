@@ -12,6 +12,7 @@ using LinaSys.UserManagement.Application.Queries.GetUserProfileByUserId;
 using LinaSys.UserManagement.Application.Queries.ListUserProfiles;
 using LinaSys.Auth.Application.Queries;
 using LinaSys.Web.Areas.Coordination.Models.UserManagement;
+using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
@@ -85,31 +86,32 @@ public class UserManagementController(
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        return View(new CreateUserViewModel());
+        var model = new CreateUserViewModel();
+        // Populate available roles based on current user permissions
+        model.AvailableRoles = GetAvailableRolesForCreateUser();
+
+        // Load all active incubators
+        model.AvailableIncubators = await GetAllIncubatorsForForm();
+
+        return View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(CreateUserViewModel model)
     {
-        // Custom validation for password fields
-        if (!model.GenerateTemporaryPassword)
-        {
-            if (string.IsNullOrWhiteSpace(model.Password))
-            {
-                ModelState.AddModelError(nameof(model.Password), "La contraseña es requerida");
-            }
-
-            if (string.IsNullOrWhiteSpace(model.ConfirmPassword))
-            {
-                ModelState.AddModelError(nameof(model.ConfirmPassword), "La confirmación de contraseña es requerida");
-            }
-        }
-
         if (!ModelState.IsValid)
         {
+            // Reload dropdowns on validation error
+            model.AvailableRoles = GetAvailableRolesForCreateUser();
+            model.AvailableIncubators = await GetAllIncubatorsForForm();
+            if (model.SelectedIncubatorId.HasValue)
+            {
+                model.AvailableProjects = await GetProjectsByIncubatorForForm(model.SelectedIncubatorId.Value);
+            }
+
             return View(model);
         }
 
@@ -167,11 +169,93 @@ public class UserManagementController(
         if (!result.IsSuccess)
         {
             this.MapErrorsToModelStateAndSetErrorToast<CreateUserViewModel>(result);
+            // Reload dropdowns on error
+            model.AvailableRoles = GetAvailableRolesForCreateUser();
+            model.AvailableIncubators = await GetAllIncubatorsForForm();
+            if (model.SelectedIncubatorId.HasValue)
+            {
+                model.AvailableProjects = await GetProjectsByIncubatorForForm(model.SelectedIncubatorId.Value);
+            }
+
             return View(model);
         }
 
-        this.SetSuccessToast("Usuario creado exitosamente");
-        return RedirectToAction(nameof(Details), new { id = result.Value });
+        var userId = result.Value!;
+
+        // Step 2: Assign role to the user
+        if (!string.IsNullOrEmpty(model.SelectedRole))
+        {
+            var assignRoleCommand = new AssignRolesToUserOrchestrationCommand(
+                userId,
+                [model.SelectedRole]);
+            var roleResult = await MediatorExecutor.SendAndLogIfFailureAsync(assignRoleCommand);
+            if (!roleResult.IsSuccess)
+            {
+                logger.LogWarning("Failed to assign role {Role} to user {UserId}", model.SelectedRole, userId);
+            }
+        }
+
+        // Step 3: Assign incubator access if needed
+        if (model.SelectedIncubatorId.HasValue && !string.IsNullOrEmpty(model.SelectedRole))
+        {
+            // Only use orchestration command for incubator-level roles
+            var incubatorLevelRoles = new[] { "Administrator", "Liaison", "Coordinator" };
+            if (incubatorLevelRoles.Contains(model.SelectedRole))
+            {
+                var assignIncubatorCommand = new AssignUserToIncubatorOrchestrationCommand(
+                    userId,
+                    model.SelectedIncubatorId.Value,
+                    model.SelectedRole);
+                var incubatorResult = await MediatorExecutor.SendAndLogIfFailureAsync(assignIncubatorCommand);
+                if (!incubatorResult.IsSuccess)
+                {
+                    logger.LogWarning("Failed to assign user {UserId} to incubator {IncubatorId}",
+                        userId, model.SelectedIncubatorId.Value);
+                }
+            }
+            else
+            {
+                // For project-level roles (Starter, Mentor, Guide, Facilitator),
+                // we need to create the incubator access record directly
+                // so they can see the incubator in context selection
+                var assignIncubatorCommand = new LinaSys.Auth.Application.Commands.AssignUserToIncubatorCommand(
+                    userId,
+                    model.SelectedIncubatorId.Value,
+                    model.SelectedRole);
+                var incubatorResult = await MediatorExecutor.SendAndLogIfFailureAsync(assignIncubatorCommand);
+                if (!incubatorResult.IsSuccess)
+                {
+                    logger.LogWarning("Failed to create incubator access for user {UserId} to incubator {IncubatorId}",
+                        userId, model.SelectedIncubatorId.Value);
+                }
+            }
+        }
+
+        // Step 4: Assign project access if needed
+        if (model.SelectedProjectId.HasValue && !string.IsNullOrEmpty(model.SelectedRole))
+        {
+            // Get project details to get the external ID
+            var projectQuery = new GetProjectByIdQuery(model.SelectedProjectId.Value);
+            var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
+
+            if (projectResult is { IsSuccess: true, Value: not null })
+            {
+                var assignProjectCommand = new AssignUserToProjectOrchestrationCommand(
+                    userId,
+                    projectResult.Value.ExternalId,
+                    model.SelectedRole);
+
+                var projectAssignResult = await MediatorExecutor.SendAndLogIfFailureAsync(assignProjectCommand);
+                if (!projectAssignResult.IsSuccess)
+                {
+                    logger.LogWarning("Failed to assign user {UserId} to project {ProjectId}",
+                        userId, model.SelectedProjectId.Value);
+                }
+            }
+        }
+
+        this.SetSuccessToast("Usuario creado exitosamente con rol y permisos asignados");
+        return RedirectToAction(nameof(Details), new { id = userId });
     }
 
     [HttpGet]
@@ -342,7 +426,7 @@ public class UserManagementController(
                 Draw = request.Draw,
                 RecordsTotal = 0,
                 RecordsFiltered = 0,
-                Data = new List<UserListItemWithRolesViewModel>()
+                Data = []
             });
         }
 
@@ -361,9 +445,9 @@ public class UserManagementController(
             Identification = u.Identification,
             IsActive = u.IsActive,
             AvatarUrl = u.AvatarUrl,
-            Roles = new List<string>(), // TODO: Get roles from Auth domain
+            Roles = [], // TODO: Get roles from Auth domain
             IncubatorName = string.Empty, // TODO: Get from user context
-            ProjectNames = new List<string>() // TODO: Get from user assignments
+            ProjectNames = [] // TODO: Get from user assignments
         }).ToList();
 
         return Json(new DataTableResponse<UserListItemWithRolesViewModel>
@@ -643,7 +727,7 @@ public class UserManagementController(
         var profileQuery = new GetUserProfileByUserIdQuery(userId);
         var profileResult = await MediatorExecutor.SendAndLogIfFailureAsync(profileQuery);
         string fullName = "Usuario";
-        if (profileResult.IsSuccess && profileResult.Value != null)
+        if (profileResult is { IsSuccess: true, Value: not null })
         {
             fullName = $"{profileResult.Value.FirstName} {profileResult.Value.LastName}".Trim();
         }
@@ -651,7 +735,7 @@ public class UserManagementController(
         // Get current roles from Auth domain
         var rolesQuery = new GetUserRolesQuery(userId);
         var rolesResult = await MediatorExecutor.SendAndLogIfFailureAsync(rolesQuery);
-        var currentRoles = rolesResult.IsSuccess ? rolesResult.Value!.ToList() : new List<string>();
+        var currentRoles = rolesResult.IsSuccess ? rolesResult.Value!.ToList() : [];
 
         var viewModel = new UserRolesViewModel
         {
@@ -772,6 +856,75 @@ public class UserManagementController(
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    /// <summary>
+    /// Gets all active incubators for the dropdown.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAllIncubators()
+    {
+        try
+        {
+            var query = new GetAllIncubatorsQuery();
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(query);
+
+            if (result is { IsSuccess: true, Value: not null })
+            {
+                return Json(new
+                {
+                    success = true,
+                    incubators = result.Value.Select(i => new
+                    {
+                        id = i.Id,
+                        name = i.Name,
+                        key = i.Key
+                    })
+                });
+            }
+
+            return Json(new { success = false, incubators = new List<object>() });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error loading incubators");
+            return Json(new { success = false, incubators = new List<object>() });
+        }
+    }
+
+    /// <summary>
+    /// Gets projects for a specific incubator.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetProjectsByIncubator(long incubatorId)
+    {
+        try
+        {
+            var query = new GetProjectsByIncubatorQuery(incubatorId);
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(query);
+
+            if (result is { IsSuccess: true, Value: not null })
+            {
+                return Json(new
+                {
+                    success = true,
+                    projects = result.Value.Select(p => new
+                    {
+                        id = p.Id,
+                        externalId = p.ExternalId,
+                        name = p.Name,
+                        key = p.Key
+                    })
+                });
+            }
+
+            return Json(new { success = false, projects = new List<object>() });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error loading projects for incubator {IncubatorId}", incubatorId);
+            return Json(new { success = false, projects = new List<object>() });
+        }
     }
 
     private Task<List<ImportUserDto>> ParseImportFileAsync(IFormFile file)
@@ -1062,6 +1215,125 @@ public class UserManagementController(
         var bytes = Encoding.UTF8.GetBytes(csv.ToString());
         var fileName = $"usuarios_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv";
         return File(bytes, "text/csv", fileName);
+    }
+
+    private async Task<List<IncubatorSelectItem>> GetAllIncubatorsForForm()
+    {
+        try
+        {
+            var query = new GetAllIncubatorsQuery();
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(query);
+
+            if (result is { IsSuccess: true, Value: not null })
+            {
+                return result.Value.Where(i => !i.IsDeleted).Select(i => new IncubatorSelectItem
+                {
+                    Id = i.Id,
+                    Name = i.Name,
+                    Key = i.Key
+                }).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error loading incubators for create user");
+        }
+
+        return [];
+    }
+
+    private async Task<List<ProjectSelectItem>> GetProjectsByIncubatorForForm(long incubatorId)
+    {
+        try
+        {
+            var query = new GetProjectsByIncubatorQuery(incubatorId);
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(query);
+
+            if (result is { IsSuccess: true, Value: not null })
+            {
+                return result.Value.Select(p => new ProjectSelectItem
+                {
+                    Id = p.Id,
+                    ExternalId = p.ExternalId,
+                    Name = p.Name,
+                    Key = p.Key,
+                    IncubatorId = incubatorId
+                }).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error loading projects for incubator {IncubatorId}", incubatorId);
+        }
+
+        return [];
+    }
+
+    private List<RoleSelectItem> GetAvailableRolesForCreateUser()
+    {
+        var roles = new List<RoleSelectItem>();
+
+        if (CurrentUserIsGlobalAdministrator)
+        {
+            // Global admin can create users with all roles
+            roles.AddRange(Roles.AllRoles.Select(r => new RoleSelectItem
+            {
+                Value = r,
+                DisplayName = GetRoleDisplayName(r),
+                Description = GetRoleDescription(r),
+                RequiresIncubator = GetRoleRequiresIncubator(r),
+                RequiresProject = GetRoleRequiresProject(r)
+            }));
+        }
+        else if (CurrentUserRoles.Contains(Roles.Administrator))
+        {
+            // Administrator can create all roles except GlobalAdministrator
+            roles.AddRange(Roles.AllRoles
+                .Where(r => r != Roles.GlobalAdministrator)
+                .Select(r => new RoleSelectItem
+                {
+                    Value = r,
+                    DisplayName = GetRoleDisplayName(r),
+                    Description = GetRoleDescription(r),
+                    RequiresIncubator = GetRoleRequiresIncubator(r),
+                    RequiresProject = GetRoleRequiresProject(r)
+                }));
+        }
+        else if (CurrentUserRoles.Contains(Roles.Coordinator))
+        {
+            // Coordinator can only create allowed roles
+            roles.AddRange(Roles.CoordinatorAllowedRoles.Select(r => new RoleSelectItem
+            {
+                Value = r,
+                DisplayName = GetRoleDisplayName(r),
+                Description = GetRoleDescription(r),
+                RequiresIncubator = GetRoleRequiresIncubator(r),
+                RequiresProject = GetRoleRequiresProject(r)
+            }));
+        }
+
+        return roles;
+    }
+
+    private bool GetRoleRequiresIncubator(string role)
+    {
+        return role switch
+        {
+            Roles.GlobalAdministrator => false,
+            _ => true
+        };
+    }
+
+    private bool GetRoleRequiresProject(string role)
+    {
+        return role switch
+        {
+            Roles.Starter => true,
+            Roles.Mentor => true,
+            Roles.Guide => true,
+            Roles.Facilitator => true,
+            _ => false
+        };
     }
 
     private IActionResult ExportToExcel(IEnumerable<LinaSys.UserManagement.Application.DTOs.UserProfileDto> users)

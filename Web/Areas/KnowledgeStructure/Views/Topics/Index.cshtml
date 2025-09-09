@@ -58,10 +58,6 @@
 
 <page-header title="@pageTitle" icon-class="fas fa-book" dropdown-items="@pageHeaderActions"></page-header>
 
-<div class="card">
-    <div class="card-body">
-        <datatable ajax-url="@Url.Action("List", "Topics", new { area = "KnowledgeStructure" })"
-                   columns="@dataTablesColumns"
-                   hover-actions="@dataTablesHoverActions"></datatable>
-    </div>
-</div>
+<datatable ajax-url="@Url.Action("List", "Topics", new { area = "KnowledgeStructure" })"
+           columns="@dataTablesColumns"
+           hover-actions="@dataTablesHoverActions"></datatable>

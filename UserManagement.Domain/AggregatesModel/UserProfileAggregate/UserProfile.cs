@@ -1,4 +1,4 @@
-using LinaSys.Shared.Application;
+﻿using LinaSys.Shared.Application;
 using LinaSys.Shared.Domain.SeedWork;
 using LinaSys.UserManagement.Domain.ValueObjects;
 
@@ -127,7 +127,7 @@ public class UserProfile : AuditableEntity, IAggregateRoot
         var locationResult = Location.Create(country, province, canton, district, fullAddress);
         if (!locationResult.IsSuccess)
         {
-            return Result.Failure(locationResult.ErrorCode ?? ResultErrorCodes.ValidationError, locationResult.ErrorMessages ?? new[] { ("UserProfile", "Invalid location") });
+            return Result.Failure(locationResult.ErrorCode ?? ResultErrorCodes.ValidationError, locationResult.ErrorMessages ?? [("UserProfile", "Invalid location")]);
         }
 
         _location = locationResult.Value;

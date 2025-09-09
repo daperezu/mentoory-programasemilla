@@ -21,6 +21,11 @@ public class IncubatorDto
     public long Id { get; set; }
 
     /// <summary>
+    /// Gets or sets the incubator external identifier.
+    /// </summary>
+    public Guid ExternalId { get; set; }
+
+    /// <summary>
     /// Gets or sets the incubator name.
     /// </summary>
     public string Name { get; set; } = string.Empty;
@@ -61,6 +66,7 @@ public class GetIncubatorByIdQueryHandler(IBusinessIncubatorRepository repositor
         var dto = new IncubatorDto
         {
             Id = incubator.Id,
+            ExternalId = incubator.ExternalId,
             Name = incubator.Name,
             Key = incubator.Key,
             IsDeleted = incubator.IsDeleted

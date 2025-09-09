@@ -1,6 +1,9 @@
 ﻿using LinaSys.BusinessIncubator.Application.Reviews.Commands.AddFeedback;
 using LinaSys.BusinessIncubator.Application.Reviews.Commands.ApproveSubmission;
 using LinaSys.BusinessIncubator.Application.Reviews.Commands.RequestChanges;
+using LinaSys.BusinessIncubator.Application.Reviews.Commands.CloseFeedback;
+using LinaSys.BusinessIncubator.Application.Reviews.Commands.ReopenFeedback;
+using LinaSys.BusinessIncubator.Application.Reviews.Commands.ReplyToFeedback;
 using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetPendingReviews;
 using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetSubmissionForReview;
 using LinaSys.BusinessIncubator.Domain.Enums;
@@ -39,9 +42,9 @@ public class AddFeedbackRequest
     public long? QuestionId { get; set; }
 
     /// <summary>
-    /// Gets or sets the review ID.
+    /// Gets or sets the submission ID.
     /// </summary>
-    public long ReviewId { get; set; }
+    public long SubmissionId { get; set; }
 }
 
 /// <summary>
@@ -92,7 +95,7 @@ public class FormReviewController(
         }
 
         var command = new AddFeedbackCommand(
-            request.ReviewId,
+            request.SubmissionId,  // Changed from ReviewId to SubmissionId
             request.BlockId,
             request.QuestionId,
             request.FeedbackText,
@@ -112,16 +115,12 @@ public class FormReviewController(
         // Use project ID directly from context
         var projectId = contextResult!.ProjectId!.Value;
         var userName = User.Identity?.Name ?? "Coordinador";
-        // Get review details to find submission ID
-        var review = await repository.GetReviewByIdAsync(request.ReviewId, cancellationToken);
-        if (review is not null)
-        {
-            await notificationService.NotifyNewFeedbackAsync(
-                projectId,
-                review.SubmissionId,
-                userName,
-                request.FeedbackType.ToString());
-        }
+        // Use submission ID directly from request
+        await notificationService.NotifyNewFeedbackAsync(
+            projectId,
+            request.SubmissionId,
+            userName,
+            request.FeedbackType.ToString());
 
         return Ok(new { success = true, data = result.Value });
     }
@@ -196,7 +195,7 @@ public class FormReviewController(
         TryGetCurrentUserContext(out var contextResult);
 
         // Get the project to obtain its ExternalId
-        var project = await repository.GetProjectWithUsersAsync(contextResult!.ProjectId!.Value, cancellationToken);
+        var project = await repository.GetProjectByIdAsync(contextResult!.ProjectId!.Value, cancellationToken);
         if (project is null)
         {
             return BadRequest(new { errors = new[] { "Proyecto no encontrado." } });
@@ -210,7 +209,20 @@ public class FormReviewController(
             return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al obtener los detalles del formulario."] });
         }
 
-        return Ok(result.Value);
+        // Also get feedback conversations
+        var feedbackQuery = new LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.GetFeedbackForSubmissionQuery(
+            submissionId,
+            CurrentUserId);
+        var feedbackResult = await mediatorExecutor.SendAndLogIfFailureAsync(feedbackQuery, cancellationToken);
+
+        // Add feedback conversations to the response
+        var response = new
+        {
+            submission = result.Value,
+            feedbackConversations = feedbackResult.IsSuccess ? feedbackResult.Value : new List<LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.FeedbackConversationDto>()
+        };
+
+        return Ok(response);
     }
 
     [HttpGet]
@@ -284,7 +296,7 @@ public class FormReviewController(
 
     [HttpGet]
     [Route("Review/{submissionId:long}")]
-    public IActionResult Review(long submissionId)
+    public async Task<IActionResult> Review(long submissionId)
     {
         TryGetCurrentUserContext(out var contextResult);
 
@@ -294,7 +306,70 @@ public class FormReviewController(
         ViewData["ProjectId"] = contextResult.ProjectId;
         ViewData["SubmissionId"] = submissionId;
 
+        // Load feedback conversations for this submission
+        var feedbackQuery = new LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.GetFeedbackForSubmissionQuery(
+            submissionId,
+            CurrentUserId);
+        var feedbackResult = await mediatorExecutor.SendAndLogIfFailureAsync(feedbackQuery);
+        ViewData["FeedbackConversations"] = feedbackResult.IsSuccess ? feedbackResult.Value : new List<LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.FeedbackConversationDto>();
+
         return View();
+    }
+
+    [HttpPost]
+    [Route("ReplyToFeedback")]
+    public async Task<IActionResult> ReplyToFeedback(long parentFeedbackId, string feedbackText)
+    {
+        if (string.IsNullOrWhiteSpace(feedbackText))
+        {
+            return BadRequest(new { error = "El texto de la respuesta es requerido." });
+        }
+
+        var isParticipant = false; // Coordinator is not a participant
+        var command = new ReplyToFeedbackCommand(
+            parentFeedbackId,
+            feedbackText,
+            CurrentUserId,
+            isParticipant);
+
+        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new { success = true, message = "Respuesta enviada correctamente." });
+        }
+
+        return BadRequest(new { error = "Error al enviar la respuesta." });
+    }
+
+    [HttpPost]
+    [Route("CloseFeedback")]
+    public async Task<IActionResult> CloseFeedback(long feedbackId)
+    {
+        var command = new CloseFeedbackCommand(feedbackId, CurrentUserId);
+        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new { success = true, message = "Retroalimentación cerrada correctamente." });
+        }
+
+        return BadRequest(new { error = "Error al cerrar la retroalimentación." });
+    }
+
+    [HttpPost]
+    [Route("ReopenFeedback")]
+    public async Task<IActionResult> ReopenFeedback(long feedbackId)
+    {
+        var command = new ReopenFeedbackCommand(feedbackId, CurrentUserId);
+        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command);
+
+        if (result.IsSuccess)
+        {
+            return Ok(new { success = true, message = "Retroalimentación reabierta correctamente." });
+        }
+
+        return BadRequest(new { error = "Error al reabrir la retroalimentación." });
     }
 
     /// <inheritdoc />

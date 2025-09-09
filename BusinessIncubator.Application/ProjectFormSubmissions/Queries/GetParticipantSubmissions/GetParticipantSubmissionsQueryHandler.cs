@@ -47,8 +47,7 @@ public sealed class GetParticipantSubmissionsQueryHandler(
             var submissions = participantSubmissions.Select(submission => new ParticipantSubmissionDto
             {
                 Id = submission.Id,
-                FormId = submission.FormId,
-                FormName = $"Formulario {submission.FormId}", // TODO: Get form name from somewhere
+                FormName = "Formulario de Diagnóstico", // Generic name for now
                 Status = GetStatusText(submission.Status),
                 StatusBadgeClass = GetStatusBadgeClass(submission.Status),
                 SubmittedAt = submission.SubmittedAt,

@@ -72,7 +72,7 @@
                                         <td class="align-middle text-end">
                                             @if (submission.CanEdit)
                                             {
-                                                <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId, formId = submission.FormId })"
+                                                <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId })"
                                                    class="btn btn-sm btn-phoenix-primary">
                                                     <i class="fas fa-edit me-1"></i>
                                                     Editar
@@ -80,7 +80,7 @@
                                             }
                                             else if (submission.CanView)
                                             {
-                                                <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId, formId = submission.FormId, readOnly = true })"
+                                                <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId, readOnly = true })"
                                                    class="btn btn-sm btn-phoenix-info">
                                                     <i class="fas fa-eye me-1"></i>
                                                     Ver
@@ -131,7 +131,7 @@
                                             <strong>Motivo del rechazo:</strong><br />
                                             @rejected.RejectionReason
                                         </p>
-                                        <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId, formId = rejected.FormId })"
+                                        <a href="@Url.Action("Index", "ParticipantForm", new { businessIncubatorExternalId = Model.BusinessIncubatorExternalId, projectExternalId = Model.ProjectId })"
                                            class="btn btn-sm btn-warning">
                                             <i class="fas fa-edit me-1"></i>
                                             Corregir Ahora

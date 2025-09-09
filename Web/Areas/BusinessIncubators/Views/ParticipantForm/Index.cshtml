@@ -6,6 +6,87 @@
 
 @section Styles {
     <style>
+        /* Choices.js custom styling for better visibility */
+        .choices__list--dropdown {
+            background-color: var(--phoenix-body-bg);
+            border: 1px solid var(--phoenix-border-color);
+            max-height: 300px !important;
+            z-index: 9999 !important;
+        }
+        
+        .choices__list--dropdown .choices__item {
+            color: var(--phoenix-body-color) !important;
+            padding: 10px !important;
+            font-size: 0.9rem;
+        }
+        
+        .choices__list--dropdown .choices__item--selectable {
+            background-color: var(--phoenix-body-bg);
+        }
+        
+        .choices__list--dropdown .choices__item--selectable.is-highlighted {
+            background-color: var(--phoenix-primary-bg-subtle) !important;
+            color: var(--phoenix-primary) !important;
+        }
+        
+        .choices__input {
+            background-color: var(--phoenix-body-bg) !important;
+            color: var(--phoenix-body-color) !important;
+            border: none !important;
+            padding: 8px !important;
+        }
+        
+        .choices__inner {
+            background-color: var(--phoenix-input-bg) !important;
+            border-color: var(--phoenix-input-border-color) !important;
+            min-height: 38px !important;
+        }
+        
+        .choices.is-open .choices__inner {
+            border-color: var(--phoenix-primary) !important;
+        }
+        
+        .choices.is-open .choices__list--dropdown {
+            border-color: var(--phoenix-primary) !important;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        /* Ensure dropdown appears above when at bottom of viewport */
+        .choices__list.choices__list--dropdown.is-active {
+            visibility: visible !important;
+        }
+        
+        /* Add extra padding for question cards with dropdowns */
+        .form-question:has(.choices.is-open) {
+            padding-bottom: 250px !important;
+            transition: padding-bottom 0.3s ease;
+        }
+        
+        /* Dark mode support */
+        [data-bs-theme="dark"] .choices__list--dropdown {
+            background-color: var(--phoenix-gray-900);
+            border-color: var(--phoenix-gray-700);
+        }
+        
+        [data-bs-theme="dark"] .choices__list--dropdown .choices__item {
+            color: var(--phoenix-gray-100) !important;
+        }
+        
+        [data-bs-theme="dark"] .choices__list--dropdown .choices__item--selectable.is-highlighted {
+            background-color: rgba(var(--phoenix-primary-rgb), 0.2) !important;
+            color: var(--phoenix-primary-light) !important;
+        }
+        
+        [data-bs-theme="dark"] .choices__input {
+            background-color: var(--phoenix-gray-900) !important;
+            color: var(--phoenix-gray-100) !important;
+        }
+        
+        [data-bs-theme="dark"] .choices__inner {
+            background-color: var(--phoenix-gray-900) !important;
+            border-color: var(--phoenix-gray-700) !important;
+            color: var(--phoenix-gray-100) !important;
+        }
         .wizard-container {
             min-height: calc(100vh - 200px);
         }
@@ -65,26 +146,7 @@
             color: white;
         }
 
-        .progress-wrapper {
-            margin-bottom: 2rem;
-        }
-
-        .progress {
-            height: 0.5rem;
-            background-color: var(--phoenix-gray-200);
-        }
-
-        .progress-info {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-        }
-
-        .progress-percentage {
-            font-weight: 600;
-            color: var(--phoenix-primary);
-        }
+        /* All progress styles moved to linasys.css */
 
         .form-question {
             margin-bottom: 2rem;
@@ -173,20 +235,80 @@
                 padding-bottom: 220px;
             }
         }
+        /* Feedback Styles */
+        .feedback-conversation {
+            border-left: 3px solid var(--phoenix-warning);
+            margin-bottom: 1rem;
+        }
+        
+        .feedback-conversation.feedback-closed {
+            border-left-color: var(--phoenix-success);
+            opacity: 0.9;
+        }
+        
+        .feedback-message {
+            position: relative;
+            border-left: 2px solid transparent;
+        }
+        
+        .feedback-message.bg-primary-subtle {
+            background-color: var(--phoenix-primary-bg-subtle) !important;
+            border-left-color: var(--phoenix-primary);
+        }
+        
+        .feedback-message.bg-warning-subtle {
+            background-color: var(--phoenix-warning-bg-subtle) !important;
+            border-left-color: var(--phoenix-warning);
+        }
+        
+        .feedback-author {
+            font-size: 0.875rem;
+            color: var(--phoenix-gray-700);
+        }
+        
+        .feedback-content {
+            color: var(--phoenix-body-color);
+        }
+        
+        .feedback-actions .input-group {
+            max-width: 100%;
+        }
+        
+        /* Question with feedback indicator */
+        .form-question.has-feedback {
+            position: relative;
+            padding-left: 1rem;
+            border-left: 4px solid var(--phoenix-warning);
+            background: linear-gradient(90deg, var(--phoenix-warning-bg-subtle) 0%, transparent 5%);
+        }
+        
+        .form-question.has-feedback.feedback-resolved {
+            border-left-color: var(--phoenix-success);
+            background: linear-gradient(90deg, var(--phoenix-success-bg-subtle) 0%, transparent 5%);
+        }
     </style>
 }
 
-<div class="container-fluid wizard-container">
+<div class="container-fluid wizard-container" id="wizardContainer" style="display: none;">
     <div class="row">
         <!-- Progress Bar -->
         <div class="col-12">
-            <div class="progress-wrapper">
-                <div class="progress">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" id="progressBar"></div>
+            <div class="d-flex align-items-center mb-3">
+                <div class="progress-wrapper flex-grow-1">
+                    <div class="progress">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: 0%" id="progressBar"></div>
+                    </div>
+                    <!-- Tick marks -->
+                    <div class="progress-ticks">
+                        <span class="tick" style="left: 0%"></span>
+                        <span class="tick" style="left: 25%"></span>
+                        <span class="tick" style="left: 50%"></span>
+                        <span class="tick" style="left: 75%"></span>
+                        <span class="tick" style="left: 100%"></span>
+                    </div>
                 </div>
-                <div class="progress-info">
-                    <span class="progress-percentage" id="progressPercentage">0%</span>
-                    <span class="progress-text" id="progressText">Cargando formulario...</span>
+                <div class="ms-3">
+                    <span class="progress-percentage badge bg-primary" id="progressPercentage">0%</span>
                 </div>
             </div>
         </div>
@@ -204,59 +326,205 @@
 
         <!-- Main Content -->
         <div class="col-lg-9 col-md-8 main-content">
-            <div id="formContent">
-                <!-- Form blocks will be loaded here -->
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
+            @* Feedback Summary Alert *@
+            @if (Model.FeedbackConversations.Any())
+            {
+                var openCount = Model.FeedbackConversations.Count(f => f.Status == LinaSys.BusinessIncubator.Domain.Enums.FeedbackStatus.ReviewNeeded);
+                var closedCount = Model.FeedbackConversations.Count(f => f.Status == LinaSys.BusinessIncubator.Domain.Enums.FeedbackStatus.ReviewClosed);
+                
+                if (openCount > 0)
+                {
+                    <div class="alert alert-warning mb-3" role="alert">
+                        <i class="fas fa-comment-dots me-2"></i>
+                        <strong>Tienes retroalimentación del coordinador:</strong>
+                        <span class="badge bg-warning ms-2">@openCount Requiere Revisión</span>
+                        @if (closedCount > 0)
+                        {
+                            <span class="badge bg-success ms-2">@closedCount Cerrados</span>
+                        }
+                        <div class="mt-2 small">
+                            <i class="fas fa-info-circle"></i> La retroalimentación aparece junto a cada pregunta correspondiente.
+                        </div>
                     </div>
-                    <p class="mt-3">Cargando formulario...</p>
+                }
+            }
+            
+            <div class="form-card phoenix-card">
+                <div class="card-header phoenix-gradient d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>
+                        <span id="blockTitle">Cargando formulario...</span>
+                    </h3>
+                    <span class="badge bg-white text-primary" id="blockBadge">
+                        Bloque <span id="currentBlockNum">1</span> de <span id="totalBlocksNum">1</span>
+                    </span>
                 </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="d-flex justify-content-between mt-4" id="actionButtons" style="display: none !important;">
-                <button class="btn btn-falcon-default" id="btnPrevious" disabled>
-                    <i class="fas fa-chevron-left me-1"></i> Anterior
-                </button>
-                <div>
-                    <button class="btn btn-light me-2" id="btnSaveDraft">
-                        <i class="fas fa-save me-1"></i> Guardar Borrador
-                    </button>
-                    <button class="btn btn-primary" id="btnNext">
-                        Siguiente <i class="fas fa-chevron-right ms-1"></i>
-                    </button>
-                    <button class="btn btn-success" id="btnSubmit" style="display: none;">
-                        <i class="fas fa-paper-plane me-1"></i> Enviar Formulario
-                    </button>
+                <div class="card-body" id="formContent">
+                    <!-- Form blocks will be loaded here -->
+                    <!-- Feedback will be injected inline by JavaScript -->
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center" id="actionButtons" style="display: none !important;">
+                        <button class="btn btn-falcon-default" id="btnPrevious" disabled>
+                            <i class="fas fa-chevron-left me-1"></i> Anterior
+                        </button>
+                        <div>
+                            <button class="btn btn-light me-2" id="btnSaveDraft">
+                                <i class="fas fa-save me-1"></i> Guardar Borrador
+                            </button>
+                            <button class="btn btn-primary" id="btnNext">
+                                Siguiente <i class="fas fa-chevron-right ms-1"></i>
+                            </button>
+                            <button class="btn btn-success" id="btnSubmit" style="display: none;">
+                                <i class="fas fa-paper-plane me-1"></i> Enviar Formulario
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Auto-save Indicator -->
-<div class="auto-save-indicator" id="autoSaveIndicator">
-    <span class="spinner-border spinner-border-sm" id="saveSpinner" style="display: none;"></span>
-    <i class="fas fa-check" id="saveCheck" style="display: none;"></i>
-    <i class="fas fa-exclamation-triangle" id="saveError" style="display: none;"></i>
-    <span id="saveText">Guardando...</span>
+<!-- Loading Spinner -->
+<div class="form-loading-container" id="formLoadingContainer">
+    <div class="text-center">
+        <div class="form-loading-spinner"></div>
+        <div class="form-loading-text">Cargando formulario...</div>
+    </div>
 </div>
 
 @section Scripts {
+    @Html.AntiForgeryToken()
+    <!-- Choices.js for enhanced selects -->
+    <link href="~/vendors/choices/choices.min.css" rel="stylesheet" />
+    <script src="~/vendors/choices/choices.min.js"></script>
+    
     <script>
         // Configuration
         const config = {
             businessIncubatorId: '@Model.BusinessIncubatorExternalId',
             projectId: '@Model.ProjectExternalId',
             projectIdNumeric: @Model.ProjectId,
-            formId: @Model.FormId,
             submissionId: @(Model.SubmissionId?.ToString() ?? "null"),
-            canSubmit: @(Model.CanSubmit ? "true" : "false")
+            canSubmit: @(Model.CanSubmit ? "true" : "false"),
+            isReadOnly: @(Model.IsReadOnly ? "true" : "false"),
+            feedbackReadOnly: @(Model.FeedbackReadOnly ? "true" : "false")
         };
 
         // Initial draft data
-        let draftData = @Html.Raw(Model.DraftData != null ? System.Text.Json.JsonSerializer.Serialize(Model.DraftData) : "null");
+        let draftData = @Html.Raw(Model.DraftData != null ? System.Text.Json.JsonSerializer.Serialize(Model.DraftData, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }) : "null");
+        
+        // Feedback data for inline display
+        const feedbackData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.FeedbackConversations, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }));
     </script>
+    
+    <!-- Feedback progressive enhancement -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle feedback form submissions with AJAX
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                
+                // Check if it's a feedback form
+                if (form.classList.contains('feedback-reply-form') || 
+                    form.action.includes('ReplyToFeedback') ||
+                    form.action.includes('CloseFeedback') || 
+                    form.action.includes('ReopenFeedback')) {
+                    
+                    e.preventDefault();
+                    
+                    const formData = new FormData(form);
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    
+                    // Disable button during submission
+                    if (submitButton) {
+                        submitButton.disabled = true;
+                    }
+                    
+                    // Send AJAX request
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.text();
+                    })
+                    .then(html => {
+                        // Check if response is JSON (for close/reopen actions)
+                        try {
+                            const json = JSON.parse(html);
+                            if (json.success) {
+                                // Reload the page to show updated status
+                                window.location.reload();
+                            }
+                        } catch {
+                            // Response is HTML (partial view for reply)
+                            const feedbackId = formData.get('parentFeedbackId') || formData.get('feedbackId');
+                            const feedbackElement = document.querySelector(`#feedback-${feedbackId}`);
+                            
+                            if (feedbackElement && html) {
+                                // Replace the feedback conversation with updated HTML
+                                const tempDiv = document.createElement('div');
+                                tempDiv.innerHTML = html;
+                                const newFeedback = tempDiv.firstElementChild;
+                                
+                                if (newFeedback) {
+                                    feedbackElement.replaceWith(newFeedback);
+                                } else {
+                                    // If no partial view returned, reload to show changes
+                                    window.location.reload();
+                                }
+                            } else {
+                                // Fallback: reload page
+                                window.location.reload();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // Fall back to regular form submission
+                        form.submit();
+                    })
+                    .finally(() => {
+                        if (submitButton) {
+                            submitButton.disabled = false;
+                        }
+                    });
+                }
+            });
+            
+            // Map feedback to questions/blocks when form loads
+            if (typeof feedbackData !== 'undefined' && feedbackData.length > 0) {
+                // This will be used by participant-form.js to show inline feedback
+                window.formFeedback = {};
+                let totalFeedbackCount = 0;
+                feedbackData.forEach(feedback => {
+                    const key = feedback.questionId || `block_${feedback.blockId}`;
+                    if (!window.formFeedback[key]) {
+                        window.formFeedback[key] = [];
+                    }
+                    window.formFeedback[key].push(feedback);
+                    totalFeedbackCount++;
+                });
+                // Debug log to verify feedback is loaded
+                console.log('[Feedback System] Loaded', totalFeedbackCount, 'conversations for', Object.keys(window.formFeedback).length, 'questions/blocks');
+                
+                // Show details of each conversation
+                feedbackData.forEach((conv, index) => {
+                    const replyCount = conv.replies ? conv.replies.length : 0;
+                    console.log(`  Conversation ${index + 1}: Question ${conv.questionId || 'Block ' + conv.blockId}, Status: ${conv.status === 0 ? 'Open' : 'Closed'}, Replies: ${replyCount}`);
+                });
+            }
+        });
+    </script>
+    
     <script src="~/js/businessincubators/participant-form.js"></script>
 }

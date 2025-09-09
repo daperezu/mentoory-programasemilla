@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.DTOs;
+using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraft;
 using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Services;
 using LinaSys.BusinessIncubator.Domain.Enums;
 using LinaSys.BusinessIncubator.Domain.Repositories;
@@ -43,15 +43,17 @@ public sealed class GetFormSubmissionQueryHandler(
             }
         }
 
-        // Check if participant has access
-        if (!project.HasFormAccess(request.ParticipantUserId))
+        // Check if participant has access through UserProjectAccess
+        var hasAccess = await repository.IsUserProjectParticipantAsync(project.Id, request.ParticipantUserId, cancellationToken);
+        if (!hasAccess)
         {
             return Failure(ResultErrorCodes.Auth_UserHasNoAccessToProtectedResource, (nameof(request.ParticipantUserId), "No tienes acceso a este proyecto."));
         }
 
-        // Find the submission
+        // Find the submission (we'll look for any submission for this user since formId is being removed)
+        // In the future, this will be based on the current stage/phase
         var submission = project.FormSubmissions
-            .FirstOrDefault(s => s.ParticipantUserId == request.ParticipantUserId && s.FormId == request.FormId);
+            .FirstOrDefault(s => s.ParticipantUserId == request.ParticipantUserId);
 
         if (submission is null)
         {
@@ -59,7 +61,6 @@ public sealed class GetFormSubmissionQueryHandler(
             return Success(new FormSubmissionDto
             {
                 ProjectId = project.Id,
-                FormId = request.FormId,
                 ParticipantUserId = request.ParticipantUserId,
                 Status = "No Iniciado",
                 StatusCode = 0,
@@ -117,7 +118,6 @@ public sealed class GetFormSubmissionQueryHandler(
         {
             Id = submission.Id,
             ProjectId = submission.ProjectId,
-            FormId = submission.FormId,
             ParticipantUserId = submission.ParticipantUserId,
             Status = GetStatusDisplay(submission.Status),
             StatusCode = (int)submission.Status,

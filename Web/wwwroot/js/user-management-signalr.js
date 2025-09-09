@@ -94,7 +94,7 @@
             console.log('User created:', data);
             
             // Show toast notification
-            showToast('success', `Nuevo usuario creado: ${data.email}`);
+            showToast(`Nuevo usuario creado: ${data.email}`, 'success');
             
             // Refresh DataTable if it exists
             if (window.userDataTable) {
@@ -111,7 +111,7 @@
             
             // Show toast notification with changed fields
             const changedFields = Object.keys(data.changes).join(', ');
-            showToast('info', `Usuario actualizado: ${changedFields}`);
+            showToast(`Usuario actualizado: ${changedFields}`, 'info');
             
             // Refresh specific row in DataTable if possible
             if (window.userDataTable) {
@@ -131,7 +131,7 @@
             console.log('User status changed:', data);
             
             const status = data.isActive ? 'activado' : 'desactivado';
-            showToast('warning', `Usuario ${status}`);
+            showToast(`Usuario ${status}`, 'warning');
             
             // Update DataTable
             if (window.userDataTable) {
@@ -156,10 +156,10 @@
     }
 
     // Show toast notification
-    function showToast(type, message) {
+    function showToast(message, type) {
         // Check if the showToast function exists (from the main application)
         if (typeof window.showToast === 'function') {
-            window.showToast(type, message);
+            window.showToast(message, type);
         } else {
             // Fallback to console
             console.log(`[${type.toUpperCase()}] ${message}`);
@@ -228,9 +228,9 @@
                     
                     // Show completion notification
                     if (data.failureCount > 0) {
-                        showToast('warning', `Operación completada con ${data.failureCount} errores`);
+                        showToast(`Operación completada con ${data.failureCount} errores`, 'warning');
                     } else {
-                        showToast('success', 'Operación completada exitosamente');
+                        showToast('Operación completada exitosamente', 'success');
                     }
                     
                     // Refresh DataTable

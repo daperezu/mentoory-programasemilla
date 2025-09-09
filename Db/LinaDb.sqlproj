@@ -347,7 +347,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="LinaDb.publish.xml" />
-    <None Include="PostDeployment\012.DropUserProfilesTable.sql" />
     <Build Include="subscription\Indexes\UX_BusinessIncubatorPackages_BusinessIncubatorId.sql" />
     <None Include="LinaDb.Development.publish.xml" />
   </ItemGroup>
@@ -363,8 +362,10 @@
     <None Include="PostDeployment\006.SeedStarterData.sql" />
     <None Include="PostDeployment\007.SeedAuthAccessTables.sql" />
     <None Include="PostDeployment\008.SeedNavigationMenuItems.sql" />
-    <None Include="PostDeployment\010.SeedProjectStages.sql" />
-    <None Include="PostDeployment\013.SeedEmailTemplates.sql" />
+    <None Include="PostDeployment\009.SeedProjectStages.sql" />
+    <None Include="PostDeployment\010.SeedEmailTemplates.sql" />
+    <None Include="PostDeployment\011.SeedProjectKnowledgeStructure.sql" />
+    <None Include="PostDeployment\012.SeedProjectFormSubmissions.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="PostDeployment\Script.PostDeployment.sql" />
@@ -373,12 +374,4 @@
   <Target Name="BeforeBuild">
     <Delete Files="$(BaseIntermediateOutputPath)\project.assets.json" />
   </Target>
-  <ItemGroup>
-    <SqlCmdVariable Include="RunPostDeploymentRolesUsersSeed">
-      <DefaultValue>False</DefaultValue>
-    </SqlCmdVariable>
-    <SqlCmdVariable Include="RunPostDeploymentRolesWebFeatures">
-      <DefaultValue>True</DefaultValue>
-    </SqlCmdVariable>
-  </ItemGroup>
 </Project>

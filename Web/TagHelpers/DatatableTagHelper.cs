@@ -146,11 +146,25 @@ public class DatatableTagHelper : TagHelper
             switch (c.RenderType)
             {
                 case ColRenderType.Custom:
-                    // If RenderJs is provided, use it as a function reference
-                    // It should be wrapped to ensure it's available when DataTable initializes
-                    renderJs = !string.IsNullOrWhiteSpace(c.RenderJs)
-                        ? $"window.{c.RenderJs} || function(data) {{ return data; }}"
-                        : "function(data) { return data; }";
+                    // If RenderJs is provided, check if it's a function definition or a function name
+                    if (!string.IsNullOrWhiteSpace(c.RenderJs))
+                    {
+                        // If it starts with "function", it's a complete function definition
+                        if (c.RenderJs.TrimStart().StartsWith("function"))
+                        {
+                            renderJs = c.RenderJs;
+                        }
+                        else
+                        {
+                            // Otherwise, treat it as a function name to be accessed via window
+                            renderJs = $"window.{c.RenderJs} || function(data) {{ return data; }}";
+                        }
+                    }
+                    else
+                    {
+                        renderJs = "function(data) { return data; }";
+                    }
+
                     break;
 
                 case ColRenderType.Link:
@@ -384,7 +398,7 @@ public class DatatableTagHelper : TagHelper
                 .ToList();
 
             var replacementChain = string.Join(".", tokenMatches.Select(token =>
-                $"replace('{{{{{token}}}}}', data.{token})"));
+                $"replace('{{{token}}}', data.{token})"));
 
             var urlJs = tokenMatches.Count > 0
                 ? $"`{url}`.{replacementChain}"

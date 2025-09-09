@@ -64,11 +64,18 @@
                 <div class="mb-3">
                     <label class="form-label">Tipo de Respuesta <span class="text-danger">*</span></label>
                     <select id="answerTypeSelect" class="form-select">
-                        <option value="1">Opción Múltiple</option>
-                        <option value="2">Texto Libre</option>
-                        <option value="3">Numérico</option>
-                        <option value="4">Sí/No</option>
-                        <option value="5">Escala</option>
+                        <option value="1">Opción Única</option>
+                        <option value="2">Opción Múltiple</option>
+                        <option value="3">Texto Libre</option>
+                        <option value="4">Numérico</option>
+                        <option value="5">Fecha</option>
+                        <option value="6">ID Personal</option>
+                        <option value="7">Tipo ID</option>
+                        <option value="8">Género</option>
+                        <option value="9">Estado Civil</option>
+                        <option value="10">Correo</option>
+                        <option value="11">Teléfono</option>
+                        <option value="12">Nacionalidad</option>
                     </select>
                 </div>
 
@@ -111,11 +118,38 @@
     <!-- Right Panel: Form Preview -->
     <div class="col-md-8">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title mb-0">Preguntas del Formulario</h3>
-                <span class="badge bg-info">@Model.Questions.Count preguntas</span>
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <h3 class="card-title mb-0">Preguntas del Formulario</h3>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" 
+                                   id="questionSearchInput" 
+                                   class="form-control" 
+                                   placeholder="Buscar preguntas por texto, bloque o tipo...">
+                            <button class="btn btn-outline-secondary" 
+                                    id="clearSearchBtn" 
+                                    type="button"
+                                    style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <span class="badge bg-info" id="questionCount">@Model.Questions.Count preguntas</span>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
+                <div id="noResultsMessage" class="alert alert-warning text-center" style="display: none;">
+                    <i class="fas fa-search me-2"></i>
+                    No se encontraron preguntas que coincidan con la búsqueda.
+                </div>
                 <div id="questionsContainer" class="sortable-questions">
                     @if (Model.Questions.Any())
                     {
@@ -141,9 +175,14 @@
                                                 <span class="badge bg-success me-2">@GetPhaseDisplay(question.AppliesToPhase)</span>
                                             </div>
                                         </div>
-                                        <button class="btn btn-sm btn-danger remove-question" data-question-id="@question.Id">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-primary edit-question" data-question-id="@question.Id">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger remove-question" data-question-id="@question.Id">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -174,16 +213,79 @@
 
 <!-- Question Modal -->
 <div class="modal fade" id="questionModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-xl">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nueva Pregunta</h5>
+                <h5 class="modal-title" id="questionModalTitle">Nueva Pregunta</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label">Texto de la Pregunta <span class="text-danger">*</span></label>
-                    <textarea id="questionText" class="form-control" rows="3" placeholder="Ingrese el texto de la pregunta..."></textarea>
+                <input type="hidden" id="editQuestionId" value="" />
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mb-3">
+                            <label class="form-label">Texto de la Pregunta <span class="text-danger">*</span></label>
+                            <textarea id="questionText" class="form-control" rows="3" placeholder="Ingrese el texto de la pregunta..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="editQuestionOptions" style="display:none;">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Tipo de Respuesta</label>
+                            <select id="editAnswerType" class="form-select">
+                                <option value="1">Opción Única</option>
+                                <option value="2">Opción Múltiple</option>
+                                <option value="3">Texto Libre</option>
+                                <option value="4">Numérico</option>
+                                <option value="5">Fecha</option>
+                                <option value="6">ID Personal</option>
+                                <option value="7">Tipo ID</option>
+                                <option value="8">Género</option>
+                                <option value="9">Estado Civil</option>
+                                <option value="10">Correo</option>
+                                <option value="11">Teléfono</option>
+                                <option value="12">Nacionalidad</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Fase de Aplicación</label>
+                            <select id="editPhase" class="form-select">
+                                <option value="1">Diagnóstico Inicial</option>
+                                <option value="2">Diagnóstico Final</option>
+                                <option value="3">Ambas Fases</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editUseForMentoring">
+                            <label class="form-check-label" for="editUseForMentoring">
+                                Usar para Plan de Mentoría
+                            </label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editUseForDiagnosis">
+                            <label class="form-check-label" for="editUseForDiagnosis">
+                                Usar para Diagnóstico
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3" id="answerOptionsSection" style="display:none;">
+                    <div class="col-12">
+                        <h6>Opciones de Respuesta</h6>
+                        <div id="answerOptionsList">
+                            <!-- Answer options will be dynamically added here -->
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary mt-2" id="addAnswerOptionBtn">
+                            <i class="fas fa-plus me-2"></i>Agregar Opción
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -253,6 +355,135 @@
             // Block change
             $('#blockSelect').change(checkCanAddQuestion);
 
+            // Question Search Functionality
+            let searchTimeout;
+            const $searchInput = $('#questionSearchInput');
+            const $clearBtn = $('#clearSearchBtn');
+            const $questionCount = $('#questionCount');
+            const $noResultsMessage = $('#noResultsMessage');
+            const $questionsContainer = $('#questionsContainer');
+
+            // Search input handler with debouncing
+            $searchInput.on('input', function() {
+                clearTimeout(searchTimeout);
+                const searchTerm = $(this).val().toLowerCase().trim();
+                
+                // Show/hide clear button
+                if (searchTerm.length > 0) {
+                    $clearBtn.show();
+                } else {
+                    $clearBtn.hide();
+                }
+                
+                // Debounce the search to avoid too many DOM operations
+                searchTimeout = setTimeout(function() {
+                    filterQuestions(searchTerm);
+                }, 300);
+            });
+
+            // Clear button handler
+            $clearBtn.on('click', function() {
+                $searchInput.val('');
+                $clearBtn.hide();
+                filterQuestions('');
+            });
+
+            // Filter questions function
+            function filterQuestions(searchTerm) {
+                const $questions = $('.question-item');
+                let visibleCount = 0;
+                
+                if (searchTerm === '') {
+                    // Show all questions
+                    $questions.show();
+                    visibleCount = $questions.length;
+                    $noResultsMessage.hide();
+                } else {
+                    // Filter questions
+                    $questions.each(function() {
+                        const $question = $(this);
+                        const questionText = $question.find('h5').text().toLowerCase();
+                        const blockName = $question.find('.badge.bg-secondary').text().toLowerCase();
+                        const answerType = $question.find('.badge.bg-primary').text().toLowerCase();
+                        const phase = $question.find('.badge.bg-success').text().toLowerCase();
+                        
+                        // Check if search term matches any of the fields
+                        const matches = questionText.includes(searchTerm) ||
+                                      blockName.includes(searchTerm) ||
+                                      answerType.includes(searchTerm) ||
+                                      phase.includes(searchTerm);
+                        
+                        if (matches) {
+                            $question.show();
+                            visibleCount++;
+                            // Highlight matching text
+                            highlightText($question, searchTerm);
+                        } else {
+                            $question.hide();
+                        }
+                    });
+                    
+                    // Show no results message if needed
+                    if (visibleCount === 0) {
+                        $noResultsMessage.show();
+                    } else {
+                        $noResultsMessage.hide();
+                    }
+                }
+                
+                // Update question count
+                updateQuestionCount(visibleCount, $questions.length);
+            }
+
+            // Update question count display
+            function updateQuestionCount(visible, total) {
+                if (visible === total) {
+                    $questionCount.text(`${total} preguntas`);
+                    $questionCount.removeClass('bg-warning').addClass('bg-info');
+                } else {
+                    $questionCount.text(`${visible} de ${total} preguntas`);
+                    $questionCount.removeClass('bg-info').addClass('bg-warning');
+                }
+            }
+
+            // Highlight matching text
+            function highlightText($element, searchTerm) {
+                if (searchTerm === '') return;
+                
+                // Remove previous highlights
+                $element.find('.search-highlight').each(function() {
+                    const $this = $(this);
+                    $this.replaceWith($this.text());
+                });
+                
+                // Add new highlights to h5 text only
+                const $h5 = $element.find('h5');
+                const originalText = $h5.text();
+                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                
+                // Split text and rebuild with highlights
+                const parts = originalText.split(regex);
+                if (parts.length > 1) {
+                    let highlightedHtml = '';
+                    for (let i = 0; i < parts.length; i++) {
+                        if (i % 2 === 0) {
+                            highlightedHtml += parts[i];
+                        } else {
+                            highlightedHtml += `<span class="search-highlight">${parts[i]}</span>`;
+                        }
+                    }
+                    $h5.html(highlightedHtml);
+                }
+            }
+
+            // Handle enter key in search input (prevent form submission)
+            $searchInput.on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
             // Check if can add question
             function checkCanAddQuestion() {
                 const hasBlock = $('#blockSelect').val() !== '';
@@ -279,8 +510,222 @@
 
             // Add Question button click
             $('#addQuestionBtn').click(function() {
-                $('#questionModal').modal('show');
+                $('#editQuestionId').val('');
+                $('#questionModalTitle').text('Nueva Pregunta');
                 $('#questionText').val('').focus();
+                $('#editQuestionOptions').hide();
+                $('#answerOptionsSection').hide();
+                $('#questionModal').modal('show');
+            });
+
+            // Helper function to handle FodaType enum value
+            function getFodaCharCode(fodaValue) {
+                // The server sends the enum as a numeric value (the ASCII code of the char)
+                // Just return it directly if it's already a number
+                if (typeof fodaValue === 'number') {
+                    return fodaValue;
+                }
+                // If it's undefined or null, return default 'N' (78)
+                return 78;
+            }
+
+            // Helper function to handle OdsrType enum value  
+            function getOdsrCharCode(odsrValue) {
+                // The server sends the enum as a numeric value (the ASCII code of the char)
+                // Just return it directly if it's already a number
+                if (typeof odsrValue === 'number') {
+                    return odsrValue;
+                }
+                // If it's undefined or null, return default 'N' (78)
+                return 78;
+            }
+
+            // Edit Question button click
+            $(document).on('click', '.edit-question', function() {
+                const questionId = $(this).data('question-id');
+                $('#editQuestionId').val(questionId);
+                $('#questionModalTitle').text('Editar Pregunta');
+                $('#editQuestionOptions').show();
+                
+                // Load question details
+                $.ajax({
+                    url: `/Diagnostics/Forms/GetQuestion/${questionId}`,
+                    type: 'GET',
+                    success: function(result) {
+                        if (result.success && result.question) {
+                            const q = result.question;
+                            $('#questionText').val(q.text);
+                            $('#editAnswerType').val(q.answerType);
+                            $('#editPhase').val(q.appliesToPhase);
+                            $('#editUseForMentoring').prop('checked', q.isUsedForMentoringPlan);
+                            $('#editUseForDiagnosis').prop('checked', q.isUsedForDiagnosis);
+                            
+                            // Show answer options for single/multiple choice
+                            if (q.answerType == 1 || q.answerType == 2) { // Single choice or Multiple choice
+                                $('#answerOptionsSection').show();
+                                // Map the answer options - FODA/ODSR come as numeric enums from the server
+                                const mappedOptions = (q.answerOptions || []).map(opt => ({
+                                    ...opt,
+                                    // Convert numeric enum values to their char codes
+                                    // FodaType enum: NoDefinido=78('N'), Fortalezas=70('F'), Oportunidades=79('O'), Debilidades=68('D'), Amenazas=65('A')
+                                    foda: getFodaCharCode(opt.foda),
+                                    // OdsrType enum: NoDefinido=78('N'), Ofensiva=79('O'), Defensiva=68('D'), Supervivencia=83('S'), Reorientacion=82('R')
+                                    odsr: getOdsrCharCode(opt.odsr)
+                                }));
+                                loadAnswerOptions(mappedOptions);
+                            } else {
+                                $('#answerOptionsSection').hide();
+                            }
+                            
+                            $('#questionModal').modal('show');
+                        } else {
+                            alert('Error al cargar la pregunta.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error al cargar la pregunta.');
+                    }
+                });
+            });
+
+            // Answer type change handler for edit mode
+            $('#editAnswerType').change(function() {
+                const answerType = parseInt($(this).val());
+                if (answerType === 1 || answerType === 2) { // Single choice or Multiple choice
+                    $('#answerOptionsSection').show();
+                    if ($('#answerOptionsList').children().length === 0) {
+                        addAnswerOptionRow();
+                    }
+                } else {
+                    $('#answerOptionsSection').hide();
+                }
+            });
+
+            // Load answer options
+            function loadAnswerOptions(options) {
+                $('#answerOptionsList').empty();
+                if (options.length === 0) {
+                    addAnswerOptionRow();
+                } else {
+                    options.forEach(opt => addAnswerOptionRow(opt));
+                }
+                // Initialize sortable for answer options
+                initializeAnswerOptionsSortable();
+            }
+            
+            // Initialize sortable for answer options
+            let answerOptionsSortable = null;
+            function initializeAnswerOptionsSortable() {
+                const container = document.getElementById('answerOptionsList');
+                if (!container) return;
+                
+                // Destroy previous sortable instance if it exists
+                if (answerOptionsSortable) {
+                    answerOptionsSortable.destroy();
+                }
+                
+                // Create new sortable instance
+                answerOptionsSortable = Sortable.create(container, {
+                    animation: 150,
+                    handle: '.drag-handle',
+                    ghostClass: 'sortable-ghost',
+                    chosenClass: 'sortable-chosen',
+                    dragClass: 'sortable-drag',
+                    onEnd: function(evt) {
+                        updateAnswerOptionNumbers();
+                    }
+                });
+            }
+            
+            // Update answer option numbers after reordering
+            function updateAnswerOptionNumbers() {
+                $('#answerOptionsList .answer-option-row').each(function(index) {
+                    $(this).find('.option-number').text(`Opción ${index + 1}`);
+                });
+            }
+
+            // Add answer option row
+            function addAnswerOptionRow(option = null) {
+                const index = $('#answerOptionsList').children().length;
+                const fodaValue = option?.foda ? parseInt(option.foda) : 78; // Default 'N' (NoDefinido)
+                const odsrValue = option?.odsr ? parseInt(option.odsr) : 78; // Default 'N' (NoDefinido)
+                
+                const html = `
+                    <div class="answer-option-row border rounded p-3 mb-3 bg-light">
+                        <input type="hidden" class="option-id" value="${option?.id || ''}" />
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="drag-handle me-3" style="cursor: move;" title="Arrastrar para reordenar">
+                                <i class="fas fa-grip-vertical text-secondary fs-5"></i>
+                            </span>
+                            <h6 class="option-number mb-0 text-primary">Opción ${index + 1}</h6>
+                            <button type="button" class="btn btn-sm btn-danger remove-option ms-auto">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-9">
+                                <label class="form-label fw-bold">Texto de la Opción</label>
+                                <input type="text" class="form-control option-text" placeholder="Texto de la opción" value="${option?.text || ''}" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Puntaje</label>
+                                <input type="number" class="form-control option-score" placeholder="0" value="${option?.score || 0}" />
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo FODA</label>
+                                <select class="form-select option-foda">
+                                    <option value="78" ${fodaValue === 78 ? 'selected' : ''}>No Definido</option>
+                                    <option value="70" ${fodaValue === 70 ? 'selected' : ''}>Fortalezas</option>
+                                    <option value="79" ${fodaValue === 79 ? 'selected' : ''}>Oportunidades</option>
+                                    <option value="68" ${fodaValue === 68 ? 'selected' : ''}>Debilidades</option>
+                                    <option value="65" ${fodaValue === 65 ? 'selected' : ''}>Amenazas</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Explicación FODA</label>
+                                <input type="text" class="form-control option-foda-explanation" placeholder="Explicación del tipo FODA" value="${option?.fodaExplanation || ''}" />
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-md-6">
+                                <label class="form-label">Tipo ODSR</label>
+                                <select class="form-select option-odsr">
+                                    <option value="78" ${odsrValue === 78 ? 'selected' : ''}>No Definido</option>
+                                    <option value="79" ${odsrValue === 79 ? 'selected' : ''}>Ofensiva</option>
+                                    <option value="68" ${odsrValue === 68 ? 'selected' : ''}>Defensiva</option>
+                                    <option value="83" ${odsrValue === 83 ? 'selected' : ''}>Supervivencia</option>
+                                    <option value="82" ${odsrValue === 82 ? 'selected' : ''}>Reorientación</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Explicación ODSR</label>
+                                <input type="text" class="form-control option-odsr-explanation" placeholder="Explicación del tipo ODSR" value="${option?.odsrExplanation || ''}" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label class="form-label">Pregunta de Seguimiento (Opcional)</label>
+                                <input type="text" class="form-control option-followup" placeholder="Pregunta de seguimiento si se selecciona esta opción" value="${option?.followUpQuestionText || ''}" />
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#answerOptionsList').append(html);
+            }
+
+            // Add answer option button
+            $('#addAnswerOptionBtn').click(function() {
+                addAnswerOptionRow();
+                initializeAnswerOptionsSortable();
+                updateAnswerOptionNumbers();
+            });
+
+            // Remove answer option
+            $(document).on('click', '.remove-option', function() {
+                $(this).closest('.answer-option-row').remove();
+                updateAnswerOptionNumbers();
             });
 
             // Save Question
@@ -291,38 +736,102 @@
                     return;
                 }
 
-                const order = $('.question-item').length + 1;
-                const data = {
-                    formId: formId,
-                    topicId: selectedTopicId,
-                    blockId: parseInt($('#blockSelect').val()),
-                    questionText: questionText,
-                    answerType: parseInt($('#answerTypeSelect').val()),
-                    questionPhase: parseInt($('#phaseSelect').val()),
-                    isUsedForMentoringPlan: $('#useForMentoringCheck').is(':checked'),
-                    isUsedForDiagnosis: $('#useForDiagnosisCheck').is(':checked'),
-                    order: order
-                };
+                const editQuestionId = $('#editQuestionId').val();
+                const isEdit = editQuestionId !== '';
 
-                $.ajax({
-                    url: '@Url.Action("AddQuestion", "Forms", new { area = "Diagnostics" })',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(data),
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    success: function(result) {
-                        if (result.success) {
-                            location.reload(); // Reload to show new question
-                        } else {
-                            alert(result.message || 'Error al agregar la pregunta.');
+                if (isEdit) {
+                    // Update existing question
+                    const answerOptions = [];
+                    $('#answerOptionsList .answer-option-row').each(function(index) {
+                        const optionId = $(this).find('.option-id').val();
+                        const optionText = $(this).find('.option-text').val();
+                        const optionScore = $(this).find('.option-score').val();
+                        const optionFoda = $(this).find('.option-foda').val();
+                        const optionFodaExplanation = $(this).find('.option-foda-explanation').val();
+                        const optionOdsr = $(this).find('.option-odsr').val();
+                        const optionOdsrExplanation = $(this).find('.option-odsr-explanation').val();
+                        const optionFollowup = $(this).find('.option-followup').val();
+                        
+                        if (optionText) {
+                            answerOptions.push({
+                                id: optionId || null,
+                                text: optionText,
+                                score: parseInt(optionScore) || 0,
+                                foda: parseInt(optionFoda) || 78, // 78 = 'N' (NoDefinido)
+                                fodaExplanation: optionFodaExplanation || 'Por definir',
+                                odsr: parseInt(optionOdsr) || 78, // 78 = 'N' (NoDefinido)
+                                odsrExplanation: optionOdsrExplanation || 'Por definir',
+                                followupQuestionText: optionFollowup || null,
+                                order: index + 1,
+                                isDeleted: false
+                            });
                         }
-                    },
-                    error: function() {
-                        alert('Error al procesar la solicitud.');
-                    }
-                });
+                    });
+
+                    const updateData = {
+                        questionId: parseInt(editQuestionId),
+                        questionText: questionText,
+                        answerType: parseInt($('#editAnswerType').val()),
+                        questionPhase: parseInt($('#editPhase').val()),
+                        isUsedForMentoringPlan: $('#editUseForMentoring').is(':checked'),
+                        isUsedForDiagnosis: $('#editUseForDiagnosis').is(':checked'),
+                        answerOptions: answerOptions.length > 0 ? answerOptions : null
+                    };
+
+                    $.ajax({
+                        url: '@Url.Action("UpdateQuestion", "Forms", new { area = "Diagnostics" })',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(updateData),
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(result) {
+                            if (result.success) {
+                                location.reload(); // Reload to show updated question
+                            } else {
+                                alert(result.message || 'Error al actualizar la pregunta.');
+                            }
+                        },
+                        error: function() {
+                            alert('Error al procesar la solicitud.');
+                        }
+                    });
+                } else {
+                    // Add new question
+                    const order = $('.question-item').length + 1;
+                    const data = {
+                        formId: formId,
+                        topicId: selectedTopicId,
+                        blockId: parseInt($('#blockSelect').val()),
+                        questionText: questionText,
+                        answerType: parseInt($('#answerTypeSelect').val()),
+                        questionPhase: parseInt($('#phaseSelect').val()),
+                        isUsedForMentoringPlan: $('#useForMentoringCheck').is(':checked'),
+                        isUsedForDiagnosis: $('#useForDiagnosisCheck').is(':checked'),
+                        order: order
+                    };
+
+                    $.ajax({
+                        url: '@Url.Action("AddQuestion", "Forms", new { area = "Diagnostics" })',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(data),
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        success: function(result) {
+                            if (result.success) {
+                                location.reload(); // Reload to show new question
+                            } else {
+                                alert(result.message || 'Error al agregar la pregunta.');
+                            }
+                        },
+                        error: function() {
+                            alert('Error al procesar la solicitud.');
+                        }
+                    });
+                }
 
                 $('#questionModal').modal('hide');
             });
@@ -428,6 +937,62 @@
         .question-item:hover .drag-handle {
             opacity: 1;
         }
+        
+        /* Search functionality styles */
+        .search-highlight {
+            background-color: #ffeb3b;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #clearSearchBtn {
+            border-left: none;
+        }
+
+        #questionSearchInput:focus {
+            box-shadow: none;
+            border-color: #dee2e6;
+        }
+
+        #noResultsMessage {
+            margin-top: 20px;
+        }
+
+        /* Smooth hide/show transitions for filtered questions */
+        .question-item.filtering {
+            animation: fadeOut 0.3s ease;
+        }
+
+        @@keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        /* Answer option sortable styles */
+        .answer-option-row.sortable-ghost {
+            opacity: 0.4;
+            background: #ffc107 !important;
+        }
+        
+        .answer-option-row.sortable-chosen {
+            opacity: 0.8;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .answer-option-row.sortable-drag {
+            opacity: 0;
+        }
+        
+        .drag-handle {
+            transition: all 0.2s ease;
+        }
+        
+        .drag-handle:hover {
+            color: #0d6efd !important;
+            transform: scale(1.1);
+        }
     </style>
 }
 
@@ -436,11 +1001,18 @@
     {
         return answerType switch
         {
-            1 => "Opción Múltiple",
-            2 => "Texto Libre",
-            3 => "Numérico",
-            4 => "Sí/No",
-            5 => "Escala",
+            1 => "Opción Única",        // SingleChoice
+            2 => "Opción Múltiple",     // MultiChoice
+            3 => "Texto Libre",         // FreeText
+            4 => "Numérico",            // Numeric
+            5 => "Fecha",               // Date
+            6 => "ID Personal",         // PersonId
+            7 => "Tipo ID",             // IdType
+            8 => "Género",              // Gender
+            9 => "Estado Civil",        // MaritalStatus
+            10 => "Correo",             // Email
+            11 => "Teléfono",           // PhoneNumber
+            12 => "Nacionalidad",       // Nationality
             _ => "Desconocido"
         };
     }

@@ -355,7 +355,7 @@ public sealed class UpsertDiagnosisFormFromCsvOrchestrationCommandHandler(
             return appliesToPhaseStr.ToLowerInvariant() switch
             {
                 "ingreso" => QuestionPhase.Start,
-                "salida" => QuestionPhase.Start,
+                "salida" => QuestionPhase.Final,
                 "ambos" or "ambas" => QuestionPhase.Both,
                 _ => QuestionPhase.Undefined,
             };
