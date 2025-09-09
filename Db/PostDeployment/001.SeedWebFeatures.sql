@@ -119,6 +119,20 @@ WITH SourceData AS (
     SELECT NEWID() AS ExternalId, 'Projects.ProcessInvitation.Post' AS Name, 'BusinessIncubators' AS Area, 'Projects' AS Controller, 'ProcessInvitation' AS Action,
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     UNION ALL
+    
+    -- ProjectStages module
+    SELECT NEWID() AS ExternalId, 'ProjectStages.Index.Page' AS Name, 'BusinessIncubators' AS Area, 'ProjectStages' AS Controller, 'Index' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'ProjectStages.Edit.Page+Post' AS Name, 'BusinessIncubators' AS Area, 'ProjectStages' AS Controller, 'Edit' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'ProjectStages.Activate.Post' AS Name, 'BusinessIncubators' AS Area, 'ProjectStages' AS Controller, 'Activate' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'ProjectStages.Deactivate.Post' AS Name, 'BusinessIncubators' AS Area, 'ProjectStages' AS Controller, 'Deactivate' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
 
     -- Diagnostics module
     SELECT NEWID() AS ExternalId, 'Diagnostics.Forms.LoadCSV.Page+Post' AS Name, 'Diagnostics' AS Area, 'Forms' AS Controller, 'LoadCSV' AS Action, 
@@ -443,6 +457,18 @@ WITH SourceData AS (
     SELECT NEWID() AS ExternalId, 'ParticipantForm.Submit.Post' AS Name, 'BusinessIncubators' AS Area, 'ParticipantForm' AS Controller, 'Submit' AS Action,
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     UNION ALL
+    SELECT NEWID() AS ExternalId, 'ParticipantForm.GetFormStructure.Get' AS Name, 'BusinessIncubators' AS Area, 'ParticipantForm' AS Controller, 'GetFormStructure' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'ParticipantForm.ReplyToFeedback.Post' AS Name, 'BusinessIncubators' AS Area, 'ParticipantForm' AS Controller, 'ReplyToFeedback' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'ParticipantForm.CloseFeedback.Post' AS Name, 'BusinessIncubators' AS Area, 'ParticipantForm' AS Controller, 'CloseFeedback' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'ParticipantForm.ReopenFeedback.Post' AS Name, 'BusinessIncubators' AS Area, 'ParticipantForm' AS Controller, 'ReopenFeedback' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
 
     -- Form Review module
     SELECT NEWID() AS ExternalId, 'FormReview.Index.Page' AS Name, 'BusinessIncubators' AS Area, 'FormReview' AS Controller, 'Index' AS Action,
@@ -578,6 +604,15 @@ WITH SourceData AS (
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     UNION ALL
     SELECT NEWID() AS ExternalId, 'Coordination.FormReview.RequestChanges.Post' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'RequestChanges' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Coordination.FormReview.ReplyToFeedback.Post' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'ReplyToFeedback' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Coordination.FormReview.CloseFeedback.Post' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'CloseFeedback' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Coordination.FormReview.ReopenFeedback.Post' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'ReopenFeedback' AS Action,
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     UNION ALL
     

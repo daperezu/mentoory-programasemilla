@@ -1,40 +1,48 @@
-﻿function showToast(message = '', type = 'info', icon = null, delay = 0, header = null) {
+﻿function showToast(message = '', type = 'info', header = null) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
-    const defaultIcons = {
-        info: 'info',
-        success: 'check-circle',
-        warning: 'alert-triangle',
-        danger: 'x-circle'
+    // Auto-dismiss durations (in milliseconds)
+    const durations = {
+        success: 4000,
+        info: 5000,
+        warning: 8000,
+        danger: 0  // Sticky for errors
     };
 
-    const defaultHeaders = {
-        info: 'Info',
-        success: 'Éxito',
-        warning: 'Atención',
-        danger: 'Error'
+    // Phoenix-aligned configuration
+    const config = {
+        info: { icon: 'info-circle', header: 'Información', colorClass: 'toast-info' },
+        success: { icon: 'check-circle', header: 'Éxito', colorClass: 'toast-success' },
+        warning: { icon: 'alert-triangle', header: 'Atención', colorClass: 'toast-warning' },
+        danger: { icon: 'x-octagon', header: 'Error', colorClass: 'toast-danger' }
     };
 
-    const iconName = icon ?? defaultIcons[type] ?? 'info';
-    const toastHeader = header ?? defaultHeaders[type] ?? 'Info';
+    const typeConfig = config[type] || config.info;
+    const toastHeader = header || typeConfig.header;
     const toastId = `toast-${Date.now()}`;
+    const duration = durations[type] || durations.info;
 
     const toastEl = document.createElement('div');
-    toastEl.className = `toast text-bg-${type} border-0 mb-2 shadow-sm`;
+    toastEl.className = `toast phoenix-toast ${typeConfig.colorClass} mb-2`;
     toastEl.setAttribute('role', 'alert');
-    toastEl.setAttribute('aria-live', 'assertive');
+    toastEl.setAttribute('aria-live', type === 'danger' ? 'assertive' : 'polite');
     toastEl.setAttribute('aria-atomic', 'true');
+    toastEl.setAttribute('data-bs-autohide', duration > 0 ? 'true' : 'false');
+    if (duration > 0) {
+        toastEl.setAttribute('data-bs-delay', duration);
+    }
 
+    // Build toast HTML with progress bar
     toastEl.innerHTML = `
-    <div class="toast-header text-white bg-transparent border-0">
-      <i data-feather="${iconName}" class="me-2"></i>
-      <strong class="me-auto">${toastHeader}</strong>
-      <span id="${toastId}-timer" class="badge bg-dark-subtle text-white rounded-pill me-2 small" style="display:none;"></span>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-    ${message ? `<div class="toast-body">${message}</div>` : ''}
-  `;
+        <div class="toast-header phoenix-toast-header">
+            <i data-feather="${typeConfig.icon}" class="toast-icon me-2"></i>
+            <strong class="me-auto">${toastHeader}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+        </div>
+        ${message ? `<div class="toast-body">${message}</div>` : ''}
+        ${duration > 0 ? `<div class="toast-progress" style="animation-duration: ${duration}ms;"></div>` : ''}
+    `;
 
     container.appendChild(toastEl);
 
@@ -43,41 +51,57 @@
         feather.replace();
     }
 
+    // Initialize Bootstrap Toast
     const toast = new bootstrap.Toast(toastEl, {
-        autohide: false
+        autohide: duration > 0,
+        delay: duration
     });
 
+    // Handle hover to pause progress bar
+    if (duration > 0) {
+        const progressBar = toastEl.querySelector('.toast-progress');
+        let isPaused = false;
+        let remainingTime = duration;
+        let startTime = Date.now();
+        let animationId;
+
+        toastEl.addEventListener('mouseenter', () => {
+            if (!isPaused && progressBar) {
+                isPaused = true;
+                const elapsed = Date.now() - startTime;
+                remainingTime = duration - elapsed;
+                progressBar.style.animationPlayState = 'paused';
+                
+                // Cancel auto-hide
+                toast._config.autohide = false;
+                clearTimeout(toast._timeout);
+            }
+        });
+
+        toastEl.addEventListener('mouseleave', () => {
+            if (isPaused && progressBar) {
+                isPaused = false;
+                startTime = Date.now();
+                progressBar.style.animationPlayState = 'running';
+                
+                // Resume auto-hide with remaining time
+                toast._config.autohide = true;
+                toast._timeout = setTimeout(() => {
+                    toast.hide();
+                }, remainingTime);
+            }
+        });
+    }
+
+    // Show the toast
     toast.show();
 
-    // Timer logic
-    let seconds = 0;
-    const timerLabel = document.getElementById(`${toastId}-timer`);
-    const interval = setInterval(() => {
-        seconds++;
-
-        if (seconds >= 15 && seconds % 15 === 0) {
-            let label = '';
-
-            if (seconds >= 300) {
-                label = 'hace más de 5 minutos';
-                clearInterval(interval);
-            } else if (seconds >= 60) {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                label = `hace ${mins}min${secs > 0 ? ` ${secs}s` : ''}`;
-            } else {
-                label = `hace ${seconds}s`;
-            }
-
-            timerLabel.textContent = label;
-            timerLabel.style.display = 'inline-block';
-        }
-    }, 1000);
-
+    // Clean up on hide
     toastEl.addEventListener('hidden.bs.toast', () => {
-        clearInterval(interval);
         toastEl.remove();
     });
+
+    return toast;
 }
 
 

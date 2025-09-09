@@ -4,7 +4,7 @@ window.FormReview = (function() {
 
     // State management
     let submissionData = null;
-    let currentReviewId = null;
+    let currentSubmissionId = null;
     let feedbackList = [];
     let isDirty = false;
 
@@ -15,6 +15,7 @@ window.FormReview = (function() {
             return;
         }
 
+        currentSubmissionId = submissionId;
         loadSubmissionDetails(submissionId);
         setupEventHandlers();
         setupAutoSave();
@@ -69,14 +70,26 @@ window.FormReview = (function() {
                 throw new Error('Failed to load submission details');
             }
 
-            submissionData = await response.json();
+            const data = await response.json();
+            
+            // Handle new response structure
+            if (data.submission) {
+                submissionData = data.submission;
+                // Store feedback conversations globally
+                window.feedbackConversations = data.feedbackConversations || [];
+                console.log('[Coordinator Review] Loaded feedback conversations:', window.feedbackConversations);
+            } else {
+                // Fallback for old structure
+                submissionData = data;
+                console.log('[Coordinator Review] Using old data structure');
+            }
             renderSubmissionContent();
             renderReviewHistory();
             enableActionButtons();
             
         } catch (error) {
             console.error('Error loading submission:', error);
-            toastr.error('Error al cargar los detalles del formulario', 'Error');
+            showToast('Error al cargar los detalles del formulario', 'danger');
             showErrorState();
         }
     }
@@ -121,14 +134,16 @@ window.FormReview = (function() {
         
         let html = '';
         submissionData.blocks.forEach(block => {
-            const blockFeedback = getFeedbackSummary(block.feedback);
+            // Get feedback for this block from window.feedbackConversations
+            const blockFeedback = (window.feedbackConversations || []).filter(f => f.blockId === block.blockId && !f.questionId);
+            const blockFeedbackSummary = getFeedbackSummary(blockFeedback);
             html += `
                 <div class="form-block" data-block-id="${block.blockId}">
                     <h4>
                         ${block.blockName}
-                        ${blockFeedback.count > 0 ? `
-                            <span class="block-feedback-indicator ${blockFeedback.class}">
-                                ${blockFeedback.count}
+                        ${blockFeedbackSummary.count > 0 ? `
+                            <span class="block-feedback-indicator ${blockFeedbackSummary.class}">
+                                ${blockFeedbackSummary.count}
                             </span>
                         ` : ''}
                         <button class="feedback-button ms-auto" onclick="FormReview.showFeedbackModal(${block.blockId}, null)">
@@ -141,7 +156,7 @@ window.FormReview = (function() {
                         ${renderQuestions(block)}
                     </div>
                     
-                    ${renderBlockFeedback(block.feedback)}
+                    ${renderBlockFeedback(blockFeedback)}
                 </div>
             `;
         });
@@ -157,7 +172,14 @@ window.FormReview = (function() {
         
         let html = '';
         block.questions.forEach(question => {
-            const hasFeedback = question.feedback && question.feedback.length > 0;
+            // Get feedback for this question from window.feedbackConversations
+            const questionFeedback = (window.feedbackConversations || []).filter(f => f.questionId === question.questionId);
+            const hasFeedback = questionFeedback.length > 0;
+            
+            if (question.questionId === 1 || questionFeedback.length > 0) {
+                console.log(`[Coordinator Review] Question ${question.questionId} has ${questionFeedback.length} feedback items`);
+            }
+            
             html += `
                 <div class="question-item ${hasFeedback ? 'has-feedback' : ''}" data-question-id="${question.questionId}">
                     <div class="question-label">
@@ -173,7 +195,7 @@ window.FormReview = (function() {
                         <i class="fas fa-comment me-1"></i> Comentar
                     </button>
                     
-                    ${renderQuestionFeedback(question.feedback)}
+                    ${renderQuestionFeedback(questionFeedback)}
                 </div>
             `;
         });
@@ -188,8 +210,8 @@ window.FormReview = (function() {
         }
         
         let html = '<div class="feedback-list">';
-        feedbackItems.forEach(feedback => {
-            html += renderFeedbackItem(feedback);
+        feedbackItems.forEach(conversation => {
+            html += renderFeedbackConversation(conversation);
         });
         html += '</div>';
         
@@ -203,15 +225,83 @@ window.FormReview = (function() {
         }
         
         let html = '<div class="feedback-list">';
-        feedbackItems.forEach(feedback => {
-            html += renderFeedbackItem(feedback);
-        });
-        html += '</div>';
         
+        // feedbackItems is already filtered by questionId
+        feedbackItems.forEach(conversation => {
+            html += renderFeedbackConversation(conversation);
+        });
+        
+        html += '</div>';
         return html;
     }
 
-    // Render individual feedback item
+    // Render feedback conversation with replies
+    function renderFeedbackConversation(conversation) {
+        const typeClass = getFeedbackTypeClass(conversation.type || conversation.feedbackType || 0);
+        const typeIcon = getFeedbackTypeIcon(conversation.type || conversation.feedbackType || 0);
+        const isOpen = conversation.status === 0; // ReviewNeeded = 0
+        
+        let html = `
+            <div class="feedback-conversation mb-3 p-3 border rounded ${isOpen ? 'border-warning bg-warning-subtle' : 'border-success bg-success-subtle'}" data-feedback-id="${conversation.id}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <i class="${typeIcon} me-2"></i>
+                        <strong>${conversation.authorName || 'Coordinador'}</strong>
+                        ${isOpen ? '<span class="badge bg-warning ms-2">Requiere Revisión</span>' : '<span class="badge bg-success ms-2">Cerrado</span>'}
+                    </div>
+                    <small class="text-muted">
+                        ${new Date(conversation.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </small>
+                </div>
+                <div class="feedback-content mb-2">
+                    ${conversation.feedbackText}
+                </div>`;
+        
+        // Add replies if any
+        if (conversation.replies && conversation.replies.length > 0) {
+            html += '<div class="replies ms-3 mt-2">';
+            conversation.replies.forEach(reply => {
+                const replyBg = reply.isFromParticipant ? 'bg-primary-subtle' : 'bg-info-subtle';
+                html += `
+                    <div class="reply-item p-2 mb-2 ${replyBg} rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <strong>${reply.authorName || (reply.isFromParticipant ? 'Participante' : 'Coordinador')}</strong>
+                            <small class="text-muted">${new Date(reply.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</small>
+                        </div>
+                        <div class="mt-1">${reply.feedbackText}</div>
+                    </div>`;
+            });
+            html += '</div>';
+        }
+        
+        // Add action buttons for coordinator
+        if (isOpen) {
+            html += `
+                <div class="feedback-actions mt-3">
+                    <div class="input-group">
+                        <input type="text" class="form-control feedback-reply-input" placeholder="Escribir respuesta..." data-feedback-id="${conversation.id}">
+                        <button class="btn btn-primary btn-reply-feedback" onclick="FormReview.replyToFeedback(${conversation.id})">
+                            <i class="fas fa-paper-plane"></i> Responder
+                        </button>
+                        <button class="btn btn-success btn-close-feedback" onclick="FormReview.closeFeedback(${conversation.id})">
+                            <i class="fas fa-check"></i> Cerrar
+                        </button>
+                    </div>
+                </div>`;
+        } else {
+            html += `
+                <div class="feedback-actions mt-3">
+                    <button class="btn btn-warning btn-reopen-feedback" onclick="FormReview.reopenFeedback(${conversation.id})">
+                        <i class="fas fa-redo"></i> Reabrir
+                    </button>
+                </div>`;
+        }
+        
+        html += '</div>';
+        return html;
+    }
+
+    // Render individual feedback item (legacy support)
     function renderFeedbackItem(feedback) {
         const typeClass = getFeedbackTypeClass(feedback.feedbackType);
         const typeIcon = getFeedbackTypeIcon(feedback.feedbackType);
@@ -223,7 +313,7 @@ window.FormReview = (function() {
                     <div class="flex-grow-1">
                         <div>${feedback.feedbackText}</div>
                         <div class="feedback-meta">
-                            ${feedback.reviewerName} • ${formatDate(feedback.createdAt)}
+                            ${feedback.reviewerName || 'Coordinador'} • ${formatDate(feedback.createdAt)}
                         </div>
                     </div>
                 </div>
@@ -298,7 +388,7 @@ window.FormReview = (function() {
                     'X-CSRF-TOKEN': document.querySelector('[name="__RequestVerificationToken"]')?.value || ''
                 },
                 body: JSON.stringify({
-                    reviewId: currentReviewId || 0,
+                    submissionId: currentSubmissionId || 0,
                     blockId: blockId || null,
                     questionId: questionId || null,
                     feedbackText: feedbackText,
@@ -316,14 +406,14 @@ window.FormReview = (function() {
             bootstrap.Modal.getInstance(document.getElementById('feedbackModal')).hide();
             
             // Show success message
-            toastr.success('Retroalimentación agregada exitosamente', 'Éxito');
+            showToast('Retroalimentación agregada exitosamente', 'success');
             
             // Reload submission to show new feedback
             await loadSubmissionDetails(window.submissionId);
             
         } catch (error) {
             console.error('Error saving feedback:', error);
-            toastr.error('Error al guardar la retroalimentación', 'Error');
+            showToast('Error al guardar la retroalimentación', 'danger');
         }
     }
 
@@ -372,7 +462,7 @@ window.FormReview = (function() {
             
         } catch (error) {
             console.error('Error approving submission:', error);
-            toastr.error('Error al aprobar el formulario', 'Error');
+            showToast('Error al aprobar el formulario', 'danger');
         }
     }
 
@@ -395,7 +485,7 @@ window.FormReview = (function() {
         const newDeadline = document.getElementById('newDeadline').value;
         
         if (!comments || !newDeadline) {
-            toastr.warning('Por favor complete todos los campos requeridos', 'Atención');
+            showToast('Por favor complete todos los campos requeridos', 'warning', 'Atención');
             return;
         }
         
@@ -432,7 +522,7 @@ window.FormReview = (function() {
             
         } catch (error) {
             console.error('Error requesting changes:', error);
-            toastr.error('Error al solicitar cambios', 'Error');
+            showToast('Error al solicitar cambios', 'danger');
         }
     }
 
@@ -450,7 +540,7 @@ window.FormReview = (function() {
         if (!result.isConfirmed) return;
         
         // TODO: Implement flag functionality
-        toastr.info('Formulario marcado para revisión especial', 'Marcado');
+        showToast('Formulario marcado para revisión especial', 'info', 'Marcado');
     }
 
     // Helper functions
@@ -575,9 +665,95 @@ window.FormReview = (function() {
         `;
     }
 
+    // Reply to feedback
+    async function replyToFeedback(feedbackId) {
+        const input = document.querySelector(`.feedback-reply-input[data-feedback-id="${feedbackId}"]`);
+        const feedbackText = input?.value?.trim();
+        
+        if (!feedbackText) {
+            showToast('Por favor escriba una respuesta', 'warning');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/Coordination/FormReview/ReplyToFeedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `parentFeedbackId=${feedbackId}&feedbackText=${encodeURIComponent(feedbackText)}`
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast('Respuesta enviada correctamente', 'success');
+                await loadSubmissionDetails(currentSubmissionId);
+            } else {
+                showToast(result.error || 'Error al enviar la respuesta', 'danger');
+            }
+        } catch (error) {
+            console.error('Error replying to feedback:', error);
+            showToast('Error al enviar la respuesta', 'danger');
+        }
+    }
+    
+    // Close feedback
+    async function closeFeedback(feedbackId) {
+        try {
+            const response = await fetch('/Coordination/FormReview/CloseFeedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `feedbackId=${feedbackId}`
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast('Retroalimentación cerrada correctamente', 'success');
+                await loadSubmissionDetails(currentSubmissionId);
+            } else {
+                showToast(result.error || 'Error al cerrar la retroalimentación', 'danger');
+            }
+        } catch (error) {
+            console.error('Error closing feedback:', error);
+            showToast('Error al cerrar la retroalimentación', 'danger');
+        }
+    }
+    
+    // Reopen feedback
+    async function reopenFeedback(feedbackId) {
+        try {
+            const response = await fetch('/Coordination/FormReview/ReopenFeedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `feedbackId=${feedbackId}`
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast('Retroalimentación reabierta correctamente', 'success');
+                await loadSubmissionDetails(currentSubmissionId);
+            } else {
+                showToast(result.error || 'Error al reabrir la retroalimentación', 'danger');
+            }
+        } catch (error) {
+            console.error('Error reopening feedback:', error);
+            showToast('Error al reabrir la retroalimentación', 'danger');
+        }
+    }
+
     // Public API
     return {
         init: init,
-        showFeedbackModal: showFeedbackModal
+        showFeedbackModal: showFeedbackModal,
+        replyToFeedback: replyToFeedback,
+        closeFeedback: closeFeedback,
+        reopenFeedback: reopenFeedback
     };
 })();

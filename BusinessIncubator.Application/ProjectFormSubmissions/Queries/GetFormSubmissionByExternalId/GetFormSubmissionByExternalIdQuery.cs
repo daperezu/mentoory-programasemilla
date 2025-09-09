@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraft;
 using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetFormSubmission;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
@@ -51,7 +52,6 @@ public class GetFormSubmissionByExternalIdQueryHandler(
             ExternalId = submission.ExternalId,
             ProjectId = submission.ProjectId,
             ParticipantUserId = submission.ParticipantUserId,
-            FormId = submission.FormId,
             FormSchemaVersion = submission.FormSchemaVersion,
             StatusEnum = submission.Status,
             Status = submission.Status.ToString(),
@@ -71,7 +71,7 @@ public class GetFormSubmissionByExternalIdQueryHandler(
             CanEdit = submission.Status is Domain.Enums.ProjectFormSubmissionStatus.Draft or Domain.Enums.ProjectFormSubmissionStatus.Rejected,
             CanSubmit = submission.Status == Domain.Enums.ProjectFormSubmissionStatus.Draft && !string.IsNullOrWhiteSpace(submission.DraftData),
             DraftData = !string.IsNullOrWhiteSpace(submission.DraftData)
-                ? System.Text.Json.JsonSerializer.Deserialize<DTOs.DraftDataDto>(submission.DraftData)
+                ? System.Text.Json.JsonSerializer.Deserialize<DraftDataDto>(submission.DraftData)
                 : null
         };
 

@@ -116,6 +116,13 @@ Before moving entities between domains, analyze if they're part of an aggregate:
 - Business logic must stay with the aggregate root
 - Example: ProjectUsers is part of Project aggregate, not a separate Auth concept
 
+#### Cross-Domain Access Verification
+Domain entities should NOT check cross-domain concerns:
+- **Wrong**: Domain entity checking Auth domain's UserProjectAccess table
+- **Right**: Application layer verifies access using repository methods
+- **Pattern**: Use `repository.IsUserProjectParticipantAsync()` at application layer
+- **Note**: Access checks in domain should only use local aggregate data
+
 ### 2. Read Models vs Domain Entities
 
 #### Domain Entities (in AggregatesModel/)

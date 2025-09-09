@@ -18,7 +18,7 @@ public class AuthRedirectController(ILogger<AuthRedirectController> logger, Medi
             // Role-based redirection using role names
             return userContext.Role switch
             {
-                Roles.Starter => RedirectToAction("Index", "StarterDashboard", new { area = "BusinessIncubators" }),
+                Roles.Starter => RedirectToAction("Index", "Dashboard", new { area = "Participant" }),
                 Roles.Mentor => RedirectToAction("Index", "Home"), // TODO: Verify correct redirect path for Mentor
                 Roles.Coordinator => RedirectToAction("Index", "Dashboard", new { area = "Coordination" }),
                 Roles.Administrator => RedirectToAction("Index", "Home"), // TODO: Verify correct redirect path for Administrator

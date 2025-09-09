@@ -43,7 +43,7 @@ public class ApplicationUrlService(
     }
 
     /// <inheritdoc/>
-    public string GetParticipantFormUrl(Guid businessIncubatorId, Guid projectId, long formId)
+    public string GetParticipantFormUrl(Guid businessIncubatorId, Guid projectId)
     {
         var urlHelper = GetUrlHelper();
         var relativeUrl = urlHelper.Action(
@@ -53,8 +53,7 @@ public class ApplicationUrlService(
             {
                 area = "BusinessIncubators",
                 businessIncubatorExternalId = businessIncubatorId,
-                projectExternalId = projectId,
-                formId = formId
+                projectExternalId = projectId
             });
 
         return GetAbsoluteUrl(relativeUrl);

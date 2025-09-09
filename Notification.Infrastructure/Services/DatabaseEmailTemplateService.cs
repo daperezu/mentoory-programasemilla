@@ -270,6 +270,29 @@ public class DatabaseEmailTemplateService(
         return RenderTemplate("identification-change-notification", variables);
     }
 
+    public string GenerateProjectStageActivatedEmail(
+        string participantName,
+        string projectName,
+        string stageName,
+        string stageType,
+        DateTime startDate,
+        DateTime endDate,
+        string dashboardUrl)
+    {
+        var variables = new Dictionary<string, string>
+        {
+            ["ParticipantName"] = participantName,
+            ["ProjectName"] = projectName,
+            ["StageName"] = stageName,
+            ["StageType"] = stageType,
+            ["StartDate"] = startDate.ToString("dd/MM/yyyy"),
+            ["EndDate"] = endDate.ToString("dd/MM/yyyy"),
+            ["DashboardUrl"] = dashboardUrl
+        };
+
+        return RenderTemplate("ProjectStageActivated", variables);
+    }
+
     private static string ReplaceVariables(string template, Dictionary<string, string> variables)
     {
         return VariableRegex.Replace(template, match =>

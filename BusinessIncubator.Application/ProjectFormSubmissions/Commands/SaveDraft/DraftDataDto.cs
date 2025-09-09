@@ -1,4 +1,4 @@
-﻿namespace LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.DTOs;
+﻿namespace LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraft;
 
 /// <summary>
 /// Represents the draft data structure for form submissions.

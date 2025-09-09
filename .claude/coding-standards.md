@@ -221,6 +221,25 @@ public async Task<IActionResult> GetStats()
 'Controller.Action.Post'
 ```
 
+### URL Generation Pattern
+```csharp
+// ✅ CORRECT - Use ApplicationUrlService for cross-area URLs
+public class DashboardController(
+    IApplicationUrlService applicationUrlService)
+{
+    private string GetFormUrl(Guid incubatorId, Guid projectId, long formId)
+    {
+        return applicationUrlService.GetParticipantFormUrl(incubatorId, projectId, formId);
+    }
+}
+
+// ❌ WRONG - Hardcoding URLs
+ActionUrl = $"/BusinessIncubators/{id}/Projects/{projectId}/ParticipantForm"
+
+// ✅ CORRECT - Use Url.Action for same-area URLs
+return Url.Action("Index", "Dashboard", new { area = "Participant" })
+```
+
 ## EPPlus License Configuration
 
 ### Static Constructor Pattern
@@ -381,4 +400,52 @@ if (projectAccess is not null && projectAccess.IsActive)
 
 // ❌ AVOID - Old style null checking  
 if (projectAccess != null && projectAccess.IsActive)
+```
+
+## JavaScript and Frontend Standards
+
+### File Organization
+- Place all JavaScript in `/wwwroot/js/` directory  
+- Use descriptive names: `area-feature.js` (e.g., `coordination-user-create.js`)
+- CSS customizations in `/wwwroot/assets/css/linasys.css`
+- NO JavaScript in Razor views (use data attributes for configuration)
+
+### Toast Notifications (Phoenix-Aligned)
+```javascript
+// ✅ CORRECT - Use global showToast with new signature
+showToast('Usuario creado exitosamente', 'success');
+showToast('Error al guardar', 'danger', 'Error Crítico');
+
+// ❌ WRONG - Old signature with multiple parameters
+showToast('success', 'Message', null, 0, 'Header');
+showToast('info', 'Message', 'icon-name', 5000);
+```
+
+**Toast Type Durations (Non-configurable)**:
+- `success`: 4 seconds - Quick acknowledgment
+- `info`: 5 seconds - Informational messages
+- `warning`: 8 seconds - Needs user attention
+- `danger`: Sticky - Must be manually dismissed
+
+**Features**:
+- Progress bar shows time remaining
+- Hover to pause auto-dismiss
+- Click to dismiss immediately
+- Dark mode fully supported
+
+### Phoenix Theme Integration
+```css
+/* ✅ CORRECT - Use Phoenix CSS variables */
+.custom-element {
+    background: rgba(var(--phoenix-body-bg-rgb), 0.95);
+    border-radius: var(--phoenix-border-radius);
+    box-shadow: var(--phoenix-box-shadow-lg);
+}
+
+/* ❌ WRONG - Hardcoded values */
+.custom-element {
+    background: #f5f7fa;
+    border-radius: 6px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+}
 ```

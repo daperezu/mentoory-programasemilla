@@ -197,6 +197,35 @@ private bool ValidateCsvStream(
 
 **When NOT to Apply**:
 - Significant domain logic or business rules involved
+
+### Controllers and DDD Compliance
+**Context**: Controllers must not directly use repositories
+
+**Decision**: Controllers should only use queries/commands through MediatR
+
+**Pattern**:
+```csharp
+// ❌ WRONG - Controller using repository
+public class ProjectsController(IBusinessIncubatorRepository repository)
+{
+    var project = await repository.GetProjectByExternalIdAsync(id);
+}
+
+// ✅ CORRECT - Controller using query
+public class ProjectsController(MediatorExecutor mediator)
+{
+    var query = new GetProjectByExternalIdQuery(id);
+    var result = await mediator.SendAndLogIfFailureAsync(query);
+}
+```
+
+**Enhanced Query Pattern for Access Checks**:
+```csharp
+// Query can optionally verify access
+public record GetProjectByExternalIdQuery(
+    Guid ExternalId, 
+    string? CheckAccessForUserId = null) : IBaseRequest<ProjectByExternalIdDto>;
+```
 - Multiple domains need to coordinate complex state changes
 - Testing or maintenance becomes difficult due to coupling
 

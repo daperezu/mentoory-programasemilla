@@ -18,28 +18,21 @@ public partial class Project
     /// Starts a new form submission for a participant.
     /// </summary>
     /// <param name="participantUserId">The participant user ID.</param>
-    /// <param name="formId">The form ID to fill.</param>
     /// <param name="startedAt">The timestamp when the form was started.</param>
     /// <returns>The created form submission.</returns>
-    /// <exception cref="InvalidOperationException">If the participant doesn't have access or already has an active submission.</exception>
-    public ProjectFormSubmission StartFormSubmission(string participantUserId, long formId, DateTime startedAt)
+    /// <exception cref="InvalidOperationException">If the participant already has an active submission.</exception>
+    /// <remarks>
+    /// Access verification should be done at the application layer using UserProjectAccess from Auth domain.
+    /// </remarks>
+    public ProjectFormSubmission StartFormSubmission(string participantUserId, DateTime startedAt)
     {
         EnsureNotDeleted();
 
-        // Verify participant has access through accepted invitation
-        var hasAccess = _projectInvitations.Any(i =>
-            i.IdentificationNumber == participantUserId &&
-            i.Status == ProjectInvitationStatus.Accepted);
+        // Note: Access verification is handled at the application layer via UserProjectAccess
 
-        if (!hasAccess)
-        {
-            throw new InvalidOperationException("El participante no tiene acceso al proyecto.");
-        }
-
-        // Check if participant already has a submission for this form
+        // Check if participant already has a submission
         var existingSubmission = _formSubmissions.FirstOrDefault(s =>
-            s.ParticipantUserId == participantUserId &&
-            s.FormId == formId);
+            s.ParticipantUserId == participantUserId);
 
         if (existingSubmission is not null)
         {
@@ -57,7 +50,7 @@ public partial class Project
         var currentVersion = ProjectKnowledgeStructure?.CurrentVersion ?? 1;
 
         // Create new submission
-        var submission = ProjectFormSubmission.Create(Id, participantUserId, formId, currentVersion, startedAt);
+        var submission = ProjectFormSubmission.Create(Id, participantUserId, currentVersion, startedAt);
         _formSubmissions.Add(submission);
 
         return submission;

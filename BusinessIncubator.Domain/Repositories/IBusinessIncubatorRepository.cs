@@ -632,6 +632,36 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// <returns>True if the user is a participant, otherwise false.</returns>
     Task<bool> IsUserProjectParticipantAsync(long projectId, string userId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gets a feedback by its ID.
+    /// </summary>
+    /// <param name="feedbackId">The feedback ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The feedback if found, otherwise null.</returns>
+    Task<Aggregates.BusinessIncubator.ProjectFormFeedback?> GetFeedbackByIdAsync(long feedbackId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets feedback for a submission with replies.
+    /// </summary>
+    /// <param name="submissionId">The submission ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of feedback with replies.</returns>
+    Task<List<Aggregates.BusinessIncubator.ProjectFormFeedback>> GetFeedbackWithRepliesForSubmissionAsync(long submissionId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Adds a new feedback.
+    /// </summary>
+    /// <param name="feedback">The feedback to add.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Task representing the operation.</returns>
+    Task AddFeedbackAsync(Aggregates.BusinessIncubator.ProjectFormFeedback feedback, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Updates an existing feedback.
+    /// </summary>
+    /// <param name="feedback">The feedback to update.</param>
+    void UpdateFeedback(Aggregates.BusinessIncubator.ProjectFormFeedback feedback);
+
     // NOTE: Report methods have been moved to IReportsRepository for proper DDD separation
 }
 

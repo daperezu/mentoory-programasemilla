@@ -15,7 +15,7 @@ namespace LinaSys.BusinessIncubator.Application.Reviews.Commands.AddFeedback;
 /// </summary>
 [CommandRequiresPermission(PermissionType.ProjectCoordinator)]
 public record AddFeedbackCommand(
-    long ReviewId,
+    long SubmissionId,  // Changed to work with SubmissionId directly
     long? BlockId,
     long? QuestionId,
     string FeedbackText,
@@ -63,13 +63,39 @@ public class AddFeedbackCommandHandler(
     {
         try
         {
-            // Get the review
-            var review = await repository.GetReviewByIdAsync(request.ReviewId, cancellationToken);
-            if (review is null)
+            // Get the submission first
+            var submission = await repository.GetSubmissionByIdAsync(request.SubmissionId, cancellationToken);
+            if (submission is null)
             {
                 return Failure(
                     ResultErrorCodes.BusinessIncubator_NotFound,
-                    (nameof(AddFeedbackCommand), $"La revisión con ID {request.ReviewId} no fue encontrada."));
+                    (nameof(AddFeedbackCommand), $"No se encontró la solicitud con ID {request.SubmissionId}."));
+            }
+
+            // Try to find an existing review for this submission
+            var reviews = await repository.GetReviewsBySubmissionIdAsync(request.SubmissionId, cancellationToken);
+            var review = reviews.FirstOrDefault();
+
+            // If no review exists, create one
+            if (review is null)
+            {
+                review = new ProjectFormReview(
+                    submissionId: submission.Id,
+                    reviewerId: request.UserId,
+                    status: ReviewStatus.Pending,
+                    reviewedAt: DateTime.UtcNow,
+                    generalComments: null);
+
+                review.CreatedAt = DateTime.UtcNow;
+                review.CreatedBy = request.UserId;
+
+                await repository.AddReviewAsync(review, cancellationToken);
+                await repository.UnitOfWork.SaveChangesAsync(cancellationToken);
+
+                logger.LogInformation(
+                    "Created new review for submission {SubmissionId} by user {UserId}",
+                    submission.Id,
+                    request.UserId);
             }
 
             // Add feedback
@@ -85,8 +111,8 @@ public class AddFeedbackCommandHandler(
             await repository.UnitOfWork.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation(
-                "Feedback added successfully to review {ReviewId} by user {UserId}",
-                request.ReviewId,
+                "Feedback added successfully to submission {SubmissionId} by user {UserId}",
+                request.SubmissionId,
                 request.UserId);
 
             return Success(new FeedbackResultDto
@@ -98,7 +124,7 @@ public class AddFeedbackCommandHandler(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error adding feedback to review {ReviewId}", request.ReviewId);
+            logger.LogError(ex, "Error adding feedback to submission {SubmissionId}", request.SubmissionId);
             return Failure(
                 ResultErrorCodes.GenericError,
                 (nameof(AddFeedbackCommand), "Ocurrió un error al agregar el feedback."));

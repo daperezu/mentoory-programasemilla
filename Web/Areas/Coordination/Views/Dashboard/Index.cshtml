@@ -107,7 +107,7 @@
                         <span class="fas fa-clock me-1"></span><span id="oldestWaiting">-</span> días max
                     </span>
                 </div>
-                <a href="#" class="btn btn-link btn-sm p-0 mt-2">Ver todas →</a>
+                <a href="@Url.Action("Index", "FormReview", new { area = "Coordination" })" class="btn btn-link btn-sm p-0 mt-2">Ver todas →</a>
             </div>
         </div>
     </div>
@@ -154,7 +154,7 @@
         <div class="card h-100">
             <div class="card-header d-flex justify-content-between">
                 <h5 class="mb-0">Revisiones Pendientes</h5>
-                <a href="#" class="btn btn-phoenix-primary btn-sm">Ver Todas</a>
+                <a href="@Url.Action("Index", "FormReview", new { area = "Coordination" })" class="btn btn-phoenix-primary btn-sm">Ver Todas</a>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -322,7 +322,7 @@
                                             <td>${review.submittedAt}</td>
                                             <td><span class="badge ${priorityBadge}">${review.priority}</span></td>
                                             <td>
-                                                <a href="#" class="btn btn-phoenix-secondary btn-sm">
+                                                <a href="/Coordination/FormReview/Review/${review.id}" class="btn btn-phoenix-secondary btn-sm" title="Revisar">
                                                     <span class="fas fa-eye"></span>
                                                 </a>
                                             </td>

@@ -50,4 +50,12 @@ PRINT '[010.SeedEmailTemplates.sql] Starting';
 :r .\010.SeedEmailTemplates.sql
 PRINT '[010.SeedEmailTemplates.sql] Finished';
 
+PRINT '[011.SeedProjectKnowledgeStructure.sql] Starting';
+:r .\011.SeedProjectKnowledgeStructure.sql
+PRINT '[011.SeedProjectKnowledgeStructure.sql] Finished';
+
+PRINT '[012.SeedProjectFormSubmissions.sql] Starting';
+:r .\012.SeedProjectFormSubmissions.sql
+PRINT '[012.SeedProjectFormSubmissions.sql] Finished';
+
 PRINT '[Script.PostDeployment.sql] Finished';

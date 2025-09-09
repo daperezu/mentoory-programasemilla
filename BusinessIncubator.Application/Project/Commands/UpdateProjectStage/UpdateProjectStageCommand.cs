@@ -1,11 +1,15 @@
 ﻿using FluentValidation;
+using LinaSys.Auth.Application.Queries;
 using LinaSys.BusinessIncubator.Application.Project.DTOs;
 using LinaSys.BusinessIncubator.Domain.Enums;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
+using LinaSys.Shared.Application.IntegrationEvents.BusinessIncubator;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Application.TimeProvider;
+using LinaSys.Shared.Domain.Constants;
 using LinaSys.Shared.Domain.SeedWork;
+using MediatR;
 
 namespace LinaSys.BusinessIncubator.Application.Project.Commands.UpdateProjectStage;
 
@@ -69,7 +73,9 @@ public class UpdateProjectStageCommandValidator : AbstractValidator<UpdateProjec
 public class UpdateProjectStageCommandHandler(
     IBusinessIncubatorRepository repository,
     IAuditContext auditContext,
-    ITimeProvider timeProvider)
+    ITimeProvider timeProvider,
+    IPublisher publisher,
+    IMediator mediator)
     : BaseCommandHandler<UpdateProjectStageCommand, ProjectStageDto>
 {
     public override async Task<Result<ProjectStageDto>> Handle(
@@ -95,6 +101,9 @@ public class UpdateProjectStageCommandHandler(
                 ResultErrorCodes.Project_UpdateFailed,
                 ("Stage", $"No existe una etapa de tipo {request.Type} en este proyecto."));
         }
+
+        // Store previous active state to detect activation
+        var wasActive = stage.IsActive;
 
         try
         {
@@ -129,6 +138,51 @@ public class UpdateProjectStageCommandHandler(
 
             // Get updated stage for DTO
             stage = project.GetStage(request.Type)!;
+
+            // Fire integration event if stage was activated and it's a form collection stage
+            if (!wasActive && stage is { IsActive: true, Type: ProjectStageType.InitialFormCollection or ProjectStageType.FinalFormCollection })
+            {
+                var phaseEnum = stage.Type == ProjectStageType.InitialFormCollection
+                    ? QuestionPhase.Start
+                    : QuestionPhase.Final;
+
+                // Get project with users
+                var projectWithUsers = await repository.GetProjectWithUsersAsync(project.Id, cancellationToken);
+                if (projectWithUsers?.ProjectUsers != null)
+                {
+                    var participants = new List<ParticipantNotificationInfo>();
+
+                    // Get details for each Starter participant
+                    foreach (var projectUser in projectWithUsers.ProjectUsers.Where(pu => pu is { IsActive: true, Role: Roles.Starter }))
+                    {
+                        var userResult = await mediator.Send(new GetUserByIdQuery(projectUser.UserId), cancellationToken);
+                        if (userResult is { IsSuccess: true, Value: not null })
+                        {
+                            participants.Add(new ParticipantNotificationInfo(
+                                UserId: projectUser.UserId,
+                                Email: userResult.Value.Email,
+                                FullName: userResult.Value.FullName ?? userResult.Value.UserName));
+                        }
+                    }
+
+                    if (participants.Count > 0)
+                    {
+                        var integrationEvent = new ProjectStageActivatedIntegrationEvent(
+                            ProjectId: project.Id,
+                            ProjectExternalId: project.ExternalId,
+                            ProjectName: project.Name,
+                            StageType: stage.Type.ToString(),
+                            Phase: phaseEnum.ToString(),
+                            StageName: stage.Title,
+                            StartDate: stage.StartDate,
+                            EndDate: stage.EndDate,
+                            Participants: participants,
+                            OccurredAt: timeProvider.UtcNow);
+
+                        await publisher.Publish(integrationEvent, cancellationToken);
+                    }
+                }
+            }
 
             // Map to DTO
             var currentDate = timeProvider.UtcNow;

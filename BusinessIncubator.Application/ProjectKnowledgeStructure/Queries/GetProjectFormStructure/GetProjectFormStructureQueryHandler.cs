@@ -112,7 +112,6 @@ public sealed class GetProjectFormStructureQueryHandler(IBusinessIncubatorReposi
 
         var result = new ProjectFormStructureDto
         {
-            FormId = request.FormId,
             FormName = knowledgeStructure.Name,
             Description = knowledgeStructure.Description,
             ProjectKnowledgeStructureId = knowledgeStructure.Id,

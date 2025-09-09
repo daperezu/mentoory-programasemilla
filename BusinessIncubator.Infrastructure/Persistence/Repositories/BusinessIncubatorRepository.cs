@@ -933,4 +933,49 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
+
+    /// <inheritdoc/>
+    public async Task<ProjectFormFeedback?> GetFeedbackByIdAsync(long feedbackId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Set<ProjectFormFeedback>()
+            .Include(f => f.ParentFeedback)
+            .Include(f => f.Replies)
+            .FirstOrDefaultAsync(f => f.Id == feedbackId && !f.IsDeleted, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<ProjectFormFeedback>> GetFeedbackWithRepliesForSubmissionAsync(long submissionId, CancellationToken cancellationToken = default)
+    {
+        // Get the review for this submission
+        var reviews = await dbContext.Set<ProjectFormReview>()
+            .Where(r => r.SubmissionId == submissionId)
+            .Select(r => r.Id)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!reviews.Any())
+        {
+            return new List<ProjectFormFeedback>();
+        }
+
+        // Get all feedback (parent and replies) for these reviews
+        return await dbContext.Set<ProjectFormFeedback>()
+            .Where(f => reviews.Contains(f.ReviewId) && !f.IsDeleted)
+            .OrderBy(f => f.CreatedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task AddFeedbackAsync(ProjectFormFeedback feedback, CancellationToken cancellationToken = default)
+    {
+        await dbContext.Set<ProjectFormFeedback>().AddAsync(feedback, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public void UpdateFeedback(ProjectFormFeedback feedback)
+    {
+        dbContext.Set<ProjectFormFeedback>().Update(feedback);
+    }
 }

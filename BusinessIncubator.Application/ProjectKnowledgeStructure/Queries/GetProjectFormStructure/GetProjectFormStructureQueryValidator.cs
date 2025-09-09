@@ -15,9 +15,5 @@ public sealed class GetProjectFormStructureQueryValidator : AbstractValidator<Ge
         RuleFor(query => query.ProjectId)
             .GreaterThan(0)
             .WithMessage("El ID del proyecto debe ser mayor que 0.");
-
-        RuleFor(query => query.FormId)
-            .GreaterThan(0)
-            .WithMessage("El ID del formulario debe ser mayor que 0.");
     }
 }

@@ -1316,3 +1316,202 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED THEN
     INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
     VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
+
+-- Project Stage Activated Template
+DECLARE @ProjectStageActivatedHTML NVARCHAR(MAX);
+SET @ProjectStageActivatedHTML = N'<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Etapa Activada - {{ApplicationName}}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, ''Segoe UI'', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .logo {
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .stage-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+        }
+        .stage-info-box {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        .project-name {
+            font-size: 22px;
+            font-weight: 700;
+            color: #28a745;
+            margin: 10px 0;
+        }
+        .stage-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #155724;
+            margin: 5px 0;
+        }
+        .date-range {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            text-decoration: none;
+            padding: 18px 36px;
+            border-radius: 6px;
+            font-weight: 700;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0, 123, 255, 0.4);
+            font-size: 16px;
+        }
+        .action-required {
+            background-color: #e7f1ff;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #dee2e6;
+        }
+        .contact-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{LogoUrl}}" alt="{{ApplicationName}}" class="logo">
+            <h1 style="margin: 0; font-size: 32px; font-weight: 300;">🚀 ¡Nueva Etapa Activada!</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 18px;">Hay nuevos formularios disponibles para ti</p>
+        </div>
+        
+        <div class="content">
+            <div class="stage-badge">✨ NUEVA ACTIVIDAD</div>
+            
+            <h2 style="color: #28a745; margin-bottom: 20px;">Hola {{ParticipantName}},</h2>
+            
+            <p style="font-size: 18px;">¡Excelentes noticias! Se ha activado una nueva etapa en tu proyecto y ahora tienes <strong>formularios disponibles</strong> para completar.</p>
+            
+            <div class="stage-info-box">
+                <p style="margin: 0; color: #155724; font-size: 14px;">PROYECTO:</p>
+                <div class="project-name">{{ProjectName}}</div>
+                <p style="margin: 15px 0 5px 0; color: #155724; font-size: 14px;">ETAPA ACTIVADA:</p>
+                <div class="stage-name">{{StageName}}</div>
+                <p style="margin: 10px 0 0 0; color: #155724; font-size: 14px;">Tipo: <strong>{{StageType}}</strong></p>
+            </div>
+            
+            <div class="date-range">
+                <p style="margin: 0; color: #856404;">
+                    <strong>📅 Período de la etapa:</strong><br>
+                    Desde: <strong>{{StartDate}}</strong><br>
+                    Hasta: <strong>{{EndDate}}</strong>
+                </p>
+            </div>
+            
+            <div class="action-required">
+                <h3 style="margin-top: 0; color: #004085;">📋 Acción Requerida</h3>
+                <p style="margin: 10px 0; color: #004085;">
+                    Debes completar los formularios de esta etapa antes de la fecha límite. 
+                    Los formularios están disponibles en tu panel de control.
+                </p>
+            </div>
+            
+            <p style="text-align: center; margin: 30px 0;">
+                <strong>Accede ahora para ver y completar tus formularios:</strong><br>
+                <a href="{{DashboardUrl}}" class="cta-button">📊 IR AL PANEL DE CONTROL</a>
+            </p>
+            
+            <p style="background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 6px; padding: 15px; margin: 20px 0;">
+                <strong>💡 Consejo:</strong> Recuerda que puedes guardar tu progreso y continuar más tarde. 
+                No es necesario completar todo de una vez.
+            </p>
+            
+            <p style="margin-top: 30px;">
+                ¡Te deseamos mucho éxito en esta nueva etapa!<br><br>
+                Saludos cordiales,<br>
+                <strong>El equipo de {{ApplicationName}}</strong>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <div class="contact-info">
+                © {{CurrentYear}} {{ApplicationName}}. Todos los derechos reservados.<br>
+                ¿Necesitas ayuda? Escríbenos a: <a href="mailto:{{SupportEmail}}" style="color: #007bff;">{{SupportEmail}}</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>';
+
+-- Seed/Update ProjectStageActivated template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'ProjectStageActivated' AS [Key],
+    'Etapa de Proyecto Activada' AS [Name],
+    '🚀 Nueva etapa activada en {{ProjectName}}' AS [Subject],
+    @ProjectStageActivatedHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());

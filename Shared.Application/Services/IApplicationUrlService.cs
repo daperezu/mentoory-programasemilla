@@ -27,9 +27,8 @@ public interface IApplicationUrlService
     /// </summary>
     /// <param name="businessIncubatorId">The business incubator external ID.</param>
     /// <param name="projectId">The project external ID.</param>
-    /// <param name="formId">The form ID.</param>
     /// <returns>The absolute URL for editing the participant form.</returns>
-    string GetParticipantFormUrl(Guid businessIncubatorId, Guid projectId, long formId);
+    string GetParticipantFormUrl(Guid businessIncubatorId, Guid projectId);
 
     /// <summary>
     /// Gets the URL for accepting a project invitation.

@@ -35,6 +35,10 @@ public class BusinessIncubatorDbContext(DbContextOptions<BusinessIncubatorDbCont
 
     public virtual DbSet<ProjectFormSubmission> ProjectFormSubmissions { get; set; }
 
+    public virtual DbSet<ProjectFormReview> ProjectFormReviews { get; set; }
+
+    public virtual DbSet<ProjectFormFeedback> ProjectFormFeedback { get; set; }
+
     public virtual DbSet<StarterProgressEntity> StarterProgress { get; set; }
 
     public virtual DbSet<StarterTaskEntity> StarterTasks { get; set; }
@@ -451,6 +455,77 @@ public class BusinessIncubatorDbContext(DbContextOptions<BusinessIncubatorDbCont
             entity.HasOne("Project").WithMany("FormSubmissions")
                 .HasForeignKey("ProjectId")
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProjectFormReview>(entity =>
+        {
+            entity.ToTable("ProjectFormReviews", "businessincubators");
+
+            entity.HasIndex(e => e.ExternalId, "IX_ProjectFormReviews_ExternalId")
+                .IsUnique();
+            entity.HasIndex(e => e.SubmissionId, "IX_ProjectFormReviews_SubmissionId");
+            entity.HasIndex(e => e.ReviewerId, "IX_ProjectFormReviews_ReviewerId");
+
+            entity.Property(e => e.ExternalId)
+                .IsRequired();
+            entity.Property(e => e.ReviewerId)
+                .IsRequired()
+                .HasMaxLength(450);
+            entity.Property(e => e.Status)
+                .HasConversion<int>()
+                .IsRequired();
+            entity.Property(e => e.GeneralComments)
+                .HasMaxLength(2000);
+
+            entity.HasOne(e => e.Submission)
+                .WithMany()
+                .HasForeignKey(e => e.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure the navigation property with backing field
+            entity.Navigation(e => e.FeedbackItems)
+                .UsePropertyAccessMode(PropertyAccessMode.Field)
+                .HasField("_feedbackItems");
+        });
+
+        modelBuilder.Entity<ProjectFormFeedback>(entity =>
+        {
+            entity.ToTable("ProjectFormFeedback", "businessincubators");
+
+            entity.HasIndex(e => e.ReviewId, "IX_ProjectFormFeedback_ReviewId");
+            entity.HasIndex(e => e.BlockId, "IX_ProjectFormFeedback_BlockId");
+            entity.HasIndex(e => e.QuestionId, "IX_ProjectFormFeedback_QuestionId");
+            entity.HasIndex(e => e.ParentFeedbackId, "IX_ProjectFormFeedback_ParentFeedbackId");
+            entity.HasIndex(e => new { e.Status, e.ReviewId }, "IX_ProjectFormFeedback_Status_ReviewId");
+
+            entity.Property(e => e.ExternalId)
+                .IsRequired();
+            entity.Property(e => e.FeedbackText)
+                .IsRequired()
+                .HasMaxLength(2000);
+            entity.Property(e => e.FeedbackType)
+                .HasConversion<int>()
+                .IsRequired();
+            entity.Property(e => e.Status)
+                .HasConversion<int>()
+                .IsRequired()
+                .HasDefaultValue(FeedbackStatus.ReviewNeeded);
+            entity.Property(e => e.IsFromParticipant)
+                .IsRequired()
+                .HasDefaultValue(false);
+            entity.Property(e => e.CreatedBy)
+                .IsRequired()
+                .HasMaxLength(450);
+
+            entity.HasOne(e => e.Review)
+                .WithMany(r => r.FeedbackItems)
+                .HasForeignKey(e => e.ReviewId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ParentFeedback)
+                .WithMany(e => e.Replies)
+                .HasForeignKey(e => e.ParentFeedbackId)
+                .OnDelete(DeleteBehavior.NoAction);
         });
 
         modelBuilder.Entity<StarterProgressEntity>(entity =>

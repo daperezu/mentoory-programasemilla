@@ -69,6 +69,21 @@ public class ProjectFormFeedback : Entity
     public FeedbackType FeedbackType { get; private set; }
 
     /// <summary>
+    /// Gets the parent feedback ID for conversation threading.
+    /// </summary>
+    public long? ParentFeedbackId { get; private set; }
+
+    /// <summary>
+    /// Gets the feedback status.
+    /// </summary>
+    public FeedbackStatus Status { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether the feedback is from a participant.
+    /// </summary>
+    public bool IsFromParticipant { get; private set; }
+
+    /// <summary>
     /// Gets or sets the creation date.
     /// </summary>
     public DateTime CreatedAt { get; set; }
@@ -109,6 +124,16 @@ public class ProjectFormFeedback : Entity
     public virtual ProjectFormReview? Review { get; private set; }
 
     /// <summary>
+    /// Gets the parent feedback for conversation threading.
+    /// </summary>
+    public virtual ProjectFormFeedback? ParentFeedback { get; private set; }
+
+    /// <summary>
+    /// Gets the collection of replies to this feedback.
+    /// </summary>
+    public virtual ICollection<ProjectFormFeedback> Replies { get; private set; } = new List<ProjectFormFeedback>();
+
+    /// <summary>
     /// Updates the feedback text.
     /// </summary>
     /// <param name="feedbackText">The new feedback text.</param>
@@ -122,5 +147,81 @@ public class ProjectFormFeedback : Entity
 
         FeedbackText = feedbackText;
         FeedbackType = feedbackType;
+    }
+
+    /// <summary>
+    /// Creates a reply to this feedback.
+    /// </summary>
+    /// <param name="feedbackText">The reply text.</param>
+    /// <param name="userId">The user ID creating the reply.</param>
+    /// <param name="isFromParticipant">Whether the reply is from a participant.</param>
+    /// <param name="currentDateTime">The current date time.</param>
+    /// <returns>The created reply feedback.</returns>
+    public ProjectFormFeedback Reply(
+        string feedbackText,
+        string userId,
+        bool isFromParticipant,
+        DateTime currentDateTime)
+    {
+        if (ParentFeedbackId.HasValue)
+        {
+            throw new InvalidOperationException("Cannot reply to a reply. Only original feedback can have replies.");
+        }
+
+        var reply = new ProjectFormFeedback(
+            ReviewId,
+            BlockId,
+            QuestionId,
+            feedbackText,
+            FeedbackType.Info)
+        {
+            ParentFeedbackId = Id,
+            IsFromParticipant = isFromParticipant,
+            Status = FeedbackStatus.ReviewNeeded,
+            CreatedBy = userId,
+            CreatedAt = currentDateTime
+        };
+
+        // Reopen if participant replies to closed feedback
+        if (isFromParticipant && Status == FeedbackStatus.ReviewClosed)
+        {
+            Reopen(userId, currentDateTime);
+        }
+
+        return reply;
+    }
+
+    /// <summary>
+    /// Closes the feedback.
+    /// </summary>
+    /// <param name="userId">The user closing the feedback.</param>
+    /// <param name="currentDateTime">The current date time.</param>
+    public void Close(string userId, DateTime currentDateTime)
+    {
+        if (Status == FeedbackStatus.ReviewClosed)
+        {
+            return;
+        }
+
+        Status = FeedbackStatus.ReviewClosed;
+        UpdatedAt = currentDateTime;
+        UpdatedBy = userId;
+    }
+
+    /// <summary>
+    /// Reopens the feedback.
+    /// </summary>
+    /// <param name="userId">The user reopening the feedback.</param>
+    /// <param name="currentDateTime">The current date time.</param>
+    public void Reopen(string userId, DateTime currentDateTime)
+    {
+        if (Status == FeedbackStatus.ReviewNeeded)
+        {
+            return;
+        }
+
+        Status = FeedbackStatus.ReviewNeeded;
+        UpdatedAt = currentDateTime;
+        UpdatedBy = userId;
     }
 }

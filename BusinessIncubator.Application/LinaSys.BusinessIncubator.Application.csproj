@@ -18,4 +18,8 @@
     <ProjectReference Include="..\Notification.Application\LinaSys.Notification.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ProjectFormSubmissions\DTOs\" />
+  </ItemGroup>
+
 </Project>

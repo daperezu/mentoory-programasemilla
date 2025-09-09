@@ -149,7 +149,7 @@
      */
     function showStatsError() {
         $('.stat-number').text('-');
-        toastr.error('Error al cargar las estadísticas', 'Error');
+        showToast('Error al cargar las estadísticas', 'danger');
     }
     
     /**
@@ -166,7 +166,7 @@
         if (participantTable) {
             participantTable.ajax.reload(null, false);
             loadParticipantStats(true);
-            toastr.success('Datos actualizados correctamente', 'Éxito');
+            showToast('Datos actualizados correctamente', 'success');
         }
     }
     
@@ -177,7 +177,7 @@
         const exportUrl = `/Coordination/Participant/Export?format=${format}`;
         
         // Show loading indicator
-        toastr.info('Generando archivo de exportación...', 'Procesando');
+        showToast('Generando archivo de exportación...', 'info', 'Procesando');
         
         // Create a temporary link and trigger download
         const link = document.createElement('a');
@@ -189,7 +189,7 @@
         
         // Show success message after a delay
         setTimeout(() => {
-            toastr.success('Archivo descargado correctamente', 'Éxito');
+            showToast('Archivo descargado correctamente', 'success');
         }, 1000);
     }
     

@@ -3,7 +3,11 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(dotnet build:*)",
-      "Bash(MSBuild:*)"
+      "Bash(MSBuild:*)",
+      "Bash(move:*)",
+      "Bash(ren:*)",
+      "Bash(msbuild:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,5 +1,112 @@
 # LinaSys Common Issues & Solutions
 
+## Dependency Injection & Service Issues
+
+### ITimeProvider Not Found
+**Error**: `CS0246: The type or namespace name 'ITimeProvider' could not be found`
+**Solution**: Use correct namespace:
+```csharp
+// ❌ Wrong
+using LinaSys.Shared.Domain.Services;
+
+// ✅ Correct
+using LinaSys.Shared.Application.TimeProvider;
+```
+**Pattern**: ITimeProvider is in Application layer, not Domain
+
+### ResultErrorCodes Missing Definition
+**Error**: `CS0117: 'ResultErrorCodes' does not contain a definition for 'BusinessValidationError'`
+**Solution**: Use existing error codes:
+```csharp
+// For domain validation errors
+ResultErrorCodes.GenericError
+
+// For not found errors
+ResultErrorCodes.BusinessIncubator_NotFound
+```
+
+## Entity Framework Issues
+
+### DbContext Missing Entity Error
+**Error**: `Cannot create a DbSet for 'EntityName' because this type is not included in the model`
+**Solution**: 
+- Add DbSet property to DbContext: `public virtual DbSet<EntityName> EntityNames { get; set; }`
+- Add entity configuration in OnModelCreating
+- Configure navigation properties with backing fields if needed:
+  ```csharp
+  entity.Navigation(e => e.CollectionProperty)
+      .UsePropertyAccessMode(PropertyAccessMode.Field)
+      .HasField("_backingField");
+  ```
+
+### EF Core Duplicate Foreign Key Columns
+**Error**: `Invalid column name 'PropertyId1'`
+**Cause**: Navigation property not properly configured
+**Solution**: Use navigation property in HasOne instead of generic type:
+```csharp
+// Wrong: entity.HasOne<RelatedEntity>()
+// Right: entity.HasOne(e => e.NavigationProperty)
+```
+
+## Modern UI Implementation Patterns (Phoenix Admin Template)
+
+### Gradient Backgrounds
+**Pattern**: Use CSS gradients for headers and active states
+```css
+/* Primary gradient pattern */
+background: linear-gradient(135deg, var(--phoenix-primary), #2c5cc5);
+```
+
+### Glassmorphism Effects
+**Pattern**: Combine backdrop-filter with semi-transparent backgrounds
+```css
+.phoenix-card {
+    background: rgba(var(--phoenix-body-bg-rgb), 0.98);
+    backdrop-filter: blur(10px);
+}
+```
+
+### Animation Performance
+**Important**: Always use transform and opacity for animations (GPU-accelerated)
+```css
+/* ✅ Good - GPU accelerated */
+@keyframes slideIn {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* ❌ Avoid - CPU intensive */
+@keyframes slideIn {
+    from { left: -100%; }
+    to { left: 0; }
+}
+```
+
+### Real-time UI Updates Pattern
+**Pattern**: Update UI immediately on field change, not just on save
+```javascript
+// Attach to all form inputs
+element.addEventListener('change', () => {
+    this.onFieldChange(element);  // Pass element for context
+    this.updateProgress();         // Update immediately
+    this.animateCompletion();      // Visual feedback
+    this.scheduleSave();           // Debounced save
+});
+```
+
+### Icon Mapping for Form Fields
+**Pattern**: Use consistent icon mapping for question types
+```javascript
+const iconMap = {
+    1: 'fa-dot-circle',      // SingleChoice
+    2: 'fa-check-square',    // MultiChoice
+    3: 'fa-align-left',      // FreeText
+    4: 'fa-sort-numeric-up', // Numeric
+    5: 'fa-calendar-alt',    // Date
+    6: 'fa-link'             // Url
+};
+```
+
 ## NuGet Package Resolution in Central Package Management
 
 ### Missing Types in Infrastructure Projects
@@ -1376,3 +1483,289 @@ if (respBody.Contains("Sandbox subdomains are for test purposes only"))
 **Quick Test Command**: `dotnet run --project Sandbox -- mailgun`
 **Integration Tests**: Tests.UnitTesting/Integration/Modules/Notification/Infrastructure/Email/
 **Configuration**: Ensure Domain, ApiKey, and FromAddress match Mailgun account settings
+
+## Entity Framework Core with DDD Private Collections
+
+### Include with Private Backing Fields
+**Error**: `The expression 'p.ProjectStages' is invalid inside an 'Include' operation`
+**Cause**: EF Core cannot use Include with public read-only collection properties that have private backing fields
+**Solution**: Use string-based Include with the private field name
+
+```csharp
+// Domain entity with encapsulation
+public class Project : Entity
+{
+    private readonly List<ProjectStage> _projectStages = new();
+    public IReadOnlyCollection<ProjectStage> ProjectStages => _projectStages.AsReadOnly();
+}
+
+// ❌ WRONG - Include with public property fails
+.Include(p => p.ProjectStages)
+
+// ✅ CORRECT - Include with private field name
+.Include("_projectStages")
+```
+
+## Form Discovery Issues
+
+### Dashboard Shows All Projects Instead of Selected One
+**Issue**: Participant Dashboard ignores selected project context
+**Cause**: Not using CurrentUserContext.ProjectId from context selection
+
+```csharp
+// ❌ WRONG - Gets all projects for user
+var projectsQuery = new GetParticipantProjectsQuery(userId);
+
+// ✅ CORRECT - Use selected project from context
+var context = DemandCurrentUserContext(requireProject: true);
+var projectId = context.ProjectId!.Value;
+var projectQuery = new GetProjectDetailsQuery(projectId);
+```
+
+### Forms Not Visible Until Created
+**Issue**: Dashboard only shows existing forms, not available ones
+**Cause**: System uses lazy form creation without discovery mechanism
+**Solution**: Create GetAvailableFormsQuery that checks active stages
+
+```csharp
+// Check active stages for available forms
+foreach (var stage in project.ProjectStages.Where(s => s.IsActive))
+{
+    if (stage.Type == ProjectStageType.InitialFormCollection || 
+        stage.Type == ProjectStageType.FinalFormCollection)
+    {
+        var phase = ProjectFormSubmission.GetPhaseForStage(stage.Type);
+        var existingForm = await GetExistingForm(userId, projectId, phase);
+        
+        // Show form as available even if not created
+        availableForms.Add(new AvailableFormDto
+        {
+            IsCreated = existingForm != null,
+            Status = existingForm?.Status,
+            CanStart = stage.IsWithinPeriod(currentDate)
+        });
+    }
+}
+
+## Form System Issues
+
+### Textarea Values Not Saving in Drafts
+**Issue**: Textarea form fields not being collected when saving drafts
+**Cause**: JavaScript querying for wrong data attribute - looking for `data-answer-type="text"` but textareas have `data-answer-type="textarea"`
+
+**Solution**: Separate case for FreeText questions
+```javascript
+// ❌ WRONG - Only queries for input elements
+case 3: // FreeText
+    const answerElement = document.querySelector(`[data-question-id="${question.id}"][data-answer-type="text"]`);
+
+// ✅ CORRECT - Query specifically for textarea
+case 3: // FreeText
+    const answerElement = document.querySelector(`textarea[data-question-id="${question.id}"]`);
+    if (answerElement && answerElement.value) {
+        answer.value = answerElement.value;
+        answer.isAnswered = true;
+    }
+```
+
+### Dashboard Showing Incorrect Completion Percentage
+**Issue**: Dashboard shows 100% when only partial questions answered (e.g., 5/5 = 100% instead of 5/15 = 33%)
+**Cause**: Using response count as total instead of actual question count from structure
+
+**Solution**: Always load project structure to get accurate totals
+```csharp
+// ❌ WRONG - Using response count as total
+int totalQuestions = request.DraftData.BlockResponses.Count;
+
+// ✅ CORRECT - Get total from project structure
+if (!project.ProjectBlocks.Any())
+{
+    project = await repository.GetProjectWithBlocksByIdAsync(project.Id, cancellationToken);
+}
+int totalQuestions = project.ProjectBlocks.Sum(b => b.ProjectQuestions?.Count ?? 0);
+int answeredQuestions = request.DraftData.BlockResponses
+    .Sum(block => block.QuestionResponses.Count(q => q.IsAnswered));
+```
+
+### Real-time UI Not Updating
+**Issue**: Progress bars and completion checkmarks only update on save/navigation
+**Cause**: Missing event handlers for field changes
+
+**Solution**: Add real-time updates on any field change
+```javascript
+// Add to all input handlers
+onFieldChange() {
+    // Save immediately
+    window.formManager.saveCurrentBlock();
+    
+    // Update all UI elements in real-time
+    window.formManager.updateProgressPercentage();
+    window.formManager.updateProgress();
+    window.formManager.updateBlockCompletionStatus(window.formManager.currentBlockIndex);
+}
+
+// Attach to form fields
+$(document).on('change', 'input, select, textarea', function() {
+    window.formManager.onFieldChange();
+});
+```
+
+### Wizard Tab Navigation Bypassing Validation
+**Issue**: Users can click wizard tabs to skip validation
+**Cause**: Tab click handler not checking validation state
+
+**Solution**: Validate only for forward navigation
+```javascript
+$(document).on('click', '.wizard-tab', function(e) {
+    const targetIndex = parseInt($(this).data('block-index'));
+    const currentIndex = window.formManager.currentBlockIndex;
+    
+    // Only validate when moving forward
+    if (targetIndex > currentIndex) {
+        if (!window.formManager.validateCurrentBlock()) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }
+    
+    window.formManager.navigateToBlock(targetIndex);
+});
+```
+
+### Case Conversion Between JavaScript and C#
+**Issue**: JavaScript uses camelCase but C# uses PascalCase causing property mismatches
+**Cause**: Default JSON serialization doesn't convert cases
+
+**Solution**: Use JsonNamingPolicy.CamelCase
+```csharp
+// In Razor view for JavaScript consumption
+let draftData = @Html.Raw(Model.DraftData != null ? 
+    System.Text.Json.JsonSerializer.Serialize(Model.DraftData, 
+        new System.Text.Json.JsonSerializerOptions { 
+            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase 
+        }) : "null");
+
+// In C# when deserializing from JavaScript
+var options = new JsonSerializerOptions
+{
+    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+};
+var draftData = JsonSerializer.Deserialize<DraftDataDto>(json, options);
+```
+
+## Integration Event Patterns
+
+### Enriching Events with User Details
+**Issue**: Integration events need user email/name but only have IDs
+**Pattern**: Enrich event at source rather than in handler
+
+```csharp
+// ❌ WRONG - Handler queries for user details (cross-boundary)
+public async Task Handle(ProjectStageActivatedIntegrationEvent notification, ...)
+{
+    foreach (var userId in notification.ParticipantUserIds)
+    {
+        var user = await userManager.FindByIdAsync(userId); // Cross-boundary query
+        // ...
+    }
+}
+
+// ✅ CORRECT - Event carries all needed data
+// In command handler that publishes event:
+var participants = new List<ParticipantNotificationInfo>();
+foreach (var projectUser in projectWithUsers.ProjectUsers)
+{
+    var userResult = await mediator.Send(new GetUserByIdQuery(projectUser.UserId));
+    participants.Add(new ParticipantNotificationInfo(
+        UserId: projectUser.UserId,
+        Email: userResult.Value.Email,
+        FullName: userResult.Value.FullName));
+}
+var integrationEvent = new ProjectStageActivatedIntegrationEvent(
+    Participants: participants, // Enriched with email/name
+    // ...
+);
+```
+
+### Notification Handler Consistency
+**Pattern**: All notification handlers should use same services
+
+```csharp
+// ✅ CONSISTENT PATTERN
+public class ProjectStageActivatedIntegrationEventHandler(
+    IEmailPreferenceService emailPreferenceService,
+    IEmailQueueService emailQueueService,
+    IEmailTemplateService emailTemplateService,  // Use template service
+    IApplicationUrlService applicationUrlService,  // Use URL service
+    ILogger<...> logger)
+{
+    // Generate email using template service
+    var emailBody = _emailTemplateService.GenerateProjectStageActivatedEmail(...);
+    
+    // Use application URL service for links
+    var dashboardUrl = _applicationUrlService.GetParticipantProjectDashboardUrl(projectId);
+}
+```
+
+## Domain Entity Property Mismatches
+
+### ProjectFormSubmission Properties
+**Common Mistakes**: Using properties from AuditableEntity when entity only inherits from Entity
+```csharp
+// ❌ WRONG - These properties don't exist
+CreatedAt, UpdatedAt  // Entity doesn't inherit from AuditableEntity
+IsDeleted            // Not available on this entity
+CreatedBy            // Use ParticipantUserId instead
+
+// ✅ CORRECT - Available properties
+StartedAt            // When form was started
+SubmittedAt          // When form was submitted (nullable)
+ApprovedAt           // When form was approved (nullable)
+RejectedAt           // When form was rejected (nullable)
+ParticipantUserId    // The user who owns the form
+```
+
+### ProjectStage Properties
+**Note**: ProjectStage inherits from AuditableEntity
+```csharp
+// Available from AuditableEntity
+CreatedAt, UpdatedAt, CreatedBy, UpdatedBy
+
+// Domain-specific properties
+EndDate  // DateTime (not nullable) - common mistake: treating as DateTime?
+Type     // ProjectStageType enum
+IsActive // bool
+
+// ❌ WRONG - Property doesn't exist
+OrderIndex  // Use Id for ordering if needed
+```
+
+## Build Configuration with StyleCop
+
+### TreatWarningsAsErrors Configuration
+**Configuration**: `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`
+**Impact**: All StyleCop warnings become build errors
+
+**Common Violations**:
+- SA1028: Trailing whitespace
+- SA1513: Closing brace needs blank line after
+- SA1633: File must have copyright header
+- SA1101: Prefix local calls with this
+
+**Quick Build for Testing**:
+```bash
+# Bypass StyleCop errors temporarily
+dotnet build -p:TreatWarningsAsErrors=false
+```
+
+### Namespace Conflicts in Views
+**Issue**: Using enums from different namespaces in Razor views
+```razor
+@* ❌ WRONG - Full namespace in switch statements *@
+case BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Draft:
+
+@* ✅ CORRECT - Add using directive at top *@
+@using LinaSys.BusinessIncubator.Domain.Enums
+case ProjectFormSubmissionStatus.Draft:
+```

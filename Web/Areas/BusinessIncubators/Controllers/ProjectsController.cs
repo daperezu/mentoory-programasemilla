@@ -19,7 +19,7 @@ namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 
 [Area("BusinessIncubators")]
 [Route("BusinessIncubators/{businessIncubatorId:guid}/Projects")]
-public class ProjectsController(ILogger<ProjectsController> logger, MediatorExecutor mediator, BusinessIncubator.Domain.Repositories.IBusinessIncubatorRepository businessIncubatorRepository)
+public class ProjectsController(ILogger<ProjectsController> logger, MediatorExecutor mediator)
     : AuthorizedBaseController(logger, mediator)
 {
     [HttpGet("Create")]
@@ -180,14 +180,15 @@ public class ProjectsController(ILogger<ProjectsController> logger, MediatorExec
     [HttpGet("{projectId:guid}/Invitations")]
     public async Task<IActionResult> Invitations(Guid businessIncubatorId, Guid projectId)
     {
-        var project = await businessIncubatorRepository.GetProjectByExternalIdAsync(projectId);
+        var projectQuery = new LinaSys.BusinessIncubator.Application.Queries.GetProjectByExternalIdQuery(projectId);
+        var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
 
         var viewModel = new ProjectInvitationsViewModel
         {
             BusinessIncubatorId = businessIncubatorId,
             ProjectId = projectId,
             BusinessIncubatorName = await GetBusinessIncubatorNameAsync(businessIncubatorId),
-            ProjectName = project?.Name ?? "Proyecto",
+            ProjectName = projectResult.Value?.Name ?? "Proyecto",
         };
 
         return View(viewModel);
@@ -276,16 +277,19 @@ public class ProjectsController(ILogger<ProjectsController> logger, MediatorExec
             return Unauthorized();
         }
 
-        // Get project to verify access
-        var project = await businessIncubatorRepository.GetProjectByExternalIdAsync(projectId);
-        if (project is null)
+        // Get project and verify access
+        var projectQuery = new LinaSys.BusinessIncubator.Application.Queries.GetProjectByExternalIdQuery(
+            projectId,
+            CheckAccessForUserId: userId);
+        var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
+
+        if (!projectResult.IsSuccess || projectResult.Value is null)
         {
             return NotFound();
         }
 
-        // Check if user has access to this project
-        var hasAccess = project.HasFormAccess(userId);
-        if (!hasAccess)
+        // Check if user has access through UserProjectAccess (Auth domain)
+        if (projectResult.Value.HasAccess == false)
         {
             TempData["ErrorMessage"] = "No tienes acceso a este proyecto.";
             return RedirectToAction("Index", "Home", new { area = string.Empty });
@@ -304,7 +308,7 @@ public class ProjectsController(ILogger<ProjectsController> logger, MediatorExec
         {
             BusinessIncubatorExternalId = businessIncubatorId,
             ProjectId = projectId,
-            ProjectName = project.Name,
+            ProjectName = projectResult.Value.Name,
             FormSubmissions = submissionsResult
         };
 

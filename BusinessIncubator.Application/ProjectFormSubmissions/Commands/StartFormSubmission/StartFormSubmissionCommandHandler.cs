@@ -35,7 +35,6 @@ public sealed class StartFormSubmissionCommandHandler(IBusinessIncubatorReposito
             // - New submission creation
             var submission = project.StartFormSubmission(
                 request.ParticipantUserId,
-                request.FormId,
                 timeProvider.UtcNow);
 
             // Save changes

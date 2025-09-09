@@ -51,7 +51,6 @@ public sealed class ApproveFormSubmissionCommandHandler(
             var integrationEvent = new ProjectFormSubmissionApproved(
                 submission.ProjectId,
                 submission.ParticipantUserId,
-                submission.FormId,
                 submission.DraftData ?? string.Empty,
                 submission.ApprovedAt!.Value,
                 submission.ApprovedByUserId!);
