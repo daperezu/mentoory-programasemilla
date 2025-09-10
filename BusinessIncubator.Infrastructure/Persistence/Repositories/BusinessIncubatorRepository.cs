@@ -978,4 +978,36 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
     {
         dbContext.Set<ProjectFormFeedback>().Update(feedback);
     }
+
+    /// <inheritdoc/>
+    public async Task<Dictionary<long, ProjectQuestion>> GetProjectQuestionsWithAnswerOptionsAsync(
+        long projectId,
+        QuestionPhase phase,
+        CancellationToken cancellationToken = default)
+    {
+        // Get all questions for the project that apply to the specified phase
+        // Using a join approach since navigation properties are internal
+        var questions = await (from q in dbContext.Set<ProjectQuestion>()
+                               join t in dbContext.Set<ProjectTopic>() on q.ProjectTopicId equals t.Id
+                               join m in dbContext.Set<ProjectModule>() on t.ProjectModuleId equals m.Id
+                               join k in dbContext.Set<ProjectKnowledgeStructure>() on m.ProjectKnowledgeStructureId equals k.Id
+                               where k.ProjectId == projectId && q.AppliesToPhase == phase
+                               select q)
+            .Include(q => q.ProjectAnswerOptions)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return questions.ToDictionary(q => q.Id);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<ProjectAnswerOption>> GetAnswerOptionsByIdsAsync(
+        List<long> answerOptionIds,
+        CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Set<ProjectAnswerOption>()
+            .Where(ao => answerOptionIds.Contains(ao.Id))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

@@ -8,6 +8,102 @@ window.FormReview = (function() {
     let feedbackList = [];
     let isDirty = false;
 
+    // Bootstrap modal helper functions
+    function showConfirmModal(title, message, confirmText, cancelText) {
+        return new Promise((resolve) => {
+            const modalHtml = `
+                <div class="modal fade" id="confirmModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${title}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>${message}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${cancelText}</button>
+                                <button type="button" class="btn btn-primary" id="confirmBtn">${confirmText}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove any existing modal
+            const existingModal = document.getElementById('confirmModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add new modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            const modalElement = document.getElementById('confirmModal');
+            const modal = new bootstrap.Modal(modalElement);
+            
+            // Handle confirm button
+            document.getElementById('confirmBtn').addEventListener('click', () => {
+                modal.hide();
+                resolve(true);
+            });
+            
+            // Handle modal hidden event
+            modalElement.addEventListener('hidden.bs.modal', () => {
+                modalElement.remove();
+                resolve(false);
+            });
+            
+            modal.show();
+        });
+    }
+
+    function showSuccessModal(title, message) {
+        return new Promise((resolve) => {
+            const modalHtml = `
+                <div class="modal fade" id="successModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">
+                                    <i class="fas fa-check-circle me-2"></i>${title}
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>${message}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-success" data-bs-dismiss="modal">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Remove any existing modal
+            const existingModal = document.getElementById('successModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+            
+            // Add new modal to body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            const modalElement = document.getElementById('successModal');
+            const modal = new bootstrap.Modal(modalElement);
+            
+            // Handle modal hidden event
+            modalElement.addEventListener('hidden.bs.modal', () => {
+                modalElement.remove();
+                resolve();
+            });
+            
+            modal.show();
+        });
+    }
+
     // Initialize the review system
     function init(submissionId) {
         if (!submissionId) {
@@ -419,17 +515,14 @@ window.FormReview = (function() {
 
     // Handle approve action
     async function handleApprove() {
-        const result = await Swal.fire({
-            title: '¿Aprobar formulario?',
-            text: 'El participante será notificado y el formulario quedará marcado como aprobado.',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, aprobar',
-            cancelButtonText: 'Cancelar',
-            confirmButtonColor: '#198754'
-        });
+        const confirmed = await showConfirmModal(
+            '¿Aprobar formulario?',
+            'El participante será notificado y el formulario quedará marcado como aprobado.',
+            'Sí, aprobar',
+            'Cancelar'
+        );
         
-        if (!result.isConfirmed) return;
+        if (!confirmed) return;
         
         const comments = document.getElementById('generalComments').value.trim();
         
@@ -450,12 +543,10 @@ window.FormReview = (function() {
                 throw new Error('Failed to approve submission');
             }
             
-            await Swal.fire({
-                title: 'Aprobado',
-                text: 'El formulario ha sido aprobado exitosamente.',
-                icon: 'success',
-                confirmButtonText: 'OK'
-            });
+            await showSuccessModal(
+                'Aprobado',
+                'El formulario ha sido aprobado exitosamente.'
+            );
             
             // Redirect back to review list
             window.location.href = '/Coordination/FormReview';
@@ -510,12 +601,10 @@ window.FormReview = (function() {
             // Close modal
             bootstrap.Modal.getInstance(document.getElementById('requestChangesModal')).hide();
             
-            await Swal.fire({
-                title: 'Cambios Solicitados',
-                text: 'Se han solicitado cambios al participante. Será notificado por correo electrónico.',
-                icon: 'success',
-                confirmButtonText: 'OK'
-            });
+            await showSuccessModal(
+                'Cambios Solicitados',
+                'Se han solicitado cambios al participante. Será notificado por correo electrónico.'
+            );
             
             // Redirect back to review list
             window.location.href = '/Coordination/FormReview';
@@ -528,16 +617,14 @@ window.FormReview = (function() {
 
     // Handle flag for review
     async function handleFlag() {
-        const result = await Swal.fire({
-            title: 'Marcar para revisión especial',
-            text: 'Este formulario será marcado para una revisión más detallada.',
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: 'Marcar',
-            cancelButtonText: 'Cancelar'
-        });
+        const confirmed = await showConfirmModal(
+            'Marcar para revisión especial',
+            'Este formulario será marcado para una revisión más detallada.',
+            'Marcar',
+            'Cancelar'
+        );
         
-        if (!result.isConfirmed) return;
+        if (!confirmed) return;
         
         // TODO: Implement flag functionality
         showToast('Formulario marcado para revisión especial', 'info', 'Marcado');

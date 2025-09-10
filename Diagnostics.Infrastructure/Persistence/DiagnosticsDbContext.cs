@@ -124,6 +124,8 @@ public class DiagnosticsDbContext(DbContextOptions<DiagnosticsDbContext> options
             entity.OwnsMany(x => x.PhaseSummaries, summaries =>
             {
                 summaries.ToTable("DiagnosisPhaseSummaries", "diagnostics");
+                summaries.Property<long>("Id");  // Explicitly configure Id as long to match database
+                summaries.HasKey("Id");
                 summaries.Property(s => s.Phase).HasConversion<int>();
                 summaries.Property(s => s.CompletedAt).IsRequired();
                 summaries.Property(s => s.AnswerCount).IsRequired();

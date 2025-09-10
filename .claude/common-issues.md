@@ -724,6 +724,31 @@ public class Handler : IRequestHandler<Query, Result<ProjectDto>>  // ✅
 
 ## Enum Parsing Issues
 
+### Cross-Domain Enum Mapping
+**Important**: Enums should match 1:1 between bounded contexts when representing the same concept.
+- Diagnostics domain is the source of truth for FODA and ODSR types
+- BusinessIncubator domain must use matching enum values
+
+```csharp
+// Both domains should have identical enums:
+// FodaType: NoDefinido='N', Fortalezas='F', Oportunidades='O', Debilidades='D', Amenazas='A'
+// OdsrType: NoDefinido='N', Ofensiva='O', Defensiva='D', Supervivencia='S', Reorientacion='R'
+```
+
+**Solution**: When enums match 1:1, use simple cast conversion
+```csharp
+private OdsrType ConvertToOdsrType(BusinessIncubatorEnums.OdsrType? odsrType)
+{
+    if (!odsrType.HasValue)
+    {
+        return OdsrType.NoDefinido;
+    }
+
+    // Enums match 1:1, just cast with same char values
+    return (OdsrType)(char)odsrType.Value;
+}
+```
+
 ### FODA/ODSR String Conversion
 ```csharp
 // Problem: Invalid enum value

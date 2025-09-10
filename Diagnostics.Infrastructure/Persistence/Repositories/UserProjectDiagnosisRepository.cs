@@ -30,7 +30,7 @@ public class UserProjectDiagnosisRepository(DiagnosticsDbContext context) : Abst
         CancellationToken cancellationToken = default)
     {
         var diagnosis = await context.Set<UserProjectDiagnosis>()
-            .Include("_answers")
+            .Include(d => d.Answers)
             .Include(d => d.PhaseSummaries)
             .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
 
@@ -44,7 +44,7 @@ public class UserProjectDiagnosisRepository(DiagnosticsDbContext context) : Abst
         CancellationToken cancellationToken = default)
     {
         return await context.Set<UserProjectDiagnosis>()
-            .Include("_answers")
+            .Include(d => d.Answers)
             .Include(d => d.PhaseSummaries)
             .FirstOrDefaultAsync(
                 d => d.ProjectId == projectId && d.UserId == userId,
@@ -57,7 +57,7 @@ public class UserProjectDiagnosisRepository(DiagnosticsDbContext context) : Abst
         CancellationToken cancellationToken = default)
     {
         return await context.Set<UserProjectDiagnosis>()
-            .Include("_answers")
+            .Include(d => d.Answers)
             .Include(d => d.PhaseSummaries)
             .Where(d => d.ProjectId == projectId)
             .ToListAsync(cancellationToken);
@@ -69,7 +69,7 @@ public class UserProjectDiagnosisRepository(DiagnosticsDbContext context) : Abst
         CancellationToken cancellationToken = default)
     {
         return await context.Set<UserProjectDiagnosis>()
-            .Include("_answers")
+            .Include(d => d.Answers)
             .Include(d => d.PhaseSummaries)
             .Where(d => d.Status == status)
             .ToListAsync(cancellationToken);

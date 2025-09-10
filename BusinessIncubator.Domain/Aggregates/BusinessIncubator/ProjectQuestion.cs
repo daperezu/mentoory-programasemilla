@@ -142,7 +142,7 @@ public partial class ProjectQuestion : Entity
         bool isOdsrExplanationCustomized,
         int order,
         bool isOrderCustomized,
-        string followUpQuestionText,
+        string? followUpQuestionText,
         bool isFollowUpTextCustomized)
     {
         var answerOption = new ProjectAnswerOption(

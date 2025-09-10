@@ -22,7 +22,7 @@ public partial class ProjectAnswerOption : Entity
         bool isOdsrExplanationCustomized,
         int order,
         bool isOrderCustomized,
-        string followUpQuestionText,
+        string? followUpQuestionText,
         bool isFollowUpTextCustomized)
     {
         ProjectQuestionId = projectQuestionId;
@@ -81,7 +81,7 @@ public partial class ProjectAnswerOption : Entity
 
     public bool IsOrderCustomized { get; private set; }
 
-    public string FollowUpQuestionText { get; private set; }
+    public string? FollowUpQuestionText { get; private set; }
 
     public bool IsFollowUpTextCustomized { get; private set; }
 
@@ -186,12 +186,12 @@ public partial class ProjectAnswerOption : Entity
         UpdateText(sourceText, isCustomized: false);
     }
 
-    public void CustomizeFollowUpQuestionText(string text)
+    public void CustomizeFollowUpQuestionText(string? text)
     {
         UpdateFollowUpQuestionText(text, isCustomized: true);
     }
 
-    public void ResetFollowUpQuestionTextToSource(string sourceText)
+    public void ResetFollowUpQuestionTextToSource(string? sourceText)
     {
         UpdateFollowUpQuestionText(sourceText, isCustomized: false);
     }
