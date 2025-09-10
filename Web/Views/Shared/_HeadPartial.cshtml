@@ -1,4 +1,7 @@
-﻿<meta charset="utf-8">
+﻿@using LinaSys.Web.Services
+@inject IGoogleAnalyticsService GoogleAnalyticsService
+
+<meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
@@ -13,6 +16,16 @@
 <meta name="theme-color" content="#ffffff">
 <script src="~/vendors/simplebar/simplebar.min.js"></script>
 <script src="~/assets/js/config.js"></script>
+
+@if (GoogleAnalyticsService.IsEnabled())
+{
+    <!-- Google Analytics -->
+    <script async src="@GoogleAnalyticsService.GetGtagScriptUrl()"></script>
+    <script>
+        @Html.Raw(GoogleAnalyticsService.GetInitializationScript())
+    </script>
+    <!-- End Google Analytics -->
+}
 
 <!-- ===============================================-->
 <!--    Stylesheets-->
