@@ -27,6 +27,18 @@ ResultErrorCodes.BusinessIncubator_NotFound
 
 ## Entity Framework Issues
 
+### Include with String-Based Backing Field
+**Error**: `InvalidIncludePathError: Unable to find navigation '_answers'`
+**Cause**: Using backing field name in Include instead of navigation property
+**Solution**: Use lambda expression with public property
+```csharp
+// ❌ WRONG - Using backing field name
+.Include("_answers")
+
+// ✅ CORRECT - Use public navigation property
+.Include(d => d.Answers)
+```
+
 ### DbContext Missing Entity Error
 **Error**: `Cannot create a DbSet for 'EntityName' because this type is not included in the model`
 **Solution**: 
@@ -722,6 +734,47 @@ public class Handler : IRequestHandler<Query, ProjectDto>  // ❌ Should return 
 public class Handler : IRequestHandler<Query, Result<ProjectDto>>  // ✅
 ```
 
+## Database Issues
+
+### NULL Values in Seed Data
+**Error**: `Cannot insert the value NULL into column 'ProjectQuestionId'`
+**Cause**: IF NOT EXISTS blocks prevent retrieving existing IDs
+**Solution**: Add ELSE clauses to retrieve existing IDs
+```sql
+IF NOT EXISTS (SELECT 1 FROM [table] WHERE condition)
+BEGIN
+    INSERT INTO [table] ...
+    SET @NewId = SCOPE_IDENTITY();
+END
+ELSE
+BEGIN
+    SELECT @NewId = Id FROM [table] WHERE condition;
+END
+```
+
+### Duplicate Key Violation for Multi-Choice
+**Error**: `Violation of UNIQUE constraint` when selecting multiple answers
+**Cause**: Unique constraint doesn't account for AnswerOptionId
+**Solution**: Include AnswerOptionId in unique constraint
+```sql
+CREATE UNIQUE INDEX [UQ_DiagnosisAnswers_ProjectId_UserId_QuestionId_AnswerOptionId_Phase] 
+ON [diagnostics].[DiagnosisAnswers](
+    [ProjectId], [UserId], [QuestionId], [AnswerOptionId], [Phase]
+);
+```
+
+### Type Mismatch in Owned Collections
+**Error**: `Expected type was 'System.Int32' but actual value was of type 'System.Int64'`
+**Cause**: EF Core assuming Int32 for owned collection IDs
+**Solution**: Explicitly configure as long
+```csharp
+entity.OwnsMany(x => x.PhaseSummaries, summaries =>
+{
+    summaries.Property<long>("Id");  // Explicitly configure as long
+    summaries.HasKey("Id");
+});
+```
+
 ## Enum Parsing Issues
 
 ### Cross-Domain Enum Mapping
@@ -945,6 +998,51 @@ var dacpacPath = Path.Combine(Directory.GetCurrentDirectory(),
 
 # Solution 3: Skip integration tests temporarily
 dotnet test --filter "Category!=Integration"
+```
+
+## JavaScript and UI Issues
+
+### SweetAlert2 Not Available in Phoenix Template
+**Error**: `ReferenceError: Swal is not defined`
+**Cause**: Phoenix Admin template doesn't include SweetAlert2
+**Solution**: Use Bootstrap modals instead
+```javascript
+// ❌ WRONG - SweetAlert2 not available
+Swal.fire({ title: 'Confirm', ... });
+
+// ✅ CORRECT - Use Bootstrap modals
+function showConfirmModal(title, message, confirmText, cancelText) {
+    return new Promise((resolve) => {
+        const modalHtml = `
+            <div class="modal fade" id="confirmModal">
+                <!-- Bootstrap modal structure -->
+            </div>
+        `;
+        // Append to body and show modal
+    });
+}
+```
+
+### Submit Button Visibility for Approved Forms
+**Issue**: Submit button showing on approved form submissions
+**Cause**: Action buttons container with `display: none !important;` overrides JavaScript
+**Solution**: Remove !important and control visibility via JavaScript
+```html
+<!-- ❌ WRONG - !important prevents JavaScript control -->
+<div id="actionButtons" style="display: none !important;">
+
+<!-- ✅ CORRECT - Allow JavaScript to control -->
+<div id="actionButtons">
+```
+
+```javascript
+// Control button visibility based on form status
+if (this.config.isReadOnly && !this.config.canSubmit) {
+    // Hide entire footer for approved forms with single block
+    if (this.formStructure.blocks.length <= 1) {
+        actionButtons.style.display = 'none';
+    }
+}
 ```
 
 ## Entity Framework Core Configuration Issues

@@ -1,66 +1,64 @@
 # Work Log
 
-## 2025-09-09 - Form Approval Workflow Implementation (REQ-007)
+## 2025-09-10 - Critical Bug Fixes and UI Improvements
 
 ### Context
-Form approval at `/Coordination/FormReview/Review/{id}` was not working - only created review record without changing submission status or triggering diagnostics integration.
+Multiple JavaScript and database errors were blocking form submissions and approvals. User reported series of runtime errors that needed immediate fixes.
 
 ### Completed
-1. **Created unified approval command**:
-   - New file: `BusinessIncubator.Application\ProjectFormSubmissions\Commands\ApproveWithReview\ApproveFormSubmissionWithReviewCommand.cs`
-   - Handler combines review creation and submission approval in single transaction
-   - Publishes `ProjectFormSubmissionApproved` integration event
-   - Sends email notification (non-blocking if fails)
+1. **Fixed SweetAlert2 ReferenceError**:
+   - Replaced SweetAlert2 with Bootstrap modals per Phoenix template standards
+   - Added `showConfirmModal()` and `showSuccessModal()` helper functions
+   - File: `Web\wwwroot\js\coordination\form-review.js`
 
-2. **Updated FormReviewController**:
-   - Changed from `ApproveSubmissionCommand` to `ApproveFormSubmissionWithReviewCommand`
-   - Added project ID retrieval from context
-   - File: `Web\Areas\Coordination\Controllers\FormReviewController.cs` (lines 128-172)
+2. **Fixed Entity Framework Include error**:
+   - Changed `Include("_answers")` to `Include(d => d.Answers)` 
+   - Property-based Include instead of backing field reference
+   - File: `Diagnostics.Infrastructure\Persistence\Repositories\UserProjectDiagnosisRepository.cs`
 
-3. **Added repository methods for metadata**:
-   - `GetProjectQuestionsWithAnswerOptionsAsync`: Fetches questions with FODA/ODSR metadata
-   - `GetAnswerOptionsByIdsAsync`: Gets answer options with scores
-   - Used LINQ joins since navigation properties are internal
-   - Files: `IBusinessIncubatorRepository.cs`, `BusinessIncubatorRepository.cs`
+3. **Fixed NULL ProjectQuestionId in seed data**:
+   - Added ELSE clauses to retrieve existing IDs when questions already exist
+   - File: `Db\PostDeployment\011.SeedProjectKnowledgeStructure.sql`
 
-4. **Enhanced integration event handler**:
-   - `ProjectFormSubmissionApprovedHandler` now fetches complete metadata
-   - Maps between BusinessIncubator and Diagnostics domain enums
-   - Creates DiagnosisAnswers with FODA, ODSR, scores
-   - File: `Orchestration.Application\BusinessIncubator\EventHandlers\ProjectFormSubmissionApprovedHandler.cs`
+4. **Fixed InvalidCastException (Int64 to Int32)**:
+   - Added explicit enum conversions in DbContext
+   - Configured DiagnosisPhaseSummary.Id as long in owned collection
+   - Files: `BusinessIncubator.Infrastructure\Persistence\BusinessIncubatorDbContext.cs`, 
+           `Diagnostics.Infrastructure\Persistence\DiagnosticsDbContext.cs`
+
+5. **Fixed duplicate key violation**:
+   - Updated unique constraint to include AnswerOptionId for multi-choice questions
+   - File: `Db\diagnostics\Tables\DiagnosisAnswers.sql`
+
+6. **Fixed submit button visibility**:
+   - Removed `display: none !important;` from action buttons container
+   - Added logic to hide submit button when form is approved
+   - Files: `Web\Areas\BusinessIncubators\Views\ParticipantForm\Index.cshtml`,
+           `Web\wwwroot\js\businessincubators\participant-form.js`
 
 ### Key Decisions
-1. **Unified command pattern**: Combine review and approval to ensure consistency
-2. **LINQ joins over navigation**: Work around internal navigation properties
-3. **Enum mapping required**: OdsrType values differ between domains (Ofensiva/Defensiva vs OdsGenero/OdsAmbiental)
-4. **Non-blocking email**: Don't fail approval if email service fails
+1. **Bootstrap modals over SweetAlert2**: Follow Phoenix template standards
+2. **Property-based EF Include**: More maintainable than string-based
+3. **Explicit type configurations**: Prevent implicit casting issues
+4. **Conditional button visibility**: Based on submission status
 
 ### Problems & Solutions
-**Problem**: Namespace conflicts with "Project" type
+**Problem**: DiagnosisPhaseSummary.Id type mismatch
 ```csharp
-// Before - ambiguous:
-private async Task SendApprovalNotificationAsync(Project project, ...)
-
-// After - explicit:
-private async Task SendApprovalNotificationAsync(
-    Domain.Aggregates.BusinessIncubator.Project project, ...)
+// Solution: Explicitly configure Id as long
+entity.OwnsMany(x => x.PhaseSummaries, summaries =>
+{
+    summaries.Property<long>("Id");
+    summaries.HasKey("Id");
+});
 ```
 
-**Update**: Confirmed enums already match 1:1 between domains
-```csharp
-// Both domains have identical values:
-// NoDefinido='N', Ofensiva='O', Defensiva='D', Supervivencia='S', Reorientacion='R'
-// Simplified conversion to direct cast:
-return (OdsrType)(char)odsrType.Value;
+**Problem**: Duplicate key when user selects multiple answers
+```sql
+-- Solution: Include AnswerOptionId in unique constraint
+CREATE UNIQUE INDEX [UQ_DiagnosisAnswers_ProjectId_UserId_QuestionId_AnswerOptionId_Phase] 
+ON [diagnostics].[DiagnosisAnswers]([ProjectId], [UserId], [QuestionId], [AnswerOptionId], [Phase]);
 ```
-
-### Refactoring: Phase Extraction Method
-**Problem**: `ExtractPhaseFromDraftData` method was returning null (placeholder logic)
-**Solution**: Enhanced integration event to include phase directly from submission
-- Updated `ProjectFormSubmissionApproved` event to include `SubmissionId` and `Phase`
-- Updated both approval command handlers to pass these values
-- Removed `ExtractPhaseFromDraftData` method entirely
-- Handler now uses phase directly from event instead of trying to extract it
 
 ### Build Status
-✅ Clean build - 0 errors, 0 warnings after refactoring
+✅ Clean build - 0 errors, 0 warnings after all fixes
