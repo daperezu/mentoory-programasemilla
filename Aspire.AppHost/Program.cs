@@ -8,6 +8,8 @@ IResourceBuilder<IResourceWithConnectionString> dbDefaultConnection;
 IResourceBuilder<AzureBlobStorageResource> blobs;
 IResourceBuilder<ParameterResource>? mailgunDomain = null;
 IResourceBuilder<ParameterResource>? mailgunApiKey = null;
+IResourceBuilder<ParameterResource>? googleAnalyticsMeasurementId = null;
+IResourceBuilder<ParameterResource>? googleAnalyticsEnabled = null;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -31,6 +33,9 @@ else //// Running in Azure
 
     mailgunDomain = builder.AddParameter("mailgun-domain");
     mailgunApiKey = builder.AddParameter("mailgun-apikey", secret: true);
+
+    googleAnalyticsMeasurementId = builder.AddParameter("googleanalytics-measurementid", secret: true);
+    googleAnalyticsEnabled = builder.AddParameter("googleanalytics-enabled");
 }
 
 var appSettingsJson = AppsettingsLoader.SerializeUserJsonConfiguration(builder.ExecutionContext.IsRunMode, out var appSettingsJsonHash);
@@ -48,6 +53,13 @@ if (mailgunDomain != null && mailgunApiKey != null)
     webProject
         .WithEnvironment("Mailgun__Domain", mailgunDomain)
         .WithEnvironment("Mailgun__ApiKey", mailgunApiKey);
+}
+
+if (googleAnalyticsMeasurementId != null && googleAnalyticsEnabled != null)
+{
+    webProject
+        .WithEnvironment("GoogleAnalytics__MeasurementId", googleAnalyticsMeasurementId)
+        .WithEnvironment("GoogleAnalytics__Enabled", googleAnalyticsEnabled);
 }
 
 builder.Build().Run();

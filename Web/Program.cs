@@ -92,6 +92,9 @@ builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 // Register ApplicationUrlService for generating URLs in the application layer
 builder.Services.AddScoped<IApplicationUrlService, ApplicationUrlService>();
 
+// Register Google Analytics service for web analytics tracking
+builder.Services.AddSingleton<IGoogleAnalyticsService, GoogleAnalyticsService>();
+
 #region Modules dependencies registration
 
 // Register shared application services (including IIntegrationEventService)
