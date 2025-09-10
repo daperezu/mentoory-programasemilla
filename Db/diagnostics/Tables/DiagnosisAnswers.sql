@@ -32,8 +32,9 @@
 GO
 
 -- Create unique constraint to prevent duplicate answers within a project
-CREATE UNIQUE NONCLUSTERED INDEX [UQ_DiagnosisAnswers_ProjectId_UserId_QuestionId_Phase] 
-ON [diagnostics].[DiagnosisAnswers]([ProjectId] ASC, [UserId] ASC, [QuestionId] ASC, [Phase] ASC);
+-- Include AnswerOptionId to allow multiple answer options for multi-choice questions
+CREATE UNIQUE NONCLUSTERED INDEX [UQ_DiagnosisAnswers_ProjectId_UserId_QuestionId_AnswerOptionId_Phase] 
+ON [diagnostics].[DiagnosisAnswers]([ProjectId] ASC, [UserId] ASC, [QuestionId] ASC, [AnswerOptionId] ASC, [Phase] ASC);
 GO
 
 -- Create indexes for performance

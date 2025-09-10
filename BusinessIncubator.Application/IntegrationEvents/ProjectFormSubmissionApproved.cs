@@ -9,7 +9,9 @@ namespace LinaSys.BusinessIncubator.Application.IntegrationEvents;
 /// </summary>
 public sealed record ProjectFormSubmissionApproved(
     long ProjectId,
+    long SubmissionId,
     string ParticipantUserId,
     string DraftData,
+    LinaSys.BusinessIncubator.Domain.Enums.QuestionPhase Phase,
     DateTime ApprovedAt,
     string ApprovedByUserId) : IntegrationEvent, INotification;

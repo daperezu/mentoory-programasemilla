@@ -662,6 +662,28 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// <param name="feedback">The feedback to update.</param>
     void UpdateFeedback(Aggregates.BusinessIncubator.ProjectFormFeedback feedback);
 
+    /// <summary>
+    /// Gets project questions with answer options for a specific project and phase.
+    /// </summary>
+    /// <param name="projectId">The project ID.</param>
+    /// <param name="phase">The question phase.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dictionary of question ID to ProjectQuestion entity with answer options.</returns>
+    Task<Dictionary<long, Aggregates.BusinessIncubator.ProjectQuestion>> GetProjectQuestionsWithAnswerOptionsAsync(
+        long projectId,
+        Enums.QuestionPhase phase,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets answer options by their IDs with all metadata.
+    /// </summary>
+    /// <param name="answerOptionIds">List of answer option IDs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of ProjectAnswerOption entities with full metadata.</returns>
+    Task<List<Aggregates.BusinessIncubator.ProjectAnswerOption>> GetAnswerOptionsByIdsAsync(
+        List<long> answerOptionIds,
+        CancellationToken cancellationToken = default);
+
     // NOTE: Report methods have been moved to IReportsRepository for proper DDD separation
 }
 

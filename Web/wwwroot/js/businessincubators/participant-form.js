@@ -264,15 +264,30 @@
             // Initialize Choices.js for nationality selects
             this.initializeEnhancedSelects();
 
-            // Show action buttons (hide save/submit in read-only mode)
-            document.getElementById('actionButtons').style.display = 'flex';
+            // Show action buttons container by default
+            const actionButtons = document.getElementById('actionButtons');
+            if (actionButtons) {
+                actionButtons.style.display = 'flex';
+            }
             
-            // Hide save and submit buttons in read-only mode
-            if (this.config.isReadOnly) {
+            // Hide save and submit buttons in read-only mode or when submission is not allowed
+            if (this.config.isReadOnly || !this.config.canSubmit) {
                 const saveDraftBtn = document.getElementById('btnSaveDraft');
                 const submitBtn = document.getElementById('btnSubmit');
                 if (saveDraftBtn) saveDraftBtn.style.display = 'none';
                 if (submitBtn) submitBtn.style.display = 'none';
+                
+                // If in read-only mode and can't submit, hide the entire action buttons footer
+                // except when there's navigation (previous/next buttons)
+                if (this.config.isReadOnly && !this.config.canSubmit) {
+                    // Check if we have multiple blocks that require navigation
+                    if (!this.formStructure || !this.formStructure.blocks || this.formStructure.blocks.length <= 1) {
+                        // Hide entire footer if there's only one block (no navigation needed)
+                        if (actionButtons) {
+                            actionButtons.style.display = 'none';
+                        }
+                    }
+                }
             }
 
             // Re-initialize auto-save for new inputs (only if not read-only)
@@ -1338,7 +1353,12 @@
             
             if (isLastBlock) {
                 btnNext.style.display = 'none';
-                btnSubmit.style.display = 'inline-block';
+                // Only show submit button if submission is allowed
+                if (this.config.canSubmit && !this.config.isReadOnly) {
+                    btnSubmit.style.display = 'inline-block';
+                } else {
+                    btnSubmit.style.display = 'none';
+                }
             } else {
                 btnNext.style.display = 'inline-block';
                 btnSubmit.style.display = 'none';

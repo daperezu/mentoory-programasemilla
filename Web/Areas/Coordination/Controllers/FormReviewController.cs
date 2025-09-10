@@ -1,5 +1,5 @@
 ﻿using LinaSys.BusinessIncubator.Application.Reviews.Commands.AddFeedback;
-using LinaSys.BusinessIncubator.Application.Reviews.Commands.ApproveSubmission;
+using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.ApproveWithReview;
 using LinaSys.BusinessIncubator.Application.Reviews.Commands.RequestChanges;
 using LinaSys.BusinessIncubator.Application.Reviews.Commands.CloseFeedback;
 using LinaSys.BusinessIncubator.Application.Reviews.Commands.ReopenFeedback;
@@ -134,10 +134,16 @@ public class FormReviewController(
             return BadRequest(ModelState);
         }
 
-        var command = new ApproveSubmissionCommand(
+        // Get current context for project ID
+        TryGetCurrentUserContext(out var contextResult);
+        var projectId = contextResult!.ProjectId!.Value;
+
+        // Use the new unified command that handles both review and approval
+        var command = new ApproveFormSubmissionWithReviewCommand(
+            projectId,
             request.SubmissionId,
-            request.Comments,
-            CurrentUserId);
+            CurrentUserId,
+            request.Comments);
 
         var result = await mediatorExecutor.SendAndLogIfFailureAsync(command, cancellationToken);
 
@@ -146,10 +152,7 @@ public class FormReviewController(
             return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al aprobar el formulario."] });
         }
 
-        TryGetCurrentUserContext(out var contextResult);
-        var projectId = contextResult!.ProjectId!.Value;
-
-        // Get submission details for participant name
+        // Get submission details for notification
         var submission = await repository.GetSubmissionByIdAsync(request.SubmissionId, cancellationToken);
         var participantName = submission?.ParticipantUserId ?? "Participante";
 
@@ -164,7 +167,7 @@ public class FormReviewController(
         {
             success = true,
             message = "Formulario aprobado exitosamente. El participante ha sido notificado.",
-            data = result.Value
+            redirectUrl = Url.Action("Index", "FormReview", new { area = "Coordination" })
         });
     }
 

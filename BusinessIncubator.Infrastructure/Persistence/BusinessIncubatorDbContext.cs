@@ -283,6 +283,15 @@ public class BusinessIncubatorDbContext(DbContextOptions<BusinessIncubatorDbCont
 
             entity.Property(e => e.Text).IsRequired();
 
+            // Explicitly configure enum conversions to prevent Int64 to Int32 casting issues
+            entity.Property(e => e.AnswerType)
+                .HasConversion<int>()
+                .IsRequired();
+
+            entity.Property(e => e.AppliesToPhase)
+                .HasConversion<int>()
+                .IsRequired();
+
             entity.HasOne(d => d.ProjectBlock)
                 .WithMany(p => p.ProjectQuestions)
                 .HasForeignKey(d => d.ProjectBlockId)
@@ -445,6 +454,9 @@ public class BusinessIncubatorDbContext(DbContextOptions<BusinessIncubatorDbCont
                 .IsRequired()
                 .HasDefaultValueSql("NEWID()");
             entity.Property(e => e.Status)
+                .HasConversion<int>()
+                .IsRequired();
+            entity.Property(e => e.Phase)
                 .HasConversion<int>()
                 .IsRequired();
             entity.Property(e => e.DraftData)
