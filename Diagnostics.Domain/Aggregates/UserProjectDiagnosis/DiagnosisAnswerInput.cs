@@ -116,4 +116,19 @@ public class DiagnosisAnswerInput
     /// Gets or sets the user identifier.
     /// </summary>
     public string UserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the answer source (Starter or Coordinator).
+    /// </summary>
+    public string AnswerSource { get; set; } = "Starter";
+
+    /// <summary>
+    /// Gets or sets the coordinator user ID when source is Coordinator.
+    /// </summary>
+    public string? CoordinatorUserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether this answer is preferred for diagnosis.
+    /// </summary>
+    public bool PreferredForDiagnosis { get; set; }
 }

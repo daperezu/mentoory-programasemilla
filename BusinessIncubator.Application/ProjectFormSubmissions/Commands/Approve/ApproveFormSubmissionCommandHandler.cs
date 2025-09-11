@@ -44,18 +44,20 @@ public sealed class ApproveFormSubmissionCommandHandler(
             submission.Approve(request.ApproverUserId, timeProvider.UtcNow);
 
             // Save changes
-            await repository.UpdateAsync(project, cancellationToken);
+            repository.Update(project);
             await repository.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-            // Publish integration event to create DiagnosisAnswers
+            // Publish integration event to create DiagnosisAnswers (with dual answers support)
             var integrationEvent = new ProjectFormSubmissionApproved(
-                submission.ProjectId,
-                submission.Id,
-                submission.ParticipantUserId,
-                submission.DraftData ?? string.Empty,
-                submission.Phase,
-                submission.ApprovedAt!.Value,
-                submission.ApprovedByUserId!);
+                ProjectId: submission.ProjectId,
+                SubmissionId: submission.Id,
+                ParticipantUserId: submission.ParticipantUserId,
+                CoordinatorUserId: submission.CoordinatorUserId ?? request.ApproverUserId,
+                StarterDraftData: submission.DraftData ?? string.Empty,
+                CoordinatorDraftData: submission.CoordinatorData ?? string.Empty,
+                Phase: submission.Phase,
+                ApprovedAt: submission.ApprovedAt!.Value,
+                ApprovedByUserId: submission.ApprovedByUserId!);
 
             await mediator.Publish(integrationEvent, cancellationToken);
 

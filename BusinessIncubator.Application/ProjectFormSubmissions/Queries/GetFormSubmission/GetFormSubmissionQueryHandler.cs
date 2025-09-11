@@ -128,8 +128,7 @@ public sealed class GetFormSubmissionQueryHandler(
             DraftData = draftData,
             CanEdit = submission.Status == ProjectFormSubmissionStatus.Draft ||
                       submission.Status == ProjectFormSubmissionStatus.Rejected,
-            CanSubmit = submission.Status == ProjectFormSubmissionStatus.Draft &&
-                        !string.IsNullOrWhiteSpace(submission.DraftData)
+            CanSubmit = submission.Status == ProjectFormSubmissionStatus.Draft
         };
 
         return Success(dto);

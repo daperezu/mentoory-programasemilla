@@ -26,22 +26,29 @@ public sealed class ProjectFormSubmissionApprovedHandler(
         try
         {
             logger.LogInformation(
-                "Processing approved form submission for project {ProjectId}, participant {ParticipantUserId}",
+                "Processing approved form submission with dual answers for project {ProjectId}, participant {ParticipantUserId}",
                 notification.ProjectId,
                 notification.ParticipantUserId);
 
-            // Parse draft data
-            if (string.IsNullOrWhiteSpace(notification.DraftData))
+            // Parse starter draft data
+            if (string.IsNullOrWhiteSpace(notification.StarterDraftData))
             {
-                logger.LogWarning("Approved form submission has no draft data");
+                logger.LogWarning("Approved form submission has no starter draft data");
                 return;
             }
 
-            var draftData = JsonSerializer.Deserialize<DraftDataDto>(notification.DraftData);
-            if (draftData is null)
+            var starterDraftData = JsonSerializer.Deserialize<DraftDataDto>(notification.StarterDraftData);
+            if (starterDraftData is null)
             {
-                logger.LogWarning("Failed to deserialize draft data");
+                logger.LogWarning("Failed to deserialize starter draft data");
                 return;
+            }
+
+            // Parse coordinator draft data
+            DraftDataDto? coordinatorDraftData = null;
+            if (!string.IsNullOrWhiteSpace(notification.CoordinatorDraftData))
+            {
+                coordinatorDraftData = JsonSerializer.Deserialize<DraftDataDto>(notification.CoordinatorDraftData);
             }
 
             // Get or create user project diagnosis
@@ -63,9 +70,10 @@ public sealed class ProjectFormSubmissionApprovedHandler(
                 notification.Phase,
                 cancellationToken);
 
-            // Collect all answer option IDs to fetch metadata
+            // Collect all answer option IDs from both starter and coordinator to fetch metadata
             var allAnswerOptionIds = new List<long>();
-            foreach (var blockResponse in draftData.BlockResponses)
+            // Collect from starter answers
+            foreach (var blockResponse in starterDraftData.BlockResponses)
             {
                 foreach (var questionResponse in blockResponse.QuestionResponses.Where(q => q.IsAnswered))
                 {
@@ -78,6 +86,23 @@ public sealed class ProjectFormSubmissionApprovedHandler(
                 }
             }
 
+            // Collect from coordinator answers if present
+            if (coordinatorDraftData != null)
+            {
+                foreach (var blockResponse in coordinatorDraftData.BlockResponses)
+                {
+                    foreach (var questionResponse in blockResponse.QuestionResponses.Where(q => q.IsAnswered))
+                    {
+                        if (questionResponse.AnswerType == (int)BusinessIncubatorEnums.AnswerType.MultiChoice ||
+                            questionResponse.AnswerType == (int)BusinessIncubatorEnums.AnswerType.SingleChoice)
+                        {
+                            var optionIds = ExtractAnswerOptionIds(questionResponse.Answer);
+                            allAnswerOptionIds.AddRange(optionIds);
+                        }
+                    }
+                }
+            }
+
             // Get answer option metadata
             var answerOptions = await businessIncubatorRepository.GetAnswerOptionsByIdsAsync(
                 allAnswerOptionIds.Distinct().ToList(),
@@ -86,8 +111,8 @@ public sealed class ProjectFormSubmissionApprovedHandler(
 
             var answerInputList = new List<DiagnosisAnswerInput>();
 
-            // Process each block
-            foreach (var blockResponse in draftData.BlockResponses)
+            // Process starter answers
+            foreach (var blockResponse in starterDraftData.BlockResponses)
             {
                 // Process each question in the block
                 foreach (var questionResponse in blockResponse.QuestionResponses.Where(q => q.IsAnswered))
@@ -112,7 +137,9 @@ public sealed class ProjectFormSubmissionApprovedHandler(
                                 questionResponse,
                                 answerOptionId,
                                 questionMetadata,
-                                answerOptionMap);
+                                answerOptionMap,
+                                "Starter",
+                                null);
 
                             answerInputList.Add(answerInput);
                         }
@@ -128,7 +155,9 @@ public sealed class ProjectFormSubmissionApprovedHandler(
                                 questionResponse,
                                 optionId,
                                 questionMetadata,
-                                answerOptionMap);
+                                answerOptionMap,
+                                "Starter",
+                                null);
 
                             answerInputList.Add(answerInput);
                         }
@@ -140,9 +169,78 @@ public sealed class ProjectFormSubmissionApprovedHandler(
                             notification,
                             blockResponse,
                             questionResponse,
-                            questionMetadata);
+                            questionMetadata,
+                            "Starter",
+                            null);
 
                         answerInputList.Add(answerInput);
+                    }
+                }
+            }
+
+            // Process coordinator answers if present
+            if (coordinatorDraftData != null)
+            {
+                foreach (var blockResponse in coordinatorDraftData.BlockResponses)
+                {
+                    foreach (var questionResponse in blockResponse.QuestionResponses.Where(q => q.IsAnswered))
+                    {
+                        if (string.IsNullOrWhiteSpace(questionResponse.Answer))
+                        {
+                            continue;
+                        }
+
+                        // Save ALL coordinator answers, not just different ones
+                        // This allows for complete dual-answer tracking in diagnostics
+
+                        // Handle different answer types for coordinator
+                        if (questionResponse.AnswerType == (int)BusinessIncubatorEnums.AnswerType.MultiChoice)
+                            {
+                                var optionIds = ExtractAnswerOptionIds(questionResponse.Answer);
+                                foreach (var answerOptionId in optionIds)
+                                {
+                                    var answerInput = CreateDiagnosisAnswerInput(
+                                        notification,
+                                        blockResponse,
+                                        questionResponse,
+                                        answerOptionId,
+                                        questionMetadata,
+                                        answerOptionMap,
+                                        "Coordinator",
+                                        notification.CoordinatorUserId);
+
+                                    answerInputList.Add(answerInput);
+                                }
+                            }
+                            else if (questionResponse.AnswerType == (int)BusinessIncubatorEnums.AnswerType.SingleChoice)
+                            {
+                                if (long.TryParse(questionResponse.Answer, out var optionId))
+                                {
+                                    var answerInput = CreateDiagnosisAnswerInput(
+                                        notification,
+                                        blockResponse,
+                                        questionResponse,
+                                        optionId,
+                                        questionMetadata,
+                                        answerOptionMap,
+                                        "Coordinator",
+                                        notification.CoordinatorUserId);
+
+                                    answerInputList.Add(answerInput);
+                                }
+                            }
+                            else
+                            {
+                                var answerInput = CreateDiagnosisAnswerInputForFreeForm(
+                                    notification,
+                                    blockResponse,
+                                    questionResponse,
+                                    questionMetadata,
+                                    "Coordinator",
+                                    notification.CoordinatorUserId);
+
+                                answerInputList.Add(answerInput);
+                            }
                     }
                 }
             }
@@ -190,7 +288,9 @@ public sealed class ProjectFormSubmissionApprovedHandler(
         QuestionResponseDto questionResponse,
         long answerOptionId,
         Dictionary<long, LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator.ProjectQuestion> questionMetadata,
-        Dictionary<long, LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator.ProjectAnswerOption> answerOptionMap)
+        Dictionary<long, LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator.ProjectAnswerOption> answerOptionMap,
+        string answerSource,
+        string? coordinatorUserId)
     {
         // Get question metadata
         var question = questionMetadata.ContainsKey(questionResponse.QuestionId)
@@ -223,7 +323,9 @@ public sealed class ProjectFormSubmissionApprovedHandler(
             Odsr = ConvertToOdsrType(answerOption?.Odsr),
             OdsrExplanation = answerOption?.OdsrExplanation ?? string.Empty,
             IsUsedForMentoringPlan = question?.IsUsedForMentoringPlan ?? false,
-            IsUsedForDiagnosis = question?.IsUsedForDiagnosis ?? true
+            IsUsedForDiagnosis = question?.IsUsedForDiagnosis ?? true,
+            AnswerSource = answerSource,
+            CoordinatorUserId = coordinatorUserId
         };
     }
 
@@ -231,7 +333,9 @@ public sealed class ProjectFormSubmissionApprovedHandler(
         ProjectFormSubmissionApproved notification,
         BlockResponseDto blockResponse,
         QuestionResponseDto questionResponse,
-        Dictionary<long, LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator.ProjectQuestion> questionMetadata)
+        Dictionary<long, LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator.ProjectQuestion> questionMetadata,
+        string answerSource,
+        string? coordinatorUserId)
     {
         // Get question metadata
         var question = questionMetadata.ContainsKey(questionResponse.QuestionId)
@@ -263,7 +367,9 @@ public sealed class ProjectFormSubmissionApprovedHandler(
             Odsr = OdsrType.NoDefinido,
             OdsrExplanation = string.Empty,
             IsUsedForMentoringPlan = question?.IsUsedForMentoringPlan ?? false,
-            IsUsedForDiagnosis = question?.IsUsedForDiagnosis ?? true
+            IsUsedForDiagnosis = question?.IsUsedForDiagnosis ?? true,
+            AnswerSource = answerSource,
+            CoordinatorUserId = coordinatorUserId
         };
     }
 

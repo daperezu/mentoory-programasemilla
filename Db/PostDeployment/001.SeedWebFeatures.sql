@@ -591,6 +591,9 @@ WITH SourceData AS (
     SELECT NEWID() AS ExternalId, 'Coordination.FormReview.GetPendingReviews.Post' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'GetPendingReviews' AS Action,
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     UNION ALL
+    SELECT NEWID() AS ExternalId, 'Coordination.FormReview.GetAllSubmissions.Post' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'GetAllSubmissions' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
     SELECT NEWID() AS ExternalId, 'Coordination.FormReview.Review.Get' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'Review' AS Action,
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     UNION ALL
@@ -613,6 +616,12 @@ WITH SourceData AS (
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     UNION ALL
     SELECT NEWID() AS ExternalId, 'Coordination.FormReview.ReopenFeedback.Post' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'ReopenFeedback' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Coordination.FormReview.SaveCoordinatorAnswers.Post' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'SaveCoordinatorAnswers' AS Action,
+           NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
+    UNION ALL
+    SELECT NEWID() AS ExternalId, 'Coordination.FormReview.GetCoordinatorAnswers.Get' AS Name, 'Coordination' AS Area, 'FormReview' AS Controller, 'GetCoordinatorAnswers' AS Action,
            NULL AS ParentId, 0 AS IsMenu, 0 AS MenuOrder, 0 AS IsPublic
     UNION ALL
     

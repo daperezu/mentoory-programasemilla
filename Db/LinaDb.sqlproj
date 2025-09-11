@@ -215,6 +215,7 @@
     <Build Include="diagnostics\Indexes\IX_UserProjectDiagnoses_ProjectId.sql" />
     <Build Include="diagnostics\Indexes\IX_UserProjectDiagnoses_Status.sql" />
     <Build Include="diagnostics\Indexes\IX_DiagnosisPhaseSummaries_UserProjectDiagnosisId.sql" />
+    <Build Include="diagnostics\Indexes\IX_DiagnosisAnswers_AnswerSource.sql" />
     <Build Include="knowledgestructure\Schema.sql" />
     <Build Include="knowledgestructure\Tables\Modules.sql" />
     <Build Include="knowledgestructure\Tables\Topics.sql" />
@@ -271,6 +272,7 @@
     <Build Include="businessincubators\Indexes\IX_ProjectFormSubmissions_Phase.sql" />
     <Build Include="businessincubators\Indexes\IX_ProjectFormSubmissions_ProjectStageId.sql" />
     <Build Include="businessincubators\Indexes\IX_ProjectFormSubmissions_UserId_Phase.sql" />
+    <Build Include="businessincubators\Indexes\IX_ProjectFormSubmissions_CoordinatorUserId.sql" />
     <Build Include="businessincubators\Indexes\IX_BatchUserRegistrations_ProjectId_Status.sql" />
     <Build Include="businessincubators\Indexes\IX_BatchUserRegistrations_CreatedAt.sql" />
     <Build Include="knowledgestructure\Tables\KnowledgeStructures.sql" />

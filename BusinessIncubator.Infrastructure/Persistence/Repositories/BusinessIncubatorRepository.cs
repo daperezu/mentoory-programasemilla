@@ -566,6 +566,7 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
     {
         return await dbContext.Set<Project>()
             .Include("ProjectKnowledgeStructure.ProjectModules.ProjectTopics.ProjectSubjects.ProjectSubjectResources")
+            .Include("ProjectBlocks.ProjectQuestions.ProjectAnswerOptions")
             .FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken)
             .ConfigureAwait(false);
     }
@@ -1007,6 +1008,25 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
     {
         return await dbContext.Set<ProjectAnswerOption>()
             .Where(ao => answerOptionIds.Contains(ao.Id))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<ProjectFormSubmission>> GetAllSubmissionsAsync(CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Set<ProjectFormSubmission>()
+            .OrderByDescending(s => s.SubmittedAt ?? s.StartedAt)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<ProjectFormSubmission>> GetSubmissionsByProjectIdsAsync(long[] projectIds, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Set<ProjectFormSubmission>()
+            .Where(s => projectIds.Contains(s.ProjectId))
+            .OrderByDescending(s => s.SubmittedAt ?? s.StartedAt)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }

@@ -1,66 +1,51 @@
 # Work Log
 
-## 2025-09-09 - Form Approval Workflow Implementation (REQ-007)
+## 2025-01-10 - FormReview 403 Error & Query Logic Fixes
 
 ### Context
-Form approval at `/Coordination/FormReview/Review/{id}` was not working - only created review record without changing submission status or triggering diagnostics integration.
+Fixed critical issues preventing FormReview page from displaying submissions. User reported 403 error and no data showing despite having submissions in database.
 
 ### Completed
-1. **Created unified approval command**:
-   - New file: `BusinessIncubator.Application\ProjectFormSubmissions\Commands\ApproveWithReview\ApproveFormSubmissionWithReviewCommand.cs`
-   - Handler combines review creation and submission approval in single transaction
-   - Publishes `ProjectFormSubmissionApproved` integration event
-   - Sends email notification (non-blocking if fails)
 
-2. **Updated FormReviewController**:
-   - Changed from `ApproveSubmissionCommand` to `ApproveFormSubmissionWithReviewCommand`
-   - Added project ID retrieval from context
-   - File: `Web\Areas\Coordination\Controllers\FormReviewController.cs` (lines 128-172)
+1. **Database Deployment Script**:
+   - Created `Db/Publish-LinaDb.ps1` with automatic tool discovery
+   - Added MSBuild/SqlPackage path resolution for multiple VS versions
+   - Created `LinaDb.Development.publish.xml` for LocalDB deployment
 
-3. **Added repository methods for metadata**:
-   - `GetProjectQuestionsWithAnswerOptionsAsync`: Fetches questions with FODA/ODSR metadata
-   - `GetAnswerOptionsByIdsAsync`: Gets answer options with scores
-   - Used LINQ joins since navigation properties are internal
-   - Files: `IBusinessIncubatorRepository.cs`, `BusinessIncubatorRepository.cs`
+2. **WebFeatures Permission Fix**:
+   - Added missing `'Coordination.FormReview.GetAllSubmissions.Post'` to seed data
+   - File: `Db/PostDeployment/001.SeedWebFeatures.sql` (line 594)
 
-4. **Enhanced integration event handler**:
-   - `ProjectFormSubmissionApprovedHandler` now fetches complete metadata
-   - Maps between BusinessIncubator and Diagnostics domain enums
-   - Creates DiagnosisAnswers with FODA, ODSR, scores
-   - File: `Orchestration.Application\BusinessIncubator\EventHandlers\ProjectFormSubmissionApprovedHandler.cs`
+3. **Query Logic Bug Fix**:
+   - **Problem**: Query checked `p.ProjectUsers.Any(...)` but Project entity has no ProjectUsers navigation
+   - **Solution**: Simplified to use GetProjectsByUserAsync results directly
+   - File: `BusinessIncubator.Application/Reviews/Queries/GetAllSubmissionsForReview/GetAllSubmissionsForReviewQuery.cs`
 
-### Key Decisions
-1. **Unified command pattern**: Combine review and approval to ensure consistency
-2. **LINQ joins over navigation**: Work around internal navigation properties
-3. **Enum mapping required**: OdsrType values differ between domains (Ofensiva/Defensiva vs OdsGenero/OdsAmbiental)
-4. **Non-blocking email**: Don't fail approval if email service fails
+### Key Findings
 
-### Problems & Solutions
-**Problem**: Namespace conflicts with "Project" type
+**Root Cause Analysis**:
+1. Permission was missing from database seed → 403 error
+2. Query logic tried to access non-existent navigation property → no results
+3. GetProjectsByUserAsync already filters accessible projects, no need to re-check
+
+**Code Fix Applied**:
 ```csharp
-// Before - ambiguous:
-private async Task SendApprovalNotificationAsync(Project project, ...)
+// Before: Checking non-existent property
+var hasAccess = userProjects.Any(p => p.Id == request.ProjectId.Value &&
+    p.ProjectUsers.Any(pu => pu.UserId == request.UserId && ...));
 
-// After - explicit:
-private async Task SendApprovalNotificationAsync(
-    Domain.Aggregates.BusinessIncubator.Project project, ...)
+// After: Simplified check
+var hasAccess = userProjects.Any(p => p.Id == request.ProjectId.Value);
 ```
 
-**Update**: Confirmed enums already match 1:1 between domains
-```csharp
-// Both domains have identical values:
-// NoDefinido='N', Ofensiva='O', Defensiva='D', Supervivencia='S', Reorientacion='R'
-// Simplified conversion to direct cast:
-return (OdsrType)(char)odsrType.Value;
-```
+### Files Modified
+- `Db/PostDeployment/001.SeedWebFeatures.sql`
+- `Db/Publish-LinaDb.ps1` (new)
+- `Db/LinaDb.Development.publish.xml` (new)
+- `Web/Areas/Coordination/Controllers/FormReviewController.cs`
+- `BusinessIncubator.Application/Reviews/Queries/GetAllSubmissionsForReview/GetAllSubmissionsForReviewQuery.cs`
 
-### Refactoring: Phase Extraction Method
-**Problem**: `ExtractPhaseFromDraftData` method was returning null (placeholder logic)
-**Solution**: Enhanced integration event to include phase directly from submission
-- Updated `ProjectFormSubmissionApproved` event to include `SubmissionId` and `Phase`
-- Updated both approval command handlers to pass these values
-- Removed `ExtractPhaseFromDraftData` method entirely
-- Handler now uses phase directly from event instead of trying to extract it
-
-### Build Status
-✅ Clean build - 0 errors, 0 warnings after refactoring
+### Next Steps
+1. Run `.\Publish-LinaDb.ps1 -Publish` to deploy database changes
+2. Restart application
+3. Test FormReview page shows submissions correctly

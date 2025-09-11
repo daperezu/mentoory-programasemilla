@@ -66,6 +66,21 @@ public class ProjectFormSubmission : Entity
     public string? DraftData { get; private set; }
 
     /// <summary>
+    /// Gets the coordinator's review data as JSON.
+    /// </summary>
+    public string? CoordinatorData { get; private set; }
+
+    /// <summary>
+    /// Gets when the coordinator reviewed the submission.
+    /// </summary>
+    public DateTime? CoordinatorReviewedAt { get; private set; }
+
+    /// <summary>
+    /// Gets the coordinator user ID who reviewed the submission.
+    /// </summary>
+    public string? CoordinatorUserId { get; private set; }
+
+    /// <summary>
     /// Gets when the form was started.
     /// </summary>
     public DateTime StartedAt { get; private set; }
@@ -237,6 +252,34 @@ public class ProjectFormSubmission : Entity
 
         Status = ProjectFormSubmissionStatus.Submitted;
         SubmittedAt = submittedAt;
+    }
+
+    /// <summary>
+    /// Saves the coordinator's review data.
+    /// </summary>
+    /// <param name="coordinatorUserId">The coordinator user ID.</param>
+    /// <param name="coordinatorData">The coordinator's answers as JSON.</param>
+    /// <param name="reviewedAt">The review timestamp.</param>
+    public void SaveCoordinatorReview(string coordinatorUserId, string coordinatorData, DateTime reviewedAt)
+    {
+        if (Status != ProjectFormSubmissionStatus.Submitted)
+        {
+            throw new InvalidOperationException("Solo se pueden revisar formularios enviados.");
+        }
+
+        if (string.IsNullOrWhiteSpace(coordinatorUserId))
+        {
+            throw new ArgumentException("El ID del coordinador es requerido.", nameof(coordinatorUserId));
+        }
+
+        if (string.IsNullOrWhiteSpace(coordinatorData))
+        {
+            throw new ArgumentException("Los datos de revisión del coordinador son requeridos.", nameof(coordinatorData));
+        }
+
+        CoordinatorUserId = coordinatorUserId;
+        CoordinatorData = coordinatorData;
+        CoordinatorReviewedAt = reviewedAt;
     }
 
     /// <summary>

@@ -33,7 +33,7 @@
 - **Completed**: `.claude/requirements/completed/` ← Done archive
 
 ### Currently Active
-- 📋 **Awaiting Requirements** - No active tasks
+- 📝 **REQ-008**: Dual Answers System - Coordinator and Starter Response Capture
 
 ### Pending Implementation
 - 📝 **REQ-001**: Enhanced User Creation with Role-Based Access Assignment

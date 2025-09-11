@@ -26,15 +26,18 @@
     [IsUsedForDiagnosis] BIT NOT NULL,
     [Order] INT NOT NULL,
     [SubmittedAt] DATETIME2(7) NOT NULL,
+    [AnswerSource] NVARCHAR(20) NOT NULL DEFAULT 'Starter', -- 'Starter' or 'Coordinator'
+    [CoordinatorUserId] NVARCHAR(450) NULL, -- Who provided coordinator answer
+    [PreferredForDiagnosis] BIT NOT NULL DEFAULT 0, -- Is this the preferred answer for diagnosis
     CONSTRAINT [PK_DiagnosisAnswers] PRIMARY KEY CLUSTERED ([Id] ASC),
     CONSTRAINT [FK_DiagnosisAnswers_UserProjectDiagnoses] FOREIGN KEY ([UserProjectDiagnosisId]) REFERENCES [diagnostics].[UserProjectDiagnoses]([Id])
 );
 GO
 
 -- Create unique constraint to prevent duplicate answers within a project
--- Include AnswerOptionId to allow multiple answer options for multi-choice questions
-CREATE UNIQUE NONCLUSTERED INDEX [UQ_DiagnosisAnswers_ProjectId_UserId_QuestionId_AnswerOptionId_Phase] 
-ON [diagnostics].[DiagnosisAnswers]([ProjectId] ASC, [UserId] ASC, [QuestionId] ASC, [AnswerOptionId] ASC, [Phase] ASC);
+-- Include AnswerSource to allow both starter and coordinator answers for same question
+CREATE UNIQUE NONCLUSTERED INDEX [UQ_DiagnosisAnswers_ProjectId_UserId_QuestionId_AnswerOptionId_Phase_Source] 
+ON [diagnostics].[DiagnosisAnswers]([ProjectId] ASC, [UserId] ASC, [QuestionId] ASC, [AnswerOptionId] ASC, [Phase] ASC, [AnswerSource] ASC);
 GO
 
 -- Create indexes for performance

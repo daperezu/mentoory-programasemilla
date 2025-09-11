@@ -579,6 +579,60 @@ updateProgress() {
 - **Mobile Responsive**: Adapts navigation for mobile
 - **Keyboard Support**: Ctrl+S to save draft
 
+## Dual Answer Review Pattern
+
+### Implementation for Coordinator Review (REQ-008)
+When coordinators need to provide their own answers alongside participant responses:
+
+#### JavaScript Manager Pattern
+```javascript
+window.DualAnswerReviewManager = (function() {
+    let coordinatorAnswers = {};
+    let autoSaveInterval = 30000; // 30 seconds
+    
+    function copyFromStarter(questionId) {
+        coordinatorAnswers[questionId] = starterAnswers[questionId];
+        updateProgress();
+        checkForDifferences(questionId);
+    }
+    
+    async function saveDraft(showNotification = true) {
+        // Auto-save implementation
+    }
+    
+    return {
+        init: init,
+        renderDualAnswerLayout: renderDualAnswerLayout,
+        saveDraft: saveDraft,
+        validateCompletion: validateCompletion
+    };
+})();
+```
+
+#### CSS Grid Layout
+```css
+.dual-answer-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .dual-answer-container {
+        grid-template-columns: 1fr;
+    }
+}
+```
+
+#### Integration with Approval
+```javascript
+// In handleApprove function
+if (window.DualAnswerReviewManager && !window.DualAnswerReviewManager.validateCompletion()) {
+    showToast('Debe completar todas sus respuestas como coordinador antes de aprobar', 'warning');
+    return;
+}
+```
+
 ## ViewComponent Patterns
 
 ### Creating a ViewComponent
@@ -623,6 +677,62 @@ public class UserContextDisplayViewModel
 ```
 - Separate display control flags from data
 - Allows clean conditional rendering in view
+
+## Shared Form Constants Pattern
+
+### Purpose
+Eliminate duplicate hardcoded lists (nationalities, ID types, gender, marital status) between form files.
+
+### Implementation
+```javascript
+// /Web/wwwroot/js/shared/form-constants.js
+window.FormConstants = {
+    FormConstants: {
+        nationalities: [...],  // 194 countries with ISO codes
+        idTypes: {...},        // CC, CE, PA, TI
+        genders: {...},        // M, F, O
+        maritalStatuses: {...} // S, C, U, D, V
+    },
+    FormUtils: {
+        getSortedNationalities(),
+        getDisplayText(type, value),
+        renderSelectOptions(type, selectedValue)
+    }
+};
+```
+
+### Usage in Views
+```razor
+@section Scripts {
+    <!-- Load shared constants first -->
+    <script src="~/js/shared/form-constants.js"></script>
+    <!-- Then load scripts that use them -->
+    <script src="~/js/businessincubators/participant-form.js"></script>
+}
+```
+
+### Usage in JavaScript
+```javascript
+// Rendering select options
+const { FormUtils } = window.FormConstants || {};
+if (!FormUtils) {
+    console.error('FormConstants module not loaded');
+    return;
+}
+
+return `<select class="form-select">
+    ${FormUtils.renderSelectOptions('nationality', value)}
+</select>`;
+
+// Getting display text
+const displayText = FormUtils.getDisplayText('idType', 'CC'); // Returns: 'Cédula de Ciudadanía'
+```
+
+### Benefits
+- **Single source of truth**: Update once, apply everywhere
+- **Reduced bundle size**: ~800 lines of duplicate code removed
+- **Consistent behavior**: Same options and sorting across all forms
+- **Browser caching**: Shared module cached across pages
 
 ### Tree Data Structure
 ```csharp

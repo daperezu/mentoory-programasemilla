@@ -55,6 +55,14 @@ public sealed class ApproveFormSubmissionWithReviewCommandHandler(
                 return Success();
             }
 
+            // 3.5. Validate coordinator has provided answers
+            if (string.IsNullOrWhiteSpace(submission.CoordinatorData))
+            {
+                return Failure(
+                    ResultErrorCodes.Validation_SomeFieldsAreInvalid,
+                    ("CoordinatorAnswers", "Debe completar su revisión antes de aprobar el formulario."));
+            }
+
             // 4. Create or update review record for audit trail
             var review = await repository.GetReviewBySubmissionIdAsync(request.SubmissionId, cancellationToken);
             if (review is null)
@@ -86,18 +94,20 @@ public sealed class ApproveFormSubmissionWithReviewCommandHandler(
             submission.Approve(request.ApproverUserId, timeProvider.UtcNow);
 
             // 6. Save all changes in one transaction
-            await repository.UpdateAsync(project, cancellationToken);
+            repository.Update(project);
             await repository.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-            // 7. Publish integration event for diagnostics domain
+            // 7. Publish integration event for diagnostics domain (with dual answers)
             var integrationEvent = new ProjectFormSubmissionApproved(
-                submission.ProjectId,
-                submission.Id,
-                submission.ParticipantUserId,
-                submission.DraftData ?? string.Empty,
-                submission.Phase,
-                submission.ApprovedAt!.Value,
-                submission.ApprovedByUserId!);
+                ProjectId: submission.ProjectId,
+                SubmissionId: submission.Id,
+                ParticipantUserId: submission.ParticipantUserId,
+                CoordinatorUserId: submission.CoordinatorUserId ?? request.ApproverUserId,
+                StarterDraftData: submission.DraftData ?? string.Empty,
+                CoordinatorDraftData: submission.CoordinatorData ?? string.Empty,
+                Phase: submission.Phase,
+                ApprovedAt: submission.ApprovedAt!.Value,
+                ApprovedByUserId: submission.ApprovedByUserId!);
 
             await mediator.Publish(integrationEvent, cancellationToken);
 

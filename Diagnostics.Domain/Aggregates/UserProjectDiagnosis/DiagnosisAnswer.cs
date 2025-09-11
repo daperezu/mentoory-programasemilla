@@ -46,6 +46,9 @@ public class DiagnosisAnswer : Entity
         IsUsedForDiagnosis = input.IsUsedForDiagnosis;
         Order = order;
         SubmittedAt = submittedAt;
+        AnswerSource = input.AnswerSource;
+        CoordinatorUserId = input.CoordinatorUserId;
+        PreferredForDiagnosis = input.PreferredForDiagnosis;
     }
 
     /// <summary>
@@ -172,6 +175,21 @@ public class DiagnosisAnswer : Entity
     /// Gets the submission date.
     /// </summary>
     public DateTime SubmittedAt { get; private set; }
+
+    /// <summary>
+    /// Gets the answer source (Starter or Coordinator).
+    /// </summary>
+    public string AnswerSource { get; private set; } = "Starter";
+
+    /// <summary>
+    /// Gets the coordinator user ID when source is Coordinator.
+    /// </summary>
+    public string? CoordinatorUserId { get; private set; }
+
+    /// <summary>
+    /// Gets whether this answer is preferred for diagnosis.
+    /// </summary>
+    public bool PreferredForDiagnosis { get; private set; }
 
     /// <summary>
     /// Creates a diagnosis answer from a form submission.
