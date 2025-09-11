@@ -1,0 +1,80 @@
+claude --permission-mode bypassPermissions
+
+------------------------------------
+
+Read CLAUDE.md first to understand the project rules, and read all the MD files at the section with title "Knowledge Base".
+
+------------------------ RIGHT AFTER EACH PHASE/TASK COMPLETED  ------------------------
+(save the prompt for later, after "AFTER COMPATING" section )
+
+ think harder on what's the best prompt for the next task.
+
+------------------------ BEFORE COMPACTING ------------------------
+
+  Update the documentation to capture current progress before compacting:
+
+  1. **UPDATE .claude/CURRENT_SESSION.md**:
+     - Update "Progress Status" with what's now completed (✅), in progress (⚠️), or pending (📋)
+     - Update "Today's Focus" with what was actually worked on
+     - Add any blocking issues or important context for next session
+     - Keep concise (~50 lines total)
+
+  2. **APPEND to .claude/WORK_LOG.md**:
+     - Add new dated section (## YYYY-MM-DD - Brief Description)
+     - Document what was completed (specific files/commands/changes)
+     - Note key decisions and rationale
+     - Record problems encountered and solutions
+     - Include any important code snippets or patterns discovered
+	 - Keep concise (~50 lines total). Remove anything from previous days.
+
+  3. **CHECK if CLAUDE.md needs updates** (only if major changes):
+     - Update branch name if changed
+     - Update build status if different
+     - DO NOT update unless architecture/setup fundamentally changed
+
+  4. **UPDATE knowledge base docs if new patterns discovered**:
+     - .claude/coding-standards.md - new style rules or build issues
+     - .claude/ddd-patterns.md - new domain patterns
+     - .claude/common-issues.md - new errors and fixes
+     - .claude/architecture.md - architectural decisions
+
+  5. **IF completing a major feature**:
+     - Move requirement from .claude/requirements/active/ to completed/
+     - Update requirement file with completion notes
+
+  Focus on capturing:
+  - What actually happened (not plans)
+  - Decisions that affect future work
+  - Context needed to resume efficiently
+  - Patterns that should be reused
+
+  Keep CURRENT_SESSION focused on "what's next" and WORK_LOG focused on "what happened".
+
+------------------------ COMPACTING ------------------------
+
+/compact Check CLAUDE.md
+
+------------------------ AFTER COMPACTING ------------------------
+
+You're continuing work on the LinaSys project after a context reset.
+
+  Read again CLAUDE.md first to understand the project rules, it was updated since the last time you read it, also read all the MD files at the section with title "Knowledge Base" as they might were updated as well.
+
+The design of the current requirement is avaiable at @.claude\requirements\active\REQ-008-dual-answers-coordinator-starter.md
+
+  Confirm you've understood by stating (in one line):
+  - The active task you'll continue working on
+  
+  
+  Then proceed with implementation following all project patterns from CLAUDE.md. 
+
+
+------------------------ WHEN DEBUGGING ------------------------
+
+I'm getting an E2E error. Use .claude/debugging/E2E_ERROR_ANALYSIS.md to analyze this: 
+ 
+with the user "demo.coordinator" after login, I'm getting 404 at http://localhost:5038/Coordination/CoordinatorDashboard
+
+
+
+********************************

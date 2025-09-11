@@ -5,6 +5,9 @@ CREATE TABLE [businessincubators].[ProjectFormSubmissions] (
     [ParticipantUserId]  NVARCHAR(450) NOT NULL,
     [Status]             INT NOT NULL DEFAULT 1, -- 1=Draft, 2=Submitted, 3=Approved, 4=Rejected
     [DraftData]          NVARCHAR(MAX) NULL,
+    [CoordinatorData]    NVARCHAR(MAX) NULL, -- Coordinator's answers
+    [CoordinatorReviewedAt] DATETIME2 NULL,   -- When coordinator completed review
+    [CoordinatorUserId]  NVARCHAR(450) NULL,   -- Coordinator who reviewed
     [StartedAt]          DATETIME2 NOT NULL,
     [SubmittedAt]        DATETIME2 NULL,
     [ApprovedAt]         DATETIME2 NULL,
@@ -22,5 +25,5 @@ CREATE TABLE [businessincubators].[ProjectFormSubmissions] (
     CONSTRAINT [FK_ProjectFormSubmissions_Projects] FOREIGN KEY ([ProjectId]) REFERENCES [businessincubators].[Projects] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_ProjectFormSubmissions_ProjectStages] FOREIGN KEY ([ProjectStageId]) REFERENCES [businessincubators].[ProjectStages] ([Id])
     -- Note: Cross-schema foreign keys are not included to maintain modular boundaries
-    -- - ParticipantUserId and ApprovedByUserId reference auth/identity system (validated at application layer)
+    -- - ParticipantUserId, ApprovedByUserId, and CoordinatorUserId reference auth/identity system (validated at application layer)
 );

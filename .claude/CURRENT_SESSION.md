@@ -1,55 +1,69 @@
 # Current Working Session
 
-## 🎯 Current Status: Bug Fixes and UI Improvements
-**Branch**: feature/create-user-improve  
-**Build**: ✅ Clean build (0 errors, 0 warnings)
-**Session Date**: 2025-09-10
-**Focus**: Fixed critical JavaScript and database errors
+## 🎯 Current Status: Coordination FormReview 403 & Data Issues Fixed
+**Branch**: feature/dual-submission  
+**Build**: ⚠️ Application running (can't verify build)
+**Session Date**: 2025-01-10
+**Today's Focus**: Fixed 403 error and query logic for FormReview page
 
 ### Progress Status
 
-**Completed Today ✅:**
-- Fixed SweetAlert2 error - replaced with Bootstrap modals per Phoenix template
-- Fixed Entity Framework Include error for '_answers' navigation property
-- Fixed NULL ProjectQuestionId error in seed data
-- Fixed InvalidCastException for Int64 to Int32 conversion
-- Fixed duplicate key violation in DiagnosisAnswers table
-- Fixed DiagnosisPhaseSummary Id type mismatch
-- Fixed submit button visibility for approved forms
+**Completed ✅:**
+- Fixed 403 Forbidden error on /Coordination/FormReview/GetAllSubmissions
+- Added missing WebFeatures seed entry for GetAllSubmissions endpoint
+- Created PowerShell database deployment script with auto-discovery of tools
+- Fixed query logic bug in GetAllSubmissionsForReviewQuery
+- Identified and fixed ProjectUsers navigation property issue
 
 **In Progress ⚠️:**
-- None
+- Testing FormReview page with database changes applied
+- Verifying submissions display correctly for coordinators
 
 **Pending 📋:**
-- Test all fixes in running application
-- Pick next requirement from pending queue
+- Deploy database changes (run Publish-LinaDb.ps1 -Publish)
+- Restart application to apply changes
+- Test full FormReview workflow
 
-### Key Bug Fixes
-- **JavaScript**: Replaced SweetAlert2 with Bootstrap modals (Phoenix standard)
-- **EF Core**: Changed Include("_answers") to Include(d => d.Answers)
-- **Database**: Added AnswerOptionId to unique constraint for multi-choice
-- **Type Mismatch**: Configured DiagnosisPhaseSummary.Id as long
-- **UI**: Hide submit button when form status is Approved
+### Issues Fixed Today
 
-### System Status
-- **Form Review**: ✅ Uses Bootstrap modals for confirmation
-- **Entity Mappings**: ✅ All navigation properties correctly configured
-- **Database Schema**: ✅ Supports multi-choice answers
-- **Form UI**: ✅ Submit button hidden for approved submissions
+#### 1. 403 Forbidden Error
+**Root Cause**: Missing permission entry in WebFeatures seed data
+**Solution**: Added `'Coordination.FormReview.GetAllSubmissions.Post'` to 001.SeedWebFeatures.sql
+
+#### 2. Database Deployment Script
+**Problem**: MSBuild and SqlPackage not in PATH
+**Solution**: Created Publish-LinaDb.ps1 with automatic tool discovery
+- Searches common Visual Studio installation paths
+- Created Development publish profile for LocalDB
+
+#### 3. FormReview Query Logic Bug
+**Root Cause**: Query tried to access non-existent `ProjectUsers` navigation property
+```csharp
+// Wrong: p.ProjectUsers.Any(...) - ProjectUsers doesn't exist on Project entity
+var hasAccess = userProjects.Any(p => p.Id == request.ProjectId.Value && 
+    p.ProjectUsers.Any(...));
+
+// Fixed: GetProjectsByUserAsync already filters accessible projects
+var hasAccess = userProjects.Any(p => p.Id == request.ProjectId.Value);
+```
 
 ### Next Session Priorities
-1. Test all bug fixes in running application
-2. Verify form approval flow works end-to-end
-3. Review pending requirements queue
-4. Start next requirement implementation
+1. Deploy database changes (run migration scripts)
+2. Test full workflow: submission → review → approval → diagnostics
+3. Verify data persistence in both domains
+4. Document feature in user guide
 
 ### Important Context
-- **Key Files Changed**: 
-  - `form-review.js` (Bootstrap modals)
-  - `DiagnosticsDbContext.cs` (Id type configuration)
-  - `participant-form.js` (button visibility logic)
-  - `ParticipantForm/Index.cshtml` (removed !important style)
-- **Watch For**: Ensure all JavaScript changes work with Phoenix template
+- **Database Changes Required**: Must run schema updates before testing
+- **Event Flow**: ProjectFormSubmissionApproved now includes both StarterDraftData and CoordinatorDraftData
+- **UI Location**: /Coordination/FormReview/Review/{submissionId}
+- **Auto-save**: Triggers every 30 seconds when coordinator makes changes
+
+### Key Technical Decisions
+- Used existing DraftDataDto structure for coordinator data storage
+- Implemented client-side diff detection for performance
+- Progress bar blocks approval until 100% complete
+- Responsive design collapses to single column on mobile
 
 ---
-*Status: Multiple critical bugs fixed, ready for testing.*
+*Ready for: Database deployment and integration testing*

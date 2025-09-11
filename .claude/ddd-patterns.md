@@ -193,6 +193,50 @@ private static Result ValidateCountryRequirements(string? country, ...)
 - Use factory methods (Create) for value object creation with validation
 - Keep country/region-specific logic in one place for maintainability
 
+## Dual Answer Pattern (REQ-008)
+
+When implementing role-specific data capture alongside primary data:
+
+### Domain Entity Pattern
+Store role-specific data with proper validation:
+```csharp
+public class ProjectFormSubmission : Entity
+{
+    public string? DraftData { get; private set; }         // Primary (starter) data
+    public string? CoordinatorData { get; private set; }   // Role-specific data
+    public string? CoordinatorUserId { get; private set; } // Who provided it
+    
+    public void SaveCoordinatorReview(string coordinatorUserId, string data, DateTime reviewedAt)
+    {
+        if (Status != ProjectFormSubmissionStatus.Submitted)
+            throw new InvalidOperationException("Solo se pueden revisar formularios enviados.");
+            
+        CoordinatorUserId = coordinatorUserId;
+        CoordinatorData = data;
+        CoordinatorReviewedAt = reviewedAt;
+    }
+}
+```
+
+### Integration Event Pattern
+Include both datasets in events:
+```csharp
+public record ProjectFormSubmissionApproved(
+    string StarterDraftData,
+    string CoordinatorDraftData,
+    string CoordinatorUserId) : IntegrationEvent;
+```
+
+### Target Domain Pattern
+Use source discrimination for multiple versions:
+```csharp
+public class DiagnosisAnswer : Entity
+{
+    public string AnswerSource { get; private set; } = "Starter";
+    public string? CoordinatorUserId { get; private set; }
+}
+```
+
 ## Encapsulation Patterns
 
 ### 1. Private Setters for All Properties

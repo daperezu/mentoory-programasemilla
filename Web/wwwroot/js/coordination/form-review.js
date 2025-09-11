@@ -112,6 +112,13 @@ window.FormReview = (function() {
         }
 
         currentSubmissionId = submissionId;
+        
+        // Initialize Dual Answer Review Manager for REQ-008
+        if (window.DualAnswerReviewManager && window.DualAnswerReviewManager.init) {
+            window.DualAnswerReviewManager.init(submissionId);
+            console.log('[FormReview] Dual Answer Review Manager initialized');
+        }
+        
         loadSubmissionDetails(submissionId);
         setupEventHandlers();
         setupAutoSave();
@@ -228,6 +235,12 @@ window.FormReview = (function() {
             return;
         }
         
+        // Show coordinator progress bar
+        const coordinatorProgress = document.getElementById('coordinatorProgress');
+        if (coordinatorProgress) {
+            coordinatorProgress.style.display = 'block';
+        }
+        
         let html = '';
         submissionData.blocks.forEach(block => {
             // Get feedback for this block from window.feedbackConversations
@@ -276,6 +289,19 @@ window.FormReview = (function() {
                 console.log(`[Coordinator Review] Question ${question.questionId} has ${questionFeedback.length} feedback items`);
             }
             
+            // Use dual answer layout if DualAnswerReviewManager is available
+            let answerContent;
+            if (window.DualAnswerReviewManager && window.DualAnswerReviewManager.renderDualAnswerLayout) {
+                answerContent = window.DualAnswerReviewManager.renderDualAnswerLayout(question, block);
+            } else {
+                // Fallback to single answer display
+                answerContent = `
+                    <div class="question-answer ${!question.answer ? 'empty' : ''}">
+                        ${question.answer || 'Sin respuesta'}
+                    </div>
+                `;
+            }
+            
             html += `
                 <div class="question-item ${hasFeedback ? 'has-feedback' : ''}" data-question-id="${question.questionId}">
                     <div class="question-label">
@@ -283,9 +309,7 @@ window.FormReview = (function() {
                         <span>${question.questionText}</span>
                     </div>
                     
-                    <div class="question-answer ${!question.answer ? 'empty' : ''}">
-                        ${question.answer || 'Sin respuesta'}
-                    </div>
+                    ${answerContent}
                     
                     <button class="feedback-button" onclick="FormReview.showFeedbackModal(${block.blockId}, ${question.questionId})">
                         <i class="fas fa-comment me-1"></i> Comentar
@@ -515,6 +539,17 @@ window.FormReview = (function() {
 
     // Handle approve action
     async function handleApprove() {
+        // Check if coordinator has completed all answers
+        if (window.DualAnswerReviewManager && !window.DualAnswerReviewManager.validateCompletion()) {
+            showToast('Debe completar todas sus respuestas como coordinador antes de aprobar', 'warning');
+            return;
+        }
+        
+        // Save coordinator answers before approving
+        if (window.DualAnswerReviewManager) {
+            await window.DualAnswerReviewManager.saveDraft(false);
+        }
+        
         const confirmed = await showConfirmModal(
             '¿Aprobar formulario?',
             'El participante será notificado y el formulario quedará marcado como aprobado.',

@@ -6,6 +6,9 @@ using LinaSys.BusinessIncubator.Application.Reviews.Commands.ReopenFeedback;
 using LinaSys.BusinessIncubator.Application.Reviews.Commands.ReplyToFeedback;
 using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetPendingReviews;
 using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetSubmissionForReview;
+using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetAllSubmissionsForReview;
+using LinaSys.BusinessIncubator.Application.Queries;
+using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetSubmissionById;
 using LinaSys.BusinessIncubator.Domain.Enums;
 using LinaSys.Core.Application.Dashboard.Services;
 using LinaSys.Shared.Domain.Constants;
@@ -64,6 +67,27 @@ public class ApproveRequest
 }
 
 /// <summary>
+/// Request model for saving coordinator answers.
+/// </summary>
+public class SaveCoordinatorAnswersRequest
+{
+    /// <summary>
+    /// Gets or sets the submission ID.
+    /// </summary>
+    public long SubmissionId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the coordinator's draft data.
+    /// </summary>
+    public BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraft.DraftDataDto CoordinatorData { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets preference selections (question IDs where coordinator answer should be used).
+    /// </summary>
+    public Dictionary<long, bool>? PreferenceSelections { get; set; }
+}
+
+/// <summary>
 /// Controller for coordinator form review functionality.
 /// </summary>
 /// <remarks>
@@ -73,7 +97,6 @@ public class ApproveRequest
 /// <param name="dashboardBuilder">The dashboard builder service.</param>
 /// <param name="logger">The logger.</param>
 /// <param name="mediatorExecutor">The mediator executor.</param>
-/// <param name="repository">The repository.</param>
 /// <param name="notificationService">The notification service.</param>
 [Area("Coordination")]
 [Route("[area]/[controller]")]
@@ -82,7 +105,6 @@ public class FormReviewController(
     IDashboardBuilderService dashboardBuilder,
     ILogger<FormReviewController> logger,
     MediatorExecutor mediatorExecutor,
-    BusinessIncubator.Domain.Repositories.IBusinessIncubatorRepository repository,
     IReviewNotificationService notificationService) : DashboardBaseController(logger, mediator, dashboardBuilder)
 {
     [HttpPost]
@@ -153,8 +175,9 @@ public class FormReviewController(
         }
 
         // Get submission details for notification
-        var submission = await repository.GetSubmissionByIdAsync(request.SubmissionId, cancellationToken);
-        var participantName = submission?.ParticipantUserId ?? "Participante";
+        var submissionQuery = new GetSubmissionByIdQuery(request.SubmissionId);
+        var submissionResult = await mediatorExecutor.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
+        var participantName = submissionResult.Value?.ParticipantUserId ?? "Participante";
 
         await notificationService.NotifyReviewStatusChangeAsync(
             projectId,
@@ -191,6 +214,37 @@ public class FormReviewController(
         return Ok(result.Value);
     }
 
+    /// <summary>
+    /// Gets all submissions for review (regardless of status).
+    /// </summary>
+    [HttpPost]
+    [Route("GetAllSubmissions")]
+    public async Task<IActionResult> GetAllSubmissions(CancellationToken cancellationToken)
+    {
+        // Context is required for this operation
+        if (!TryGetCurrentUserContext(out var contextResult))
+        {
+            return BadRequest(new { errors = new[] { "Debe seleccionar un contexto de proyecto para continuar." } });
+        }
+
+        // Use the GetAllSubmissionsForReviewQuery to get ALL submissions
+        var query = new BusinessIncubator.Application.Reviews.Queries.GetAllSubmissionsForReview.GetAllSubmissionsForReviewQuery(
+            CurrentUserId,
+            contextResult.ProjectId,
+            contextResult.IncubatorId,
+            User.IsInRole(Roles.GlobalAdministrator),
+            User.IsInRole(Roles.Administrator));
+
+        var result = await mediatorExecutor.SendAndLogIfFailureAsync(query, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al obtener los formularios."] });
+        }
+
+        return Ok(result.Value);
+    }
+
     [HttpGet]
     [Route("GetSubmissionDetails/{submissionId:long}")]
     public async Task<IActionResult> GetSubmissionDetails(long submissionId, CancellationToken cancellationToken)
@@ -198,11 +252,14 @@ public class FormReviewController(
         TryGetCurrentUserContext(out var contextResult);
 
         // Get the project to obtain its ExternalId
-        var project = await repository.GetProjectByIdAsync(contextResult!.ProjectId!.Value, cancellationToken);
-        if (project is null)
+        var projectQuery = new GetProjectByIdQuery(contextResult!.ProjectId!.Value);
+        var projectResult = await mediatorExecutor.SendAndLogIfFailureAsync(projectQuery, cancellationToken);
+        if (projectResult.IsFailure || projectResult.Value is null)
         {
             return BadRequest(new { errors = new[] { "Proyecto no encontrado." } });
         }
+
+        var project = projectResult.Value;
 
         var query = new GetSubmissionForReviewQuery(submissionId, project.ExternalId);
         var result = await mediatorExecutor.SendAndLogIfFailureAsync(query, cancellationToken);
@@ -242,6 +299,95 @@ public class FormReviewController(
         return View();
     }
 
+    /// <summary>
+    /// Saves coordinator's answers during form review.
+    /// </summary>
+    [HttpPost]
+    [Route("SaveCoordinatorAnswers")]
+    public async Task<IActionResult> SaveCoordinatorAnswers([FromBody] SaveCoordinatorAnswersRequest request, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var command = new BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveCoordinatorAnswers.SaveCoordinatorAnswersCommand(
+            request.SubmissionId,
+            CurrentUserId,
+            request.CoordinatorData,
+            request.PreferenceSelections ?? new Dictionary<long, bool>());
+
+        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al guardar las respuestas del coordinador."] });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "Respuestas del coordinador guardadas exitosamente."
+        });
+    }
+
+    /// <summary>
+    /// Gets existing coordinator answers for a submission.
+    /// </summary>
+    [HttpGet]
+    [Route("GetCoordinatorAnswers/{submissionId:long}")]
+    public async Task<IActionResult> GetCoordinatorAnswers(long submissionId, CancellationToken cancellationToken)
+    {
+        // Get submission with coordinator data
+        var submissionQuery = new GetSubmissionByIdQuery(submissionId);
+        var submissionResult = await mediatorExecutor.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
+
+        if (submissionResult.IsFailure || submissionResult.Value is null)
+        {
+            return NotFound(new { error = "Formulario no encontrado." });
+        }
+
+        var submission = submissionResult.Value;
+
+        // Parse coordinator data if exists
+        if (!string.IsNullOrEmpty(submission.CoordinatorData))
+        {
+            var coordinatorData = System.Text.Json.JsonSerializer.Deserialize<BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraft.DraftDataDto>(
+                submission.CoordinatorData,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            // Extract answers from blocks
+            var coordinatorAnswers = new Dictionary<long, string>();
+            if (coordinatorData?.BlockResponses != null)
+            {
+                foreach (var block in coordinatorData.BlockResponses)
+                {
+                    foreach (var question in block.QuestionResponses)
+                    {
+                        if (!string.IsNullOrEmpty(question.Answer))
+                        {
+                            coordinatorAnswers[question.QuestionId] = question.Answer;
+                        }
+                    }
+                }
+            }
+
+            return Ok(new
+            {
+                coordinatorData = coordinatorAnswers,
+                preferenceSelections = new Dictionary<long, bool>(), // TODO: Implement preference storage
+                coordinatorUserId = submission.CoordinatorUserId,
+                coordinatorReviewedAt = submission.CoordinatorReviewedAt
+            });
+        }
+
+        return Ok(new
+        {
+            coordinatorData = new Dictionary<long, string>(),
+            preferenceSelections = new Dictionary<long, bool>()
+        });
+    }
+
     [HttpPost]
     [Route("RequestChanges")]
     public async Task<IActionResult> RequestChanges([FromBody] RequestChangesRequest request, CancellationToken cancellationToken)
@@ -269,8 +415,9 @@ public class FormReviewController(
         var projectId = contextResult!.ProjectId!.Value;
 
         // Get submission details for participant name
-        var submission = await repository.GetSubmissionByIdAsync(request.SubmissionId, cancellationToken);
-        var participantName = submission?.ParticipantUserId ?? "Participante";
+        var submissionQuery = new GetSubmissionByIdQuery(request.SubmissionId);
+        var submissionResult = await mediatorExecutor.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
+        var participantName = submissionResult.Value?.ParticipantUserId ?? "Participante";
 
         await notificationService.NotifyReviewStatusChangeAsync(
             projectId,

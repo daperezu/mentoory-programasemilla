@@ -163,6 +163,21 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     Task<List<Aggregates.BusinessIncubator.ProjectFormSubmission>> GetPendingSubmissionsForReviewAsync(long[] projectIds, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets all form submissions.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of all submissions.</returns>
+    Task<List<Aggregates.BusinessIncubator.ProjectFormSubmission>> GetAllSubmissionsAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets form submissions by project IDs.
+    /// </summary>
+    /// <param name="projectIds">Array of project IDs.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of submissions.</returns>
+    Task<List<Aggregates.BusinessIncubator.ProjectFormSubmission>> GetSubmissionsByProjectIdsAsync(long[] projectIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets all project answer option references by source answer option ID.
     /// </summary>
     /// <param name="sourceAnswerOptionId">The source answer option ID.</param>

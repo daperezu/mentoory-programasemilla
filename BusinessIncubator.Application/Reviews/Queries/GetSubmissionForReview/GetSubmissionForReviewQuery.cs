@@ -152,6 +152,11 @@ public class QuestionReviewDto
     public string QuestionType { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the answer type as integer for JavaScript compatibility.
+    /// </summary>
+    public int AnswerType { get; set; }
+
+    /// <summary>
     /// Gets or sets whether the question is required.
     /// </summary>
     public bool IsRequired { get; set; }
@@ -162,9 +167,45 @@ public class QuestionReviewDto
     public string? Answer { get; set; }
 
     /// <summary>
+    /// Gets or sets the answer options for choice questions.
+    /// </summary>
+    public List<AnswerOptionDto> AnswerOptions { get; set; } = [];
+
+    /// <summary>
     /// Gets or sets the feedback items for this question.
     /// </summary>
     public List<FeedbackItemDto> Feedback { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets module information for tracking.
+    /// </summary>
+    public ProjectFormSubmissions.Commands.SaveDraft.ModuleInfoDto? ModuleInfo { get; set; }
+
+    /// <summary>
+    /// Gets or sets topic information for tracking.
+    /// </summary>
+    public ProjectFormSubmissions.Commands.SaveDraft.TopicInfoDto? TopicInfo { get; set; }
+}
+
+/// <summary>
+/// DTO for answer options.
+/// </summary>
+public class AnswerOptionDto
+{
+    /// <summary>
+    /// Gets or sets the answer option ID.
+    /// </summary>
+    public long AnswerOptionId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the answer option text.
+    /// </summary>
+    public string AnswerOptionText { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the score for this option.
+    /// </summary>
+    public int Score { get; set; }
 }
 
 /// <summary>
@@ -266,6 +307,42 @@ public class GetSubmissionForReviewQueryHandler(
                     (nameof(GetSubmissionForReviewQuery), $"La solicitud con ID {request.SubmissionId} no fue encontrada."));
             }
 
+            // Load project with knowledge structure to get question metadata
+            var project = await repository.GetProjectWithKnowledgeStructureByIdAsync(
+                submission.ProjectId,
+                cancellationToken);
+
+            if (project is null)
+            {
+                return Failure(
+                    ResultErrorCodes.BusinessIncubator_NotFound,
+                    (nameof(GetSubmissionForReviewQuery), $"El proyecto no fue encontrado."));
+            }
+
+            // Build a map of questions with their answer options
+            var questionMap = new Dictionary<long, (int AnswerType, bool IsRequired, List<AnswerOptionDto> Options)>();
+            if (project.HasKnowledgeStructure())
+            {
+                var knowledgeStructure = project.GetKnowledgeStructure();
+                if (knowledgeStructure is not null)
+                {
+                    foreach (var block in project.ProjectBlocks)
+                    {
+                        foreach (var question in block.ProjectQuestions)
+                        {
+                            var options = question.ProjectAnswerOptions?.Select(ao => new AnswerOptionDto
+                            {
+                                AnswerOptionId = ao.Id,
+                                AnswerOptionText = ao.Text,
+                                Score = ao.Score
+                            }).ToList() ?? [];
+
+                            questionMap[question.Id] = ((int)question.AnswerType, question.IsRequired, options);
+                        }
+                    }
+                }
+            }
+
             // Authorization is now handled by the RequiresPermission attribute and AuthorizationBehavior
             // The ProjectId in the query will be used to verify access via ProtectedResource
 
@@ -301,14 +378,24 @@ public class GetSubmissionForReviewQueryHandler(
                             BlockName = block.BlockName,
                             BlockDescription = null, // Description not stored in draft
                             Order = 0, // Order not stored in draft
-                            Questions = block.QuestionResponses?.Select(q => new QuestionReviewDto
+                            Questions = block.QuestionResponses?.Select(q =>
                             {
-                                QuestionId = q.QuestionId,
-                                QuestionText = q.QuestionText,
-                                QuestionType = MapAnswerTypeToString(q.AnswerType),
-                                IsRequired = true, // Not stored in draft, assume required
-                                Answer = q.Answer,
-                                Feedback = [] // No feedback initially
+                                // Get metadata from knowledge structure
+                                var hasMetadata = questionMap.TryGetValue(q.QuestionId, out var metadata);
+
+                                return new QuestionReviewDto
+                                {
+                                    QuestionId = q.QuestionId,
+                                    QuestionText = q.QuestionText,
+                                    QuestionType = MapAnswerTypeToString(q.AnswerType),
+                                    AnswerType = hasMetadata ? metadata.AnswerType : q.AnswerType,
+                                    IsRequired = hasMetadata ? metadata.IsRequired : true,
+                                    Answer = q.Answer,
+                                    AnswerOptions = hasMetadata ? metadata.Options : [],
+                                    Feedback = [], // No feedback initially
+                                    ModuleInfo = q.ModuleInfo,
+                                    TopicInfo = q.TopicInfo
+                                };
                             }).ToList() ?? [],
                             Feedback = [] // No feedback initially
                         }).ToList();

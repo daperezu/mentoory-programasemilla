@@ -39,6 +39,36 @@ ResultErrorCodes.BusinessIncubator_NotFound
 .Include(d => d.Answers)
 ```
 
+### Repository Method Not Loading Required Data
+**Error**: Questions display as plain text, answers show as "Sin respuesta"
+**Cause**: Repository method not including all required related entities for query
+**Solution**: Ensure repository methods include all necessary navigation properties
+
+```csharp
+// ❌ WRONG - Missing ProjectBlocks needed by handler
+public async Task<Project?> GetProjectWithKnowledgeStructureByIdAsync(long projectId)
+{
+    return await dbContext.Set<Project>()
+        .Include("ProjectKnowledgeStructure.ProjectModules.ProjectTopics.ProjectSubjects.ProjectSubjectResources")
+        .FirstOrDefaultAsync(p => p.Id == projectId);
+}
+
+// ✅ CORRECT - Include all entities needed by the query handler
+public async Task<Project?> GetProjectWithKnowledgeStructureByIdAsync(long projectId)
+{
+    return await dbContext.Set<Project>()
+        .Include("ProjectKnowledgeStructure.ProjectModules.ProjectTopics.ProjectSubjects.ProjectSubjectResources")
+        .Include("ProjectBlocks.ProjectQuestions.ProjectAnswerOptions")  // Include blocks for questionMap
+        .FirstOrDefaultAsync(p => p.Id == projectId);
+}
+```
+
+**Diagnosis Steps**:
+1. Check what entities the handler is trying to access (e.g., `project.ProjectBlocks`)
+2. Verify those entities are included in the repository method
+3. If handler builds maps or lookups, ensure source data is loaded
+4. Watch for empty collections that should have data
+
 ### DbContext Missing Entity Error
 **Error**: `Cannot create a DbSet for 'EntityName' because this type is not included in the model`
 **Solution**: 
@@ -50,6 +80,22 @@ ResultErrorCodes.BusinessIncubator_NotFound
       .UsePropertyAccessMode(PropertyAccessMode.Field)
       .HasField("_backingField");
   ```
+
+### Entity Framework Tracked Entity Updates
+**Error**: `CS1503: cannot convert from 'Entity' to 'BusinessIncubator'` when calling repository.Update()
+**Cause**: Trying to update an already-tracked entity
+**Solution**: Remove the Update call - tracked entities are automatically updated
+```csharp
+// ❌ WRONG - Entity already tracked after retrieval
+var entity = await repository.GetByIdAsync(id);
+entity.ModifyProperty(value);
+repository.Update(entity); // Unnecessary!
+
+// ✅ CORRECT - Just save changes
+var entity = await repository.GetByIdAsync(id);
+entity.ModifyProperty(value);
+await repository.UnitOfWork.SaveChangesAsync();
+```
 
 ### EF Core Duplicate Foreign Key Columns
 **Error**: `Invalid column name 'PropertyId1'`
@@ -1847,6 +1893,20 @@ SubmittedAt          // When form was submitted (nullable)
 ApprovedAt           // When form was approved (nullable)
 RejectedAt           // When form was rejected (nullable)
 ParticipantUserId    // The user who owns the form
+```
+
+### Project Entity Navigation Properties
+**Issue**: Trying to access non-existent navigation properties
+```csharp
+// ❌ WRONG - Project doesn't have ProjectUsers navigation
+var hasAccess = userProjects.Any(p => 
+    p.ProjectUsers.Any(pu => pu.UserId == userId));
+
+// ✅ CORRECT - GetProjectsByUserAsync already filters accessible projects
+var hasAccess = userProjects.Any(p => p.Id == request.ProjectId.Value);
+
+// Note: ProjectUsers is a separate table, not a navigation property on Project
+// Access is managed through repository methods that query the ProjectUsers table
 ```
 
 ### ProjectStage Properties

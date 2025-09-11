@@ -579,6 +579,60 @@ updateProgress() {
 - **Mobile Responsive**: Adapts navigation for mobile
 - **Keyboard Support**: Ctrl+S to save draft
 
+## Dual Answer Review Pattern
+
+### Implementation for Coordinator Review (REQ-008)
+When coordinators need to provide their own answers alongside participant responses:
+
+#### JavaScript Manager Pattern
+```javascript
+window.DualAnswerReviewManager = (function() {
+    let coordinatorAnswers = {};
+    let autoSaveInterval = 30000; // 30 seconds
+    
+    function copyFromStarter(questionId) {
+        coordinatorAnswers[questionId] = starterAnswers[questionId];
+        updateProgress();
+        checkForDifferences(questionId);
+    }
+    
+    async function saveDraft(showNotification = true) {
+        // Auto-save implementation
+    }
+    
+    return {
+        init: init,
+        renderDualAnswerLayout: renderDualAnswerLayout,
+        saveDraft: saveDraft,
+        validateCompletion: validateCompletion
+    };
+})();
+```
+
+#### CSS Grid Layout
+```css
+.dual-answer-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .dual-answer-container {
+        grid-template-columns: 1fr;
+    }
+}
+```
+
+#### Integration with Approval
+```javascript
+// In handleApprove function
+if (window.DualAnswerReviewManager && !window.DualAnswerReviewManager.validateCompletion()) {
+    showToast('Debe completar todas sus respuestas como coordinador antes de aprobar', 'warning');
+    return;
+}
+```
+
 ## ViewComponent Patterns
 
 ### Creating a ViewComponent

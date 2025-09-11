@@ -329,7 +329,8 @@
         // Load submissions
         async function loadSubmissions() {
             try {
-                const response = await fetch('/Coordination/FormReview/GetPendingReviews', {
+                // Use the new GetAllSubmissions endpoint to get ALL submissions regardless of status
+                const response = await fetch('/Coordination/FormReview/GetAllSubmissions', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -343,7 +344,7 @@
                     updateStatistics();
                     renderSubmissions();
                 } else {
-                    throw new Error('Error al cargar las revisiones');
+                    throw new Error('Error al cargar los formularios');
                 }
             } catch (error) {
                 console.error('Error loading submissions:', error);
