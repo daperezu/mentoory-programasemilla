@@ -550,66 +550,57 @@ window.DualAnswerReviewManager = (function() {
                 break;
 
             case 7: // IdType
-                // Map code to text for starter display
-                const idTypeOptions = {
-                    'CC': 'Cédula de Ciudadanía',
-                    'CE': 'Cédula de Extranjería',
-                    'PA': 'Pasaporte',
-                    'TI': 'Tarjeta de Identidad'
-                };
-                starterAnswerDisplay = idTypeOptions[starterAnswerValue] || starterAnswerValue || 'Sin respuesta';
-                coordinatorInput = `
-                    <select class="form-control coordinator-answer-input" 
-                            data-question-id="${questionId}">
-                        <option value="">Seleccione tipo de identificación</option>
-                        <option value="CC" ${coordinatorAnswers[questionId] === 'CC' ? 'selected' : ''}>Cédula de Ciudadanía</option>
-                        <option value="CE" ${coordinatorAnswers[questionId] === 'CE' ? 'selected' : ''}>Cédula de Extranjería</option>
-                        <option value="PA" ${coordinatorAnswers[questionId] === 'PA' ? 'selected' : ''}>Pasaporte</option>
-                        <option value="TI" ${coordinatorAnswers[questionId] === 'TI' ? 'selected' : ''}>Tarjeta de Identidad</option>
-                    </select>
-                `;
+                // Use shared constants for display
+                const { FormUtils } = window.FormConstants || {};
+                if (!FormUtils) {
+                    console.error('FormConstants module not loaded');
+                    starterAnswerDisplay = starterAnswerValue || 'Sin respuesta';
+                    coordinatorInput = '<p class="text-danger">Error: FormConstants module not loaded</p>';
+                } else {
+                    starterAnswerDisplay = FormUtils.getDisplayText('idType', starterAnswerValue);
+                    coordinatorInput = `
+                        <select class="form-control coordinator-answer-input" 
+                                data-question-id="${questionId}">
+                            ${FormUtils.renderSelectOptions('idType', coordinatorAnswers[questionId])}
+                        </select>
+                    `;
+                }
                 break;
 
             case 8: // Gender
-                // Map code to text for starter display
-                const genderOptions = {
-                    'M': 'Masculino',
-                    'F': 'Femenino',
-                    'O': 'Otro'
-                };
-                starterAnswerDisplay = genderOptions[starterAnswerValue] || starterAnswerValue || 'Sin respuesta';
-                coordinatorInput = `
-                    <select class="form-control coordinator-answer-input" 
-                            data-question-id="${questionId}">
-                        <option value="">Seleccione género</option>
-                        <option value="M" ${coordinatorAnswers[questionId] === 'M' ? 'selected' : ''}>Masculino</option>
-                        <option value="F" ${coordinatorAnswers[questionId] === 'F' ? 'selected' : ''}>Femenino</option>
-                        <option value="O" ${coordinatorAnswers[questionId] === 'O' ? 'selected' : ''}>Otro</option>
-                    </select>
-                `;
+                // Use shared constants for display
+                const { FormUtils: FormUtilsGender } = window.FormConstants || {};
+                if (!FormUtilsGender) {
+                    console.error('FormConstants module not loaded');
+                    starterAnswerDisplay = starterAnswerValue || 'Sin respuesta';
+                    coordinatorInput = '<p class="text-danger">Error: FormConstants module not loaded</p>';
+                } else {
+                    starterAnswerDisplay = FormUtilsGender.getDisplayText('gender', starterAnswerValue);
+                    coordinatorInput = `
+                        <select class="form-control coordinator-answer-input" 
+                                data-question-id="${questionId}">
+                            ${FormUtilsGender.renderSelectOptions('gender', coordinatorAnswers[questionId])}
+                        </select>
+                    `;
+                }
                 break;
 
             case 9: // MaritalStatus
-                // Map code to text for starter display
-                const maritalOptions = {
-                    'S': 'Soltero(a)',
-                    'C': 'Casado(a)',
-                    'U': 'Unión Libre',
-                    'D': 'Divorciado(a)',
-                    'V': 'Viudo(a)'
-                };
-                starterAnswerDisplay = maritalOptions[starterAnswerValue] || starterAnswerValue || 'Sin respuesta';
-                coordinatorInput = `
-                    <select class="form-control coordinator-answer-input" 
-                            data-question-id="${questionId}">
-                        <option value="">Seleccione estado civil</option>
-                        <option value="S" ${coordinatorAnswers[questionId] === 'S' ? 'selected' : ''}>Soltero(a)</option>
-                        <option value="C" ${coordinatorAnswers[questionId] === 'C' ? 'selected' : ''}>Casado(a)</option>
-                        <option value="U" ${coordinatorAnswers[questionId] === 'U' ? 'selected' : ''}>Unión Libre</option>
-                        <option value="D" ${coordinatorAnswers[questionId] === 'D' ? 'selected' : ''}>Divorciado(a)</option>
-                        <option value="V" ${coordinatorAnswers[questionId] === 'V' ? 'selected' : ''}>Viudo(a)</option>
-                    </select>
-                `;
+                // Use shared constants for display
+                const { FormUtils: FormUtilsMarital } = window.FormConstants || {};
+                if (!FormUtilsMarital) {
+                    console.error('FormConstants module not loaded');
+                    starterAnswerDisplay = starterAnswerValue || 'Sin respuesta';
+                    coordinatorInput = '<p class="text-danger">Error: FormConstants module not loaded</p>';
+                } else {
+                    starterAnswerDisplay = FormUtilsMarital.getDisplayText('maritalStatus', starterAnswerValue);
+                    coordinatorInput = `
+                        <select class="form-control coordinator-answer-input" 
+                                data-question-id="${questionId}">
+                            ${FormUtilsMarital.renderSelectOptions('maritalStatus', coordinatorAnswers[questionId])}
+                        </select>
+                    `;
+                }
                 break;
 
             case 10: // Email
@@ -636,219 +627,21 @@ window.DualAnswerReviewManager = (function() {
                 break;
 
             case 12: // Nationality
-                // Complete nationality list matching participant form exactly
-                const nationalities = [
-                    // Americas
-                    { value: 'AR', text: 'Argentina' },
-                    { value: 'BO', text: 'Bolivia' },
-                    { value: 'BR', text: 'Brasil' },
-                    { value: 'CA', text: 'Canadá' },
-                    { value: 'CL', text: 'Chile' },
-                    { value: 'CO', text: 'Colombia' },
-                    { value: 'CR', text: 'Costa Rica' },
-                    { value: 'CU', text: 'Cuba' },
-                    { value: 'DO', text: 'República Dominicana' },
-                    { value: 'EC', text: 'Ecuador' },
-                    { value: 'SV', text: 'El Salvador' },
-                    { value: 'US', text: 'Estados Unidos' },
-                    { value: 'GT', text: 'Guatemala' },
-                    { value: 'HT', text: 'Haití' },
-                    { value: 'HN', text: 'Honduras' },
-                    { value: 'JM', text: 'Jamaica' },
-                    { value: 'MX', text: 'México' },
-                    { value: 'NI', text: 'Nicaragua' },
-                    { value: 'PA', text: 'Panamá' },
-                    { value: 'PY', text: 'Paraguay' },
-                    { value: 'PE', text: 'Perú' },
-                    { value: 'PR', text: 'Puerto Rico' },
-                    { value: 'UY', text: 'Uruguay' },
-                    { value: 'VE', text: 'Venezuela' },
-                    
-                    // Europe
-                    { value: 'AL', text: 'Albania' },
-                    { value: 'DE', text: 'Alemania' },
-                    { value: 'AD', text: 'Andorra' },
-                    { value: 'AT', text: 'Austria' },
-                    { value: 'BE', text: 'Bélgica' },
-                    { value: 'BY', text: 'Bielorrusia' },
-                    { value: 'BA', text: 'Bosnia y Herzegovina' },
-                    { value: 'BG', text: 'Bulgaria' },
-                    { value: 'HR', text: 'Croacia' },
-                    { value: 'DK', text: 'Dinamarca' },
-                    { value: 'SK', text: 'Eslovaquia' },
-                    { value: 'SI', text: 'Eslovenia' },
-                    { value: 'ES', text: 'España' },
-                    { value: 'EE', text: 'Estonia' },
-                    { value: 'FI', text: 'Finlandia' },
-                    { value: 'FR', text: 'Francia' },
-                    { value: 'GR', text: 'Grecia' },
-                    { value: 'HU', text: 'Hungría' },
-                    { value: 'IE', text: 'Irlanda' },
-                    { value: 'IS', text: 'Islandia' },
-                    { value: 'IT', text: 'Italia' },
-                    { value: 'LV', text: 'Letonia' },
-                    { value: 'LI', text: 'Liechtenstein' },
-                    { value: 'LT', text: 'Lituania' },
-                    { value: 'LU', text: 'Luxemburgo' },
-                    { value: 'MK', text: 'Macedonia del Norte' },
-                    { value: 'MT', text: 'Malta' },
-                    { value: 'MD', text: 'Moldavia' },
-                    { value: 'MC', text: 'Mónaco' },
-                    { value: 'ME', text: 'Montenegro' },
-                    { value: 'NO', text: 'Noruega' },
-                    { value: 'NL', text: 'Países Bajos' },
-                    { value: 'PL', text: 'Polonia' },
-                    { value: 'PT', text: 'Portugal' },
-                    { value: 'GB', text: 'Reino Unido' },
-                    { value: 'CZ', text: 'República Checa' },
-                    { value: 'RO', text: 'Rumania' },
-                    { value: 'RU', text: 'Rusia' },
-                    { value: 'SM', text: 'San Marino' },
-                    { value: 'RS', text: 'Serbia' },
-                    { value: 'SE', text: 'Suecia' },
-                    { value: 'CH', text: 'Suiza' },
-                    { value: 'UA', text: 'Ucrania' },
-                    { value: 'VA', text: 'Vaticano' },
-                    
-                    // Asia
-                    { value: 'AF', text: 'Afganistán' },
-                    { value: 'SA', text: 'Arabia Saudita' },
-                    { value: 'AM', text: 'Armenia' },
-                    { value: 'AZ', text: 'Azerbaiyán' },
-                    { value: 'BH', text: 'Baréin' },
-                    { value: 'BD', text: 'Bangladesh' },
-                    { value: 'BT', text: 'Bután' },
-                    { value: 'BN', text: 'Brunéi' },
-                    { value: 'KH', text: 'Camboya' },
-                    { value: 'CN', text: 'China' },
-                    { value: 'CY', text: 'Chipre' },
-                    { value: 'KP', text: 'Corea del Norte' },
-                    { value: 'KR', text: 'Corea del Sur' },
-                    { value: 'AE', text: 'Emiratos Árabes Unidos' },
-                    { value: 'PH', text: 'Filipinas' },
-                    { value: 'GE', text: 'Georgia' },
-                    { value: 'IN', text: 'India' },
-                    { value: 'ID', text: 'Indonesia' },
-                    { value: 'IQ', text: 'Irak' },
-                    { value: 'IR', text: 'Irán' },
-                    { value: 'IL', text: 'Israel' },
-                    { value: 'JP', text: 'Japón' },
-                    { value: 'JO', text: 'Jordania' },
-                    { value: 'KZ', text: 'Kazajistán' },
-                    { value: 'KW', text: 'Kuwait' },
-                    { value: 'KG', text: 'Kirguistán' },
-                    { value: 'LA', text: 'Laos' },
-                    { value: 'LB', text: 'Líbano' },
-                    { value: 'MY', text: 'Malasia' },
-                    { value: 'MV', text: 'Maldivas' },
-                    { value: 'MN', text: 'Mongolia' },
-                    { value: 'MM', text: 'Myanmar' },
-                    { value: 'NP', text: 'Nepal' },
-                    { value: 'OM', text: 'Omán' },
-                    { value: 'PK', text: 'Pakistán' },
-                    { value: 'PS', text: 'Palestina' },
-                    { value: 'QA', text: 'Qatar' },
-                    { value: 'SG', text: 'Singapur' },
-                    { value: 'SY', text: 'Siria' },
-                    { value: 'LK', text: 'Sri Lanka' },
-                    { value: 'TJ', text: 'Tayikistán' },
-                    { value: 'TH', text: 'Tailandia' },
-                    { value: 'TL', text: 'Timor Oriental' },
-                    { value: 'TM', text: 'Turkmenistán' },
-                    { value: 'TR', text: 'Turquía' },
-                    { value: 'UZ', text: 'Uzbekistán' },
-                    { value: 'VN', text: 'Vietnam' },
-                    { value: 'YE', text: 'Yemen' },
-                    
-                    // Africa
-                    { value: 'DZ', text: 'Argelia' },
-                    { value: 'AO', text: 'Angola' },
-                    { value: 'BJ', text: 'Benín' },
-                    { value: 'BW', text: 'Botsuana' },
-                    { value: 'BF', text: 'Burkina Faso' },
-                    { value: 'BI', text: 'Burundi' },
-                    { value: 'CV', text: 'Cabo Verde' },
-                    { value: 'CM', text: 'Camerún' },
-                    { value: 'TD', text: 'Chad' },
-                    { value: 'KM', text: 'Comoras' },
-                    { value: 'CG', text: 'Congo' },
-                    { value: 'CD', text: 'República Democrática del Congo' },
-                    { value: 'CI', text: 'Costa de Marfil' },
-                    { value: 'DJ', text: 'Yibuti' },
-                    { value: 'EG', text: 'Egipto' },
-                    { value: 'GQ', text: 'Guinea Ecuatorial' },
-                    { value: 'ER', text: 'Eritrea' },
-                    { value: 'SZ', text: 'Esuatini' },
-                    { value: 'ET', text: 'Etiopía' },
-                    { value: 'GA', text: 'Gabón' },
-                    { value: 'GM', text: 'Gambia' },
-                    { value: 'GH', text: 'Ghana' },
-                    { value: 'GN', text: 'Guinea' },
-                    { value: 'GW', text: 'Guinea-Bisáu' },
-                    { value: 'KE', text: 'Kenia' },
-                    { value: 'LS', text: 'Lesoto' },
-                    { value: 'LR', text: 'Liberia' },
-                    { value: 'LY', text: 'Libia' },
-                    { value: 'MG', text: 'Madagascar' },
-                    { value: 'MW', text: 'Malaui' },
-                    { value: 'ML', text: 'Malí' },
-                    { value: 'MR', text: 'Mauritania' },
-                    { value: 'MU', text: 'Mauricio' },
-                    { value: 'MA', text: 'Marruecos' },
-                    { value: 'MZ', text: 'Mozambique' },
-                    { value: 'NA', text: 'Namibia' },
-                    { value: 'NE', text: 'Níger' },
-                    { value: 'NG', text: 'Nigeria' },
-                    { value: 'CF', text: 'República Centroafricana' },
-                    { value: 'RW', text: 'Ruanda' },
-                    { value: 'ST', text: 'Santo Tomé y Príncipe' },
-                    { value: 'SN', text: 'Senegal' },
-                    { value: 'SC', text: 'Seychelles' },
-                    { value: 'SL', text: 'Sierra Leona' },
-                    { value: 'SO', text: 'Somalia' },
-                    { value: 'ZA', text: 'Sudáfrica' },
-                    { value: 'SS', text: 'Sudán del Sur' },
-                    { value: 'SD', text: 'Sudán' },
-                    { value: 'TZ', text: 'Tanzania' },
-                    { value: 'TG', text: 'Togo' },
-                    { value: 'TN', text: 'Túnez' },
-                    { value: 'UG', text: 'Uganda' },
-                    { value: 'ZM', text: 'Zambia' },
-                    { value: 'ZW', text: 'Zimbabue' },
-                    
-                    // Oceania
-                    { value: 'AU', text: 'Australia' },
-                    { value: 'FJ', text: 'Fiyi' },
-                    { value: 'KI', text: 'Kiribati' },
-                    { value: 'MH', text: 'Islas Marshall' },
-                    { value: 'FM', text: 'Micronesia' },
-                    { value: 'NR', text: 'Nauru' },
-                    { value: 'NZ', text: 'Nueva Zelanda' },
-                    { value: 'PW', text: 'Palaos' },
-                    { value: 'PG', text: 'Papúa Nueva Guinea' },
-                    { value: 'WS', text: 'Samoa' },
-                    { value: 'SB', text: 'Islas Salomón' },
-                    { value: 'TO', text: 'Tonga' },
-                    { value: 'TV', text: 'Tuvalu' },
-                    { value: 'VU', text: 'Vanuatu' }
-                ];
-                
-                // Sort countries alphabetically by text (matching participant form)
-                nationalities.sort((a, b) => a.text.localeCompare(b.text, 'es'));
-                
-                // Find the text for the starter's answer
-                const selectedNationality = nationalities.find(n => n.value === starterAnswerValue);
-                starterAnswerDisplay = selectedNationality ? selectedNationality.text : starterAnswerValue || 'Sin respuesta';
-                
-                coordinatorInput = `
-                    <select class="form-control coordinator-answer-input nationality-select-coord" 
-                            data-question-id="${questionId}">
-                        <option value="">Seleccione nacionalidad</option>
-                        ${nationalities.map(opt => 
-                            `<option value="${opt.value}" ${coordinatorAnswers[questionId] === opt.value ? 'selected' : ''}>${opt.text}</option>`
-                        ).join('')}
-                    </select>
-                `;
+                // Use shared constants for display
+                const { FormUtils: FormUtilsNationality } = window.FormConstants || {};
+                if (!FormUtilsNationality) {
+                    console.error('FormConstants module not loaded');
+                    starterAnswerDisplay = starterAnswerValue || 'Sin respuesta';
+                    coordinatorInput = '<p class="text-danger">Error: FormConstants module not loaded</p>';
+                } else {
+                    starterAnswerDisplay = FormUtilsNationality.getDisplayText('nationality', starterAnswerValue);
+                    coordinatorInput = `
+                        <select class="form-control coordinator-answer-input nationality-select-coord" 
+                                data-question-id="${questionId}">
+                            ${FormUtilsNationality.renderSelectOptions('nationality', coordinatorAnswers[questionId])}
+                        </select>
+                    `;
+                }
                 break;
 
             default:

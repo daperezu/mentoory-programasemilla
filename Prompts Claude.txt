@@ -60,7 +60,7 @@ You're continuing work on the LinaSys project after a context reset.
 
   Read again CLAUDE.md first to understand the project rules, it was updated since the last time you read it, also read all the MD files at the section with title "Knowledge Base" as they might were updated as well.
 
-The design of the current requirement is avaiable at @.claude\requirements\active\REQ-008-dual-answers-coordinator-starter.md
+The design of the current requirement is avaiable at @.claude/requirements/pending/REQ-009-form-constants-deduplication.md
 
   Confirm you've understood by stating (in one line):
   - The active task you'll continue working on

@@ -279,7 +279,7 @@ public class FormReviewController(
         var response = new
         {
             submission = result.Value,
-            feedbackConversations = feedbackResult.IsSuccess ? feedbackResult.Value : new List<LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.FeedbackConversationDto>()
+            feedbackConversations = feedbackResult.IsSuccess ? feedbackResult.Value : []
         };
 
         return Ok(response);

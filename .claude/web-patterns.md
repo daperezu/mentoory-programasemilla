@@ -678,6 +678,62 @@ public class UserContextDisplayViewModel
 - Separate display control flags from data
 - Allows clean conditional rendering in view
 
+## Shared Form Constants Pattern
+
+### Purpose
+Eliminate duplicate hardcoded lists (nationalities, ID types, gender, marital status) between form files.
+
+### Implementation
+```javascript
+// /Web/wwwroot/js/shared/form-constants.js
+window.FormConstants = {
+    FormConstants: {
+        nationalities: [...],  // 194 countries with ISO codes
+        idTypes: {...},        // CC, CE, PA, TI
+        genders: {...},        // M, F, O
+        maritalStatuses: {...} // S, C, U, D, V
+    },
+    FormUtils: {
+        getSortedNationalities(),
+        getDisplayText(type, value),
+        renderSelectOptions(type, selectedValue)
+    }
+};
+```
+
+### Usage in Views
+```razor
+@section Scripts {
+    <!-- Load shared constants first -->
+    <script src="~/js/shared/form-constants.js"></script>
+    <!-- Then load scripts that use them -->
+    <script src="~/js/businessincubators/participant-form.js"></script>
+}
+```
+
+### Usage in JavaScript
+```javascript
+// Rendering select options
+const { FormUtils } = window.FormConstants || {};
+if (!FormUtils) {
+    console.error('FormConstants module not loaded');
+    return;
+}
+
+return `<select class="form-select">
+    ${FormUtils.renderSelectOptions('nationality', value)}
+</select>`;
+
+// Getting display text
+const displayText = FormUtils.getDisplayText('idType', 'CC'); // Returns: 'Cédula de Ciudadanía'
+```
+
+### Benefits
+- **Single source of truth**: Update once, apply everywhere
+- **Reduced bundle size**: ~800 lines of duplicate code removed
+- **Consistent behavior**: Same options and sorting across all forms
+- **Browser caching**: Shared module cached across pages
+
 ### Tree Data Structure
 ```csharp
 public class TreeNodeDto
