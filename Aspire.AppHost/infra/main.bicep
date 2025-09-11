@@ -12,6 +12,9 @@ param location string
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
+param googleanalytics_enabled string
+@secure()
+param googleanalytics_measurementid string
 @secure()
 param mailgun_apikey string
 param mailgun_domain string

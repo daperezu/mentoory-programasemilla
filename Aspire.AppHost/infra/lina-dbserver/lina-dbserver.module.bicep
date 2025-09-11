@@ -39,7 +39,7 @@ resource DefaultConnection 'Microsoft.Sql/servers/databases@2023-08-01' = {
   name: 'LinaDb'
   location: location
   properties: {
-    freeLimitExhaustionBehavior: 'AutoPause'
+    freeLimitExhaustionBehavior: 'BillOverUsage'
     useFreeLimit: true
   }
   sku: {
