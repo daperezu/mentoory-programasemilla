@@ -40,6 +40,7 @@
 - 📝 **REQ-002**: Seed Data for Project Knowledge Structure
 - 📝 **REQ-003**: Automated Form Availability Notifications
 - 📝 **REQ-007**: Form Approval and Diagnostics Domain Integration
+- 📝 **REQ-011**: Public Homepage with Geolocation-Based Project Discovery
 
 ### Recently Completed
 - ✅ **REQ-005**: Modern Phoenix-Aligned Form Experience (2025-09-08)
