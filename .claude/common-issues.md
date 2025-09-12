@@ -25,6 +25,34 @@ ResultErrorCodes.GenericError
 ResultErrorCodes.BusinessIncubator_NotFound
 ```
 
+## Performance Issues
+
+### Dashboard Loading Takes 5-10 Seconds
+**Problem**: Coordination Dashboard executes 20+ queries causing slow load times
+**Root Causes**:
+- N+1 queries when loading user names
+- Each widget loads project data independently
+- Missing database indexes on critical columns
+- All filtering done in-memory instead of at database level
+
+**Solution**: 
+```csharp
+// ❌ WRONG - N+1 queries
+foreach (var submission in submissions) {
+    var user = await userManager.FindByIdAsync(submission.UserId);
+}
+
+// ✅ CORRECT - Batch load users
+var userIds = submissions.Select(s => s.UserId).Distinct();
+var users = await authRepository.GetUsersByIdsAsync(userIds);
+```
+
+**Quick Wins**:
+1. Add database indexes on frequently queried columns
+2. Use `.AsNoTracking()` for read-only queries
+3. Project to DTOs using `.Select()` instead of loading full entities
+4. Cache data within request scope to avoid duplicate loads
+
 ## Entity Framework Issues
 
 ### Include with String-Based Backing Field

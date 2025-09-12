@@ -1,68 +1,74 @@
 # Work Log
 
-## 2025-01-11 - Diagnostic Charts Requirements & Planning
+## 2025-01-12 - Coordination Dashboard Performance Analysis
 
 ### Context
-Analyzed requirements prompt for generating diagnostic charts from approved forms. Created comprehensive implementation plan for visualizing diagnosis scores as radial charts per block.
+User reported that /Coordination/Dashboard takes an eternity to load. Performed deep performance analysis to identify root causes and created comprehensive optimization plan.
 
 ### Completed
 
-1. **Requirements Analysis**:
-   - Analyzed prompt in `.claude/requirements/prompts/linasys_diagnosis_charts_prompt.md`
-   - Translated Elixir/Phoenix requirements to ASP.NET Core/C# architecture
-   - Identified existing infrastructure (ECharts in Phoenix Admin Template)
+1. **Performance Analysis**:
+   - Traced entire flow from controller to database
+   - Identified 20+ queries executed per page load
+   - Found severe N+1 query problems in user data loading
+   - Discovered duplicate project loading across handlers
 
-2. **Domain Exploration**:
-   - Reviewed `DiagnosisAnswer` entity structure
-   - Examined `DiagnosisAnswers` table schema
-   - Found existing columns: `AnswerSource`, `PreferredForDiagnosis`, `Score`
+2. **Root Causes Identified**:
+   - `GetCoordinatorParticipantStatsQuery`: Loads project twice
+   - `GetCoordinatorDiagnosticStatsQuery`: Loads project twice  
+   - `GetCoordinatorPendingReviewsQuery`: N+1 for user names (up to 10 queries)
+   - `GetCoordinatorRecentActivityQuery`: N+1 for user names (up to 11 queries)
+   - Missing database indexes on critical columns
+   - All filtering done in-memory instead of at database level
 
 3. **Requirements Document Created**:
-   - Created `REQ-010-diagnostic-charts.md` following LinaSys template
+   - Created `REQ-011-coordination-dashboard-performance.md`
    - Saved to `.claude/requirements/pending/`
-   - Document approved by user for implementation
+   - Comprehensive optimization plan with code examples
 
-### Key Decisions
+### Key Discoveries
 
-**Architecture Approach**:
-- Use existing ECharts library (no new dependencies)
-- Implement domain service for score aggregation
-- Cache results (data immutable post-approval)
-
-**Score Aggregation Logic**:
+**Query Explosion Pattern**:
 ```csharp
-// Pseudo-code for preference logic
-if (answers.Any(a => a.AnswerSource == "Coordinator" && a.PreferredForDiagnosis))
-    useCoordinatorAnswers();
-else
-    useStarterAnswers();
+// PROBLEM: Each handler loads project independently
+GetProjectWithUsersAsync(projectId);      // Query 1
+GetProjectWithFormSubmissionsAsync(id);   // Query 2  
+GetProjectWithInvitationsByExternalIdAsync(id); // Query 3
+// Then N+1 for each user...
+foreach (var userId in userIds) {
+    await userManager.FindByIdAsync(userId); // +N queries!
+}
 ```
 
-**Chart Configuration**:
-- One radial/radar chart per block
-- Labels: `{blockId}.{internalQuestionId}` format
-- Multi-select: SUM aggregation by default
+**Missing Indexes**:
+- No index on `ProjectFormSubmissions(ProjectId, Status)`
+- No index on `ProjectUsers(ProjectId, IsActive)`
+- No covering indexes for dashboard statistics
 
-### Technical Specifications
+### Solution Approach
 
-**New Components**:
-- `DiagnosisScoreCalculator` (Domain Service)
-- `GetDiagnosisChartDataQuery` (Application Query)
-- `DiagnosisChartsController` (Web Controller)
-- `diagnosis-charts.js` (JavaScript module)
-- `diagnosis-print.css` (Print styles)
+**Single Query Pattern**:
+```csharp
+// SOLUTION: Load all data in one optimized query
+var dashboardData = await dbContext.Projects
+    .Where(p => p.Id == projectId)
+    .Select(p => new DashboardData {
+        // Project aggregations at DB level
+        TotalUsers = p.ProjectUsers.Count(u => u.IsActive),
+        CompletedForms = p.FormSubmissions.Count(f => f.Status == Completed),
+        // Batch load all user IDs
+        AllUserIds = p.ProjectUsers.Select(u => u.UserId).ToList()
+    })
+    .FirstOrDefaultAsync();
+```
 
-**Database Enhancement**:
-- Add `InternalQuestionId` column to `DiagnosisAnswers`
-- Create composite index for performance
-- Consider materialized view for aggregations
-
-### Files Created
-- `.claude/requirements/pending/REQ-010-diagnostic-charts.md`
+### Files Created/Modified
+- `.claude/requirements/pending/REQ-011-coordination-dashboard-performance.md`
+- `.claude/CURRENT_SESSION.md` (updated with findings)
 
 ### Next Steps
-1. Implement domain services for score calculation
-2. Create application queries and DTOs
-3. Build coordinator review UI
-4. Integrate ECharts for visualization
-5. Add print-ready CSS
+1. Add database indexes (quick win - 30-50% improvement)
+2. Implement batch user loading query
+3. Create unified dashboard data query
+4. Add request-scoped caching
+5. Performance test with 100+ users
