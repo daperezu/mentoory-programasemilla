@@ -4,6 +4,7 @@ using LinaSys.Shared.Application;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,8 @@ namespace LinaSys.Web.Areas.Coordination.Controllers;
 public class EmailTemplateController(
     IMediator mediator,
     ILogger<EmailTemplateController> logger,
-    MediatorExecutor mediatorExecutor) : AuthorizedBaseController(logger, mediatorExecutor)
+    MediatorExecutor mediatorExecutor,
+    IApplicationUrlService applicationUrlService) : AuthorizedBaseController(logger, mediatorExecutor, applicationUrlService)
 {
 
     /// <summary>

@@ -14,6 +14,7 @@ using LinaSys.Core.Application.Dashboard.Services;
 using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -105,7 +106,8 @@ public class FormReviewController(
     IDashboardBuilderService dashboardBuilder,
     ILogger<FormReviewController> logger,
     MediatorExecutor mediatorExecutor,
-    IReviewNotificationService notificationService) : DashboardBaseController(logger, mediator, dashboardBuilder)
+    IApplicationUrlService applicationUrlService,
+    IReviewNotificationService notificationService) : DashboardBaseController(logger, mediator, applicationUrlService, dashboardBuilder)
 {
     [HttpPost]
     [Route("AddFeedback")]

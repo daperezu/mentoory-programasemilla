@@ -436,6 +436,15 @@
             const initials = getInitials(submission.userName);
             const deadlineInfo = getDeadlineInfo(submission);
 
+            // Add chart button for approved submissions (diagnosis forms only)
+            const chartButton = status === 'Approved' && submission.projectExternalId && submission.userId && submission.phase !== undefined ? `
+                <button class="btn btn-sm btn-falcon-info ms-2" 
+                        onclick="event.stopPropagation(); viewDiagnosisChart('${submission.projectExternalId}', '${submission.userId}', ${submission.phase})"
+                        title="Ver gráficos de diagnóstico">
+                    <i class="fas fa-chart-radar"></i> Ver Gráficos
+                </button>
+            ` : '';
+
             return `
                 <div class="submission-row position-relative" onclick="openReview(${submission.submissionId})">
                     <div class="priority-indicator ${priorityClass}"></div>
@@ -459,6 +468,7 @@
                                 </span>
                             ` : ''}
                             ${statusBadge}
+                            ${chartButton}
                         </div>
                     </div>
                 </div>
@@ -592,6 +602,11 @@
         // Open review
         function openReview(submissionId) {
             window.location.href = `/Coordination/FormReview/Review/${submissionId}`;
+        }
+
+        // View diagnosis chart
+        function viewDiagnosisChart(projectExternalId, userId, phase) {
+            window.location.href = `/Diagnostics/DiagnosisCharts/Review/${projectExternalId}/${userId}/${phase}`;
         }
     </script>
 }

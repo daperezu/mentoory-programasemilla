@@ -35,6 +35,7 @@ using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Filters;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,7 +57,8 @@ namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 public class ProjectKnowledgeStructureController(
     ILogger<ProjectKnowledgeStructureController> logger,
     MediatorExecutor mediatorExecutor,
-    IMediator mediator) : AuthorizedBaseController(logger, mediatorExecutor)
+    IApplicationUrlService applicationUrlService,
+    IMediator mediator) : AuthorizedBaseController(logger, mediatorExecutor, applicationUrlService)
 {
 
     /// <summary>

@@ -1,9 +1,6 @@
 ﻿using FluentValidation;
 using LinaSys.BusinessIncubator.Domain.Repositories;
-using LinaSys.Permissions.Application.IntegrationEvents;
-using LinaSys.Permissions.Domain.Constants;
 using LinaSys.Shared.Application;
-using LinaSys.Shared.Application.IntegrationEvents;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.SeedWork;
 
@@ -38,7 +35,7 @@ public class CreateBusinessIncubatorCommandValidator : AbstractValidator<CreateB
 /// <summary>
 /// Handler for <see cref="CreateBusinessIncubatorCommand"/>.
 /// </summary>
-public class CreateBusinessIncubatorHandler(IBusinessIncubatorRepository repository, IAuditContext auditContext, IIntegrationEventService integrationEventService)
+public class CreateBusinessIncubatorHandler(IBusinessIncubatorRepository repository, IAuditContext auditContext)
     : BaseCommandHandler<CreateBusinessIncubatorCommand, (long Id, Guid ExternalId)>
 {
     /// <summary>
@@ -79,20 +76,6 @@ public class CreateBusinessIncubatorHandler(IBusinessIncubatorRepository reposit
 
         //// Exception to the rule: we don't want to SaveChangesAsync in the handler
         await repository.UnitOfWork.SaveChangesAsync(cancellationToken);
-
-        // Publish integration event for protected resource creation
-        var protectedResourceCreatedEvent = new ProtectedResourceCreated(
-            incubator.ExternalId,
-            ResourceTypes.BusinessIncubator,
-            incubator.Name,
-            auditContext.User);
-
-        // Publish integration event - synchronous in tests, async in production
-        #if DEBUG
-        await integrationEventService.PublishAsync(protectedResourceCreatedEvent, cancellationToken);
-        #else
-        _ = Task.Run(async () => await integrationEventService.PublishAsync(protectedResourceCreatedEvent, cancellationToken), cancellationToken);
-        #endif
 
         return Success((incubator.Id, incubator.ExternalId));
     }

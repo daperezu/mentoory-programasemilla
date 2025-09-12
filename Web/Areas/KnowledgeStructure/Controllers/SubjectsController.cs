@@ -10,14 +10,15 @@ using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LinaSys.Web.Areas.KnowledgeStructure.Controllers;
 
 [Area("KnowledgeStructure")]
-public class SubjectsController(ILogger<SubjectsController> logger, MediatorExecutor mediator)
-    : AuthorizedBaseController(logger, mediator)
+public class SubjectsController(ILogger<SubjectsController> logger, MediatorExecutor mediator, IApplicationUrlService applicationUrlService)
+    : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     [HttpGet]
     public IActionResult Index()

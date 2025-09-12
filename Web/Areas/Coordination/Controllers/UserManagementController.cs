@@ -28,8 +28,9 @@ namespace LinaSys.Web.Areas.Coordination.Controllers;
 public class UserManagementController(
     ILogger<UserManagementController> logger,
     MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService,
     IProgressTrackingService progressTrackingService,
-    IPasswordGeneratorService passwordGeneratorService) : AuthorizedBaseController(logger, mediator)
+    IPasswordGeneratorService passwordGeneratorService) : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     [HttpGet]
     public IActionResult Index()

@@ -50,6 +50,11 @@ public class SubmissionDto
     public long ProjectId { get; set; }
 
     /// <summary>
+    /// Gets or sets the project external ID.
+    /// </summary>
+    public Guid ProjectExternalId { get; set; }
+
+    /// <summary>
     /// Gets or sets the project name.
     /// </summary>
     public string ProjectName { get; set; } = string.Empty;
@@ -98,6 +103,11 @@ public class SubmissionDto
     /// Gets or sets the deadline if any.
     /// </summary>
     public DateTime? Deadline { get; set; }
+
+    /// <summary>
+    /// Gets or sets the phase (0 = Start, 1 = Final).
+    /// </summary>
+    public int Phase { get; set; }
 }
 
 /// <summary>
@@ -126,7 +136,7 @@ public class GetAllSubmissionsForReviewQueryHandler(
                 // Global admin can see everything
                 submissions = await repository.GetAllSubmissionsAsync(cancellationToken);
             }
-            else if (request.IsAdmin && request.IncubatorId.HasValue)
+            else if (request is { IsAdmin: true, IncubatorId: not null })
             {
                 // Admin can see all submissions in their incubator
                 var incubatorProjects = await repository.GetProjectsByIncubatorIdAsync(
@@ -196,6 +206,7 @@ public class GetAllSubmissionsForReviewQueryHandler(
                 {
                     SubmissionId = submission.Id,
                     ProjectId = submission.ProjectId,
+                    ProjectExternalId = project?.ExternalId ?? Guid.Empty,
                     ProjectName = project?.Name ?? "Proyecto",
                     UserId = submission.ParticipantUserId,
                     UserName = "Usuario", // TODO: Get from UserManager if needed
@@ -205,7 +216,8 @@ public class GetAllSubmissionsForReviewQueryHandler(
                     ReviewStatus = reviewStatus,
                     Status = submission.Status.ToString(),
                     FeedbackCount = feedbackCount,
-                    Deadline = deadline
+                    Deadline = deadline,
+                    Phase = (int)submission.Phase
                 });
             }
 

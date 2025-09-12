@@ -10,6 +10,7 @@ using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -21,9 +22,10 @@ namespace LinaSys.Web.Areas.Coordination.Controllers;
 public class ReportsController(
     ILogger<ReportsController> logger,
     MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService,
     IDashboardBuilderService dashboardBuilder,
     IDashboardAuditService auditService,
-    IMemoryCache cache) : DashboardBaseController(logger, mediator, dashboardBuilder)
+    IMemoryCache cache) : DashboardBaseController(logger, mediator, applicationUrlService, dashboardBuilder)
 {
     /// <summary>
     /// Create a new custom report template.

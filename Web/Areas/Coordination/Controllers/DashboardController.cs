@@ -11,6 +11,7 @@ using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -22,9 +23,10 @@ namespace LinaSys.Web.Areas.Coordination.Controllers;
 public class DashboardController(
     ILogger<DashboardController> logger,
     MediatorExecutor mediatorExecutor,
+    IApplicationUrlService applicationUrlService,
     IDashboardBuilderService dashboardBuilder,
     IDashboardAuditService auditService,
-    IMemoryCache cache) : DashboardBaseController(logger, mediatorExecutor, dashboardBuilder)
+    IMemoryCache cache) : DashboardBaseController(logger, mediatorExecutor, applicationUrlService, dashboardBuilder)
 {
     [HttpGet]
     public async Task<IActionResult> Index()

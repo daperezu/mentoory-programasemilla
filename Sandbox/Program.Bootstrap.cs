@@ -11,8 +11,6 @@ using LinaSys.Shared.Application.TimeProvider;
 using LinaSys.Shared.Domain.SeedWork;
 using LinaSys.Shared.Infrastructure.Behaviors;
 using LinaSys.Shared.Infrastructure.Persistence;
-using LinaSys.SystemFeatures.Application;
-using LinaSys.SystemFeatures.Infrastructure;
 using LinaSys.Web.Infrastructure.Persistence;
 using LinaSys.Web.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,10 +60,6 @@ public partial class Program
         //// BusinessIncubator Domain
         builder.AddBusinessIncubatorInfrastructure();
         builder.Services.AddBusinessIncubatorApplication();
-
-        //// SystemFeatures Domain
-        builder.AddSystemFeaturesInfrastructure();
-        builder.Services.AddSystemFeaturesApplication();
 
         // Automatically register all classes decorated with ScopedDependencyAttribute
         RegisterScopedDependencies(builder.Services);

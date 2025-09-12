@@ -1,51 +1,68 @@
 # Work Log
 
-## 2025-01-10 - FormReview 403 Error & Query Logic Fixes
+## 2025-01-11 - Diagnostic Charts Requirements & Planning
 
 ### Context
-Fixed critical issues preventing FormReview page from displaying submissions. User reported 403 error and no data showing despite having submissions in database.
+Analyzed requirements prompt for generating diagnostic charts from approved forms. Created comprehensive implementation plan for visualizing diagnosis scores as radial charts per block.
 
 ### Completed
 
-1. **Database Deployment Script**:
-   - Created `Db/Publish-LinaDb.ps1` with automatic tool discovery
-   - Added MSBuild/SqlPackage path resolution for multiple VS versions
-   - Created `LinaDb.Development.publish.xml` for LocalDB deployment
+1. **Requirements Analysis**:
+   - Analyzed prompt in `.claude/requirements/prompts/linasys_diagnosis_charts_prompt.md`
+   - Translated Elixir/Phoenix requirements to ASP.NET Core/C# architecture
+   - Identified existing infrastructure (ECharts in Phoenix Admin Template)
 
-2. **WebFeatures Permission Fix**:
-   - Added missing `'Coordination.FormReview.GetAllSubmissions.Post'` to seed data
-   - File: `Db/PostDeployment/001.SeedWebFeatures.sql` (line 594)
+2. **Domain Exploration**:
+   - Reviewed `DiagnosisAnswer` entity structure
+   - Examined `DiagnosisAnswers` table schema
+   - Found existing columns: `AnswerSource`, `PreferredForDiagnosis`, `Score`
 
-3. **Query Logic Bug Fix**:
-   - **Problem**: Query checked `p.ProjectUsers.Any(...)` but Project entity has no ProjectUsers navigation
-   - **Solution**: Simplified to use GetProjectsByUserAsync results directly
-   - File: `BusinessIncubator.Application/Reviews/Queries/GetAllSubmissionsForReview/GetAllSubmissionsForReviewQuery.cs`
+3. **Requirements Document Created**:
+   - Created `REQ-010-diagnostic-charts.md` following LinaSys template
+   - Saved to `.claude/requirements/pending/`
+   - Document approved by user for implementation
 
-### Key Findings
+### Key Decisions
 
-**Root Cause Analysis**:
-1. Permission was missing from database seed → 403 error
-2. Query logic tried to access non-existent navigation property → no results
-3. GetProjectsByUserAsync already filters accessible projects, no need to re-check
+**Architecture Approach**:
+- Use existing ECharts library (no new dependencies)
+- Implement domain service for score aggregation
+- Cache results (data immutable post-approval)
 
-**Code Fix Applied**:
+**Score Aggregation Logic**:
 ```csharp
-// Before: Checking non-existent property
-var hasAccess = userProjects.Any(p => p.Id == request.ProjectId.Value &&
-    p.ProjectUsers.Any(pu => pu.UserId == request.UserId && ...));
-
-// After: Simplified check
-var hasAccess = userProjects.Any(p => p.Id == request.ProjectId.Value);
+// Pseudo-code for preference logic
+if (answers.Any(a => a.AnswerSource == "Coordinator" && a.PreferredForDiagnosis))
+    useCoordinatorAnswers();
+else
+    useStarterAnswers();
 ```
 
-### Files Modified
-- `Db/PostDeployment/001.SeedWebFeatures.sql`
-- `Db/Publish-LinaDb.ps1` (new)
-- `Db/LinaDb.Development.publish.xml` (new)
-- `Web/Areas/Coordination/Controllers/FormReviewController.cs`
-- `BusinessIncubator.Application/Reviews/Queries/GetAllSubmissionsForReview/GetAllSubmissionsForReviewQuery.cs`
+**Chart Configuration**:
+- One radial/radar chart per block
+- Labels: `{blockId}.{internalQuestionId}` format
+- Multi-select: SUM aggregation by default
+
+### Technical Specifications
+
+**New Components**:
+- `DiagnosisScoreCalculator` (Domain Service)
+- `GetDiagnosisChartDataQuery` (Application Query)
+- `DiagnosisChartsController` (Web Controller)
+- `diagnosis-charts.js` (JavaScript module)
+- `diagnosis-print.css` (Print styles)
+
+**Database Enhancement**:
+- Add `InternalQuestionId` column to `DiagnosisAnswers`
+- Create composite index for performance
+- Consider materialized view for aggregations
+
+### Files Created
+- `.claude/requirements/pending/REQ-010-diagnostic-charts.md`
 
 ### Next Steps
-1. Run `.\Publish-LinaDb.ps1 -Publish` to deploy database changes
-2. Restart application
-3. Test FormReview page shows submissions correctly
+1. Implement domain services for score calculation
+2. Create application queries and DTOs
+3. Build coordinator review UI
+4. Integrate ECharts for visualization
+5. Add print-ready CSS

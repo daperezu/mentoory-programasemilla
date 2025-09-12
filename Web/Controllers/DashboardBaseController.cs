@@ -1,5 +1,6 @@
 ﻿using LinaSys.Core.Application.Dashboard.Queries.GetDashboard;
 using LinaSys.Core.Application.Dashboard.Services;
+using LinaSys.Shared.Application.Services;
 using LinaSys.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,8 +9,9 @@ namespace LinaSys.Web.Controllers;
 public abstract class DashboardBaseController(
     ILogger<DashboardBaseController> logger,
     MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService,
     IDashboardBuilderService dashboardBuilder)
-    : AuthorizedBaseController(logger, mediator)
+    : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     protected MediatorExecutor Mediator { get; } = mediator;
     protected IDashboardBuilderService DashboardBuilder { get; } = dashboardBuilder;

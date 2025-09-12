@@ -4,13 +4,14 @@ using LinaSys.Web.Areas.Diagnostics.Models.DiagnosisForms;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Areas.Diagnostics.Controllers;
 
 [Area("Diagnostics")]
 [Route("Diagnostics")]
-public class DiagnosisFormsController(ILogger<DiagnosisFormsController> logger, MediatorExecutor mediatorExecutor) : AuthorizedBaseController(logger, mediatorExecutor)
+public class DiagnosisFormsController(ILogger<DiagnosisFormsController> logger, MediatorExecutor mediatorExecutor, IApplicationUrlService applicationUrlService) : AuthorizedBaseController(logger, mediatorExecutor, applicationUrlService)
 {
     [HttpGet("DiagnosisForms/{id:guid}/{phase}")]
     public async Task<IActionResult> Index(Guid id, QuestionPhase phase, CancellationToken cancellationToken)

@@ -6,10 +6,8 @@ using LinaSys.Diagnostics.Infrastructure.Persistence;
 using LinaSys.KnowledgeStructure.Infrastructure.Persistence;
 using LinaSys.Notification.Infrastructure.Persistence;
 using LinaSys.Orchestration.Application.Diagnostics.Commands;
-using LinaSys.Permissions.Infrastructure.Persistence;
 using LinaSys.Shared.Infrastructure.Persistence;
 using LinaSys.Subscription.Infrastructure.Persistence;
-using LinaSys.SystemFeatures.Infrastructure.Persistence;
 using LinaSys.UserManagement.Infrastructure.Persistence;
 
 namespace LinaSys.Web.Infrastructure.Persistence;
@@ -24,9 +22,7 @@ public class DbContextFactory(IServiceProvider serviceProvider) : IDbContextFact
         { "Diagnostics", typeof(DiagnosticsDbContext) },
         { "KnowledgeStructure", typeof(KnowledgeStructureDbContext) },
         { "Notification", typeof(NotificationDbContext) },
-        { "Permissions", typeof(PermissionsDbContext) },
         { "Subscription", typeof(SubscriptionDbContext) },
-        { "SystemFeatures", typeof(SystemFeaturesDbContext) },
         { "UserManagement", typeof(UserManagementDbContext) },
     };
 

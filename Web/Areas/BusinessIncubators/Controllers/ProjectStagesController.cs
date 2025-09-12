@@ -7,6 +7,7 @@ using LinaSys.Web.Areas.BusinessIncubators.Models.ProjectStages;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,8 +19,9 @@ namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 public class ProjectStagesController(
     ILogger<ProjectStagesController> logger,
     MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService,
     BusinessIncubator.Domain.Repositories.IBusinessIncubatorRepository businessIncubatorRepository)
-    : AuthorizedBaseController(logger, mediator)
+    : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     [HttpGet]
     public async Task<IActionResult> Index(Guid businessIncubatorId, Guid projectId)

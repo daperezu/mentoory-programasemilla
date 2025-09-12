@@ -9,6 +9,7 @@ using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,9 +20,10 @@ namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 public class StarterDashboardController(
     ILogger<StarterDashboardController> logger,
     MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService,
     IDashboardBuilderService dashboardBuilder,
     IBusinessIncubatorRepository repository,
-    IDashboardAuditService auditService) : DashboardBaseController(logger, mediator, dashboardBuilder)
+    IDashboardAuditService auditService) : DashboardBaseController(logger, mediator, applicationUrlService, dashboardBuilder)
 {
     [HttpGet]
     public async Task<IActionResult> Index(long? projectId)

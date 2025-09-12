@@ -4,6 +4,7 @@ using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetSu
 using LinaSys.Web.Areas.BusinessIncubators.Models.FormReview;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,8 +23,9 @@ namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 public class FormReviewController(
     ILogger<FormReviewController> logger,
     MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService,
     BusinessIncubator.Domain.Repositories.IBusinessIncubatorRepository repository)
-    : AuthorizedBaseController(logger, mediator)
+    : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
 
     /// <summary>

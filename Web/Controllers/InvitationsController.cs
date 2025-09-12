@@ -3,13 +3,14 @@ using LinaSys.BusinessIncubator.Application.Project.Queries;
 using LinaSys.Orchestration.Application.BusinessIncubator.Commands;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models.Invitations;
+using LinaSys.Shared.Application.Services;
 using LinaSys.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Controllers;
 
-public class InvitationsController(ILogger<InvitationsController> logger, MediatorExecutor mediatorExecutor)
-    : AuthorizedBaseController(logger, mediatorExecutor)
+public class InvitationsController(ILogger<InvitationsController> logger, MediatorExecutor mediatorExecutor, IApplicationUrlService applicationUrlService)
+    : AuthorizedBaseController(logger, mediatorExecutor, applicationUrlService)
 {
     [HttpGet("invitations/accept/{token}")]
     public async Task<IActionResult> Accept(string token)
