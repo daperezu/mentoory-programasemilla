@@ -28,10 +28,39 @@ ResultErrorCodes.BusinessIncubator_NotFound
 ## Performance Issues
 
 ### Dashboard Loading Takes 5-10 Seconds
-**Problem**: Coordination Dashboard executes 20+ queries causing slow load times
+**Problem**: Dashboard executes 20+ queries causing slow load times.
+
 **Root Causes**:
 - N+1 queries when loading user names
-- Each widget loads project data independently
+- Multiple handlers loading same project data
+- No database-level aggregation
+- Missing indexes on critical columns
+
+**Solution**: Create single optimized query:
+```csharp
+// Handler with single query + caching
+public class GetCoordinatorDashboardCompleteDataQueryHandler(
+    IBusinessIncubatorRepository repository,
+    IMemoryCache cache,
+    ITimeProvider timeProvider)
+{
+    // Get all data in ONE query with DB aggregation
+    var dashboardData = await repository.GetProjectDashboardDataAsync(
+        projectId, timeProvider.UtcNow);
+    
+    // Batch load users to avoid N+1
+    var users = await mediator.Send(new GetUsersByIdsQuery(userIds));
+    
+    // Cache for 5 minutes
+    cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+}
+```
+
+**Key Patterns**:
+- Use `GetUsersByIdsAsync` for batch user loading
+- Pass `ITimeProvider.UtcNow` to repository methods
+- Use `HttpContext.Items` for request-scoped data (not custom cache)
+- No SQL scripts needed pre-production
 - Missing database indexes on critical columns
 - All filtering done in-memory instead of at database level
 

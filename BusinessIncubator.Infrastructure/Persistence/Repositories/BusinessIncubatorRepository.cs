@@ -579,6 +579,111 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
             .ConfigureAwait(false);
     }
 
+    public async Task<Domain.DTOs.DashboardProjectData?> GetProjectDashboardDataAsync(
+        long projectId,
+        DateTime currentTime,
+        DateTime? fromDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        var cutoffDate = fromDate ?? currentTime.AddDays(-30);
+        var now = currentTime;
+
+        // Single optimized query with all necessary data
+        var query = from p in dbContext.Projects
+                    where p.Id == projectId
+                    select new Domain.DTOs.DashboardProjectData
+                    {
+                        ProjectId = p.Id,
+                        ProjectName = p.Name,
+                        ProjectKey = p.Key,
+                        IncubatorId = p.BusinessIncubatorId,
+                        IncubatorName = dbContext.BusinessIncubators
+                            .Where(b => b.Id == p.BusinessIncubatorId)
+                            .Select(b => b.Name)
+                            .FirstOrDefault() ?? string.Empty,
+
+                        // User statistics (calculated at database level)
+                        TotalUsers = p.ProjectUsers.Count(u => u.IsActive),
+                        ActiveUsers = p.ProjectUsers.Count(u => u.IsActive),
+                        RecentUsers = p.ProjectUsers.Count(u => u.JoinedAt > now.AddDays(-7)),
+                        UsersByRole = p.ProjectUsers
+                            .Where(u => u.IsActive)
+                            .GroupBy(u => u.Role)
+                            .Select(g => new { Role = g.Key, Count = g.Count() })
+                            .ToDictionary(x => x.Role, x => x.Count),
+
+                        // Form statistics (calculated at database level)
+                        TotalForms = p.FormSubmissions.Count(),
+                        CompletedForms = p.FormSubmissions.Count(f =>
+                            f.Status == ProjectFormSubmissionStatus.Submitted ||
+                            f.Status == ProjectFormSubmissionStatus.Approved),
+                        InProgressForms = p.FormSubmissions.Count(f =>
+                            f.Status == ProjectFormSubmissionStatus.Draft),
+                        NotStartedForms = Math.Max(0,
+                            p.ProjectUsers.Count(u => u.IsActive) - p.FormSubmissions.Count()),
+                        AverageCompletionHours = p.FormSubmissions
+                            .Where(f => f.SubmittedAt != null)
+                            .Select(f => (double)EF.Functions.DateDiffHour(f.StartedAt, f.SubmittedAt!.Value))
+                            .DefaultIfEmpty(0)
+                            .Average(),
+
+                        // Pending reviews (limited at database level)
+                        TotalPendingReviews = p.FormSubmissions.Count(f =>
+                            f.Status == ProjectFormSubmissionStatus.Submitted),
+                        PendingInvitations = p.ProjectInvitations.Count(i =>
+                            i.Status == ProjectInvitationStatus.Pending),
+                        PendingReviews = p.FormSubmissions
+                            .Where(f => f.Status == ProjectFormSubmissionStatus.Submitted)
+                            .OrderByDescending(f => f.SubmittedAt)
+                            .Take(10)
+                            .Select(f => new Domain.DTOs.PendingReviewData
+                            {
+                                Id = f.Id,
+                                UserId = f.ParticipantUserId,
+                                SubmittedAt = f.SubmittedAt ?? f.StartedAt,
+                                DaysWaiting = EF.Functions.DateDiffDay(f.SubmittedAt ?? f.StartedAt, now)
+                            })
+                            .ToList(),
+
+                        // Recent activities (limited at database level)
+                        RecentActivities = p.FormSubmissions
+                            .Where(f => f.SubmittedAt > cutoffDate)
+                            .OrderByDescending(f => f.SubmittedAt)
+                            .Take(10)
+                            .Select(f => new Domain.DTOs.ActivityData
+                            {
+                                UserId = f.ParticipantUserId,
+                                Action = "form_submitted",
+                                Timestamp = f.SubmittedAt!.Value
+                            })
+                            .Union(
+                                p.ProjectUsers
+                                    .Where(u => u.JoinedAt > cutoffDate)
+                                    .OrderByDescending(u => u.JoinedAt)
+                                    .Take(5)
+                                    .Select(u => new Domain.DTOs.ActivityData
+                                    {
+                                        UserId = u.UserId,
+                                        Action = "user_joined",
+                                        Timestamp = u.JoinedAt
+                                    }))
+                            .OrderByDescending(a => a.Timestamp)
+                            .Take(15)
+                            .ToList(),
+
+                        // Collect all user IDs for batch loading
+                        AllUserIds = p.ProjectUsers.Select(u => u.UserId)
+                            .Union(p.FormSubmissions.Select(f => f.ParticipantUserId))
+                            .Distinct()
+                            .ToList()
+                    };
+
+        return await query
+            .AsNoTracking()
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     /// <inheritdoc/>
     public async Task<Project?> GetProjectWithStagesByExternalIdAsync(Guid projectExternalId, CancellationToken cancellationToken = default)
     {
