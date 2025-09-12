@@ -11,6 +11,5 @@
         <ProjectReference Include="..\Auth.Domain\LinaSys.Auth.Domain.csproj" />
         <ProjectReference Include="..\Shared.Infrastructure\LinaSys.Shared.Infrastructure.csproj" />
         <ProjectReference Include="..\BusinessIncubator.Infrastructure\LinaSys.BusinessIncubator.Infrastructure.csproj" />
-        <ProjectReference Include="..\Permissions.Infrastructure\LinaSys.Permissions.Infrastructure.csproj" />
     </ItemGroup>
 </Project>

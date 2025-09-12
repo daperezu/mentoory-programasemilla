@@ -18,8 +18,9 @@ namespace LinaSys.Web.Areas.Participant.Controllers;
 public class DashboardController(
     ILogger<DashboardController> logger,
     MediatorExecutor mediator,
-    IApplicationUrlService applicationUrlService) : AuthorizedBaseController(logger, mediator)
+    IApplicationUrlService applicationUrlService) : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
+    private readonly IApplicationUrlService _applicationUrlService = applicationUrlService;
     [HttpGet]
     public async Task<IActionResult> Index()
     {
@@ -92,7 +93,7 @@ public class DashboardController(
         if (result.IsSuccess && projectDetailsResult.Value.IncubatorExternalId.HasValue)
         {
             // Use ApplicationUrlService to generate the correct URL
-            var url = applicationUrlService.GetParticipantFormUrl(
+            var url = _applicationUrlService.GetParticipantFormUrl(
                 projectDetailsResult.Value.IncubatorExternalId.Value,
                 projectResult.Value.ExternalId);
 
@@ -257,7 +258,7 @@ public class DashboardController(
             // If we have all required IDs, generate the ParticipantForm URL with read-only parameter
             if (businessIncubatorExternalId.HasValue && projectExternalId.HasValue)
             {
-                var url = applicationUrlService.GetParticipantFormUrl(
+                var url = _applicationUrlService.GetParticipantFormUrl(
                     businessIncubatorExternalId.Value,
                     projectExternalId.Value);
 
@@ -277,7 +278,7 @@ public class DashboardController(
         // If form is already created and we have all required IDs, use the ParticipantForm URL
         if (form.IsCreated && businessIncubatorExternalId.HasValue && projectExternalId.HasValue)
         {
-            return applicationUrlService.GetParticipantFormUrl(
+            return _applicationUrlService.GetParticipantFormUrl(
                 businessIncubatorExternalId.Value,
                 projectExternalId.Value);
         }

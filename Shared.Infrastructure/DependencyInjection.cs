@@ -1,7 +1,6 @@
 ﻿using LinaSys.Shared.Application.Services;
 using LinaSys.Shared.Infrastructure.Configuration;
 using LinaSys.Shared.Infrastructure.Services;
-using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

@@ -12,9 +12,11 @@ public class ContextSelectionController(
     ILogger<ContextSelectionController> logger,
     MediatorExecutor mediatorExecutor,
     IApplicationUrlService applicationUrlService)
-    : AuthorizedBaseController(logger, mediatorExecutor)
+    : AuthorizedBaseController(logger, mediatorExecutor, applicationUrlService)
 {
     public const string IndexUrl = "/ContextSelection/Index";
+
+    private readonly IApplicationUrlService _applicationUrlService = applicationUrlService;
 
     [HttpGet]
     public async Task<IActionResult> Index()
@@ -129,7 +131,7 @@ public class ContextSelectionController(
             Projects = projects ?? [],
             SelectedIncubatorId = selectedIncubatorId,
             SelectedProjectId = selectedProjectId,
-            LogoutUrl = applicationUrlService.GetLogoutUrl()
+            LogoutUrl = _applicationUrlService.GetLogoutUrl()
         };
 
         logger.LogInformation("User {UserId} needs to select context, showing selection page", CurrentUserId);

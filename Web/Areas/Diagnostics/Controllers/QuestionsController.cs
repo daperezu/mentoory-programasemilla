@@ -8,14 +8,15 @@ using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Areas.Diagnostics.Controllers;
 
 [Area("Diagnostics")]
 [Route("Diagnostics")]
-public class QuestionsController(ILogger<QuestionsController> logger, MediatorExecutor mediator)
-    : AuthorizedBaseController(logger, mediator)
+public class QuestionsController(ILogger<QuestionsController> logger, MediatorExecutor mediator, IApplicationUrlService applicationUrlService)
+    : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     [HttpGet("Questions/List")]
     public async Task<IActionResult> List(CancellationToken cancellationToken)

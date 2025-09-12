@@ -218,8 +218,6 @@ USING (SELECT
     500 AS Id, 'ADMINISTRATION' AS Code, 'Administración del Sistema' AS DisplayText, NULL AS ParentId, 50 AS SortOrder, 
     'settings' AS Icon, '#' AS Url, 1 AS IsSection, 1 AS IsActive, 
     1 AS RequiresAuthentication, 0 AS RequiresIncubator, 0 AS RequiresProject, 'Global Administrator' AS AllowedRoles
-    UNION ALL
-    SELECT 501, 'PERMISSIONS', 'Permisos', 500, 1, NULL, '/Permissions/ProtectedResources', 0, 1, 1, 0, 0, 'Global Administrator'
 ) AS source
 ON target.Code = source.Code
 WHEN MATCHED THEN

@@ -1,12 +1,13 @@
-﻿using LinaSys.Shared.Domain.Constants;
+﻿using LinaSys.Shared.Application.Services;
+using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Controllers;
 
-public class AuthRedirectController(ILogger<AuthRedirectController> logger, MediatorExecutor mediatorExecutor)
-    : AuthorizedBaseController(logger, mediatorExecutor)
+public class AuthRedirectController(ILogger<AuthRedirectController> logger, MediatorExecutor mediatorExecutor, IApplicationUrlService applicationUrlService)
+    : AuthorizedBaseController(logger, mediatorExecutor, applicationUrlService)
 {
     [HttpGet]
     public IActionResult RedirectToDashboard()

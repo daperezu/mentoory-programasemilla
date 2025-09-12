@@ -12,6 +12,7 @@ using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -19,8 +20,8 @@ namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 
 [Area("BusinessIncubators")]
 [Route("BusinessIncubators/{businessIncubatorId:guid}/Projects")]
-public class ProjectsController(ILogger<ProjectsController> logger, MediatorExecutor mediator)
-    : AuthorizedBaseController(logger, mediator)
+public class ProjectsController(ILogger<ProjectsController> logger, MediatorExecutor mediator, IApplicationUrlService applicationUrlService)
+    : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     [HttpGet("Create")]
     public async Task<IActionResult> Create(Guid businessIncubatorId)

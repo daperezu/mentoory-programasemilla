@@ -10,9 +10,6 @@ PRINT '[000.SeedRolesAndUsers.sql] Starting';
 :r .\000.SeedRolesAndUsers.sql
 PRINT '[000.SeedRolesAndUsers.sql] Finished';
 
-PRINT '[001.SeedWebFeatures.sql] Starting';
-:r .\001.SeedWebFeatures.sql
-PRINT '[001.SeedWebFeatures.sql] Finished';
 
 PRINT '[002.SeedPackagesLimits.sql] Starting';
 :r .\002.SeedPackagesLimits.sql

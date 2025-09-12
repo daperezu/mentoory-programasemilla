@@ -5,14 +5,15 @@ using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Areas.Diagnostics.Controllers;
 
 [Area("Diagnostics")]
-public class BlocksController(ILogger<BlocksController> logger, MediatorExecutor mediator)
-    : AuthorizedBaseController(logger, mediator)
+public class BlocksController(ILogger<BlocksController> logger, MediatorExecutor mediator, IApplicationUrlService applicationUrlService)
+    : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     [HttpGet]
     public IActionResult Index()

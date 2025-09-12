@@ -9,13 +9,14 @@ using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 
 [Area("BusinessIncubators")]
-public class HomeController(ILogger<HomeController> logger, MediatorExecutor mediator) : AuthorizedBaseController(logger, mediator)
+public class HomeController(ILogger<HomeController> logger, MediatorExecutor mediator, IApplicationUrlService applicationUrlService) : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     [HttpPost]
     [ValidateAntiForgeryToken]

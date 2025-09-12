@@ -72,4 +72,28 @@ public interface IUserProjectDiagnosisRepository : IRepository<UserProjectDiagno
     /// </summary>
     /// <param name="entity">The user project diagnosis to update.</param>
     void Update(UserProjectDiagnosis entity);
+
+    /// <summary>
+    /// Gets approved diagnosis answers for a specific project, user, and phase.
+    /// </summary>
+    /// <param name="projectId">The project identifier.</param>
+    /// <param name="userId">The user identifier.</param>
+    /// <param name="phase">The question phase.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A collection of diagnosis answers.</returns>
+    Task<IEnumerable<DiagnosisAnswer>> GetApprovedDiagnosisAnswersAsync(
+        long projectId,
+        string userId,
+        Enums.QuestionPhase phase,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets blocks with questions for a project.
+    /// </summary>
+    /// <param name="projectId">The project identifier.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A collection of block information with questions.</returns>
+    Task<IEnumerable<(long BlockId, string BlockName, int QuestionCount)>> GetBlocksWithQuestionsAsync(
+        long projectId,
+        CancellationToken cancellationToken = default);
 }

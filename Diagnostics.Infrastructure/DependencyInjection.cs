@@ -1,4 +1,5 @@
 ﻿using LinaSys.Diagnostics.Domain.Repositories;
+using LinaSys.Diagnostics.Domain.Services;
 using LinaSys.Diagnostics.Infrastructure.Persistence;
 using LinaSys.Diagnostics.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -31,6 +32,9 @@ public static class DependencyInjection
         builder.Services.AddScoped<IFormRepository, FormRepository>();
         builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
         builder.Services.AddScoped<IUserProjectDiagnosisRepository, UserProjectDiagnosisRepository>();
+
+        // Register memory cache
+        builder.Services.AddMemoryCache();
 
         return builder;
     }

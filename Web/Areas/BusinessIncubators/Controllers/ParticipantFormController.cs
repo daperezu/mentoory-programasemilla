@@ -10,6 +10,7 @@ using LinaSys.Web.Areas.BusinessIncubators.Models.ParticipantForm;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,8 +23,9 @@ namespace LinaSys.Web.Areas.BusinessIncubators.Controllers;
 [Route("[area]/{businessIncubatorExternalId:guid}/Projects/{projectExternalId:guid}/[controller]")]
 public class ParticipantFormController(
     ILogger<ParticipantFormController> logger,
-    MediatorExecutor mediator)
-    : AuthorizedBaseController(logger, mediator)
+    MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService)
+    : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
 
     /// <summary>

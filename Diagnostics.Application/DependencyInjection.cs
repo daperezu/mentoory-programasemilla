@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using LinaSys.Diagnostics.Domain.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace LinaSys.Diagnostics.Application;
@@ -17,6 +18,9 @@ public static class DependencyInjection
         FluentValidation.AssemblyScanner
             .FindValidatorsInAssembly(Assembly.GetExecutingAssembly())
             .ForEach(item => services.AddScoped(item.InterfaceType, item.ValidatorType));
+
+        // Register domain services
+        services.AddScoped<DiagnosisScoreCalculator>();
 
         return services;
     }

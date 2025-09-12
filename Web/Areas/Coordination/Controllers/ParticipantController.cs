@@ -10,6 +10,7 @@ using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,8 +22,9 @@ namespace LinaSys.Web.Areas.Coordination.Controllers;
 public class ParticipantController(
     ILogger<ParticipantController> logger,
     MediatorExecutor mediator,
+    IApplicationUrlService applicationUrlService,
     IDashboardBuilderService dashboardBuilder,
-    UserManager<User> userManager) : DashboardBaseController(logger, mediator, dashboardBuilder)
+    UserManager<User> userManager) : DashboardBaseController(logger, mediator, applicationUrlService, dashboardBuilder)
 {
     [HttpGet]
     public async Task<IActionResult> Index()

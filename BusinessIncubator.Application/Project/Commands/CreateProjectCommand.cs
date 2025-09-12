@@ -1,9 +1,6 @@
 using FluentValidation;
 using LinaSys.BusinessIncubator.Domain.Repositories;
-using LinaSys.Permissions.Application.IntegrationEvents;
-using LinaSys.Permissions.Domain.Constants;
 using LinaSys.Shared.Application;
-using LinaSys.Shared.Application.IntegrationEvents;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.SeedWork;
 
@@ -24,7 +21,7 @@ public class CreateProjectCommandValidator : AbstractValidator<CreateProjectComm
     }
 }
 
-public class CreateProjectCommandHandler(IBusinessIncubatorRepository repository, IAuditContext auditContext, IIntegrationEventService integrationEventService)
+public class CreateProjectCommandHandler(IBusinessIncubatorRepository repository, IAuditContext auditContext)
     : BaseCommandHandler<CreateProjectCommand, Guid>
 {
     public override async Task<Result<Guid>> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
@@ -60,20 +57,6 @@ public class CreateProjectCommandHandler(IBusinessIncubatorRepository repository
 
             // Add project to repository
             await repository.AddProjectAsync(project, cancellationToken);
-
-            // Publish integration event for protected resource creation
-            var protectedResourceCreatedEvent = new ProtectedResourceCreated(
-                project.ExternalId,
-                ResourceTypes.Project,
-                project.Name,
-                auditContext.User);
-
-            // Publish integration event - synchronous in tests, async in production
-            #if DEBUG
-            await integrationEventService.PublishAsync(protectedResourceCreatedEvent, cancellationToken);
-            #else
-            _ = Task.Run(async () => await integrationEventService.PublishAsync(protectedResourceCreatedEvent, cancellationToken), cancellationToken);
-            #endif
 
             return Result.Success(project.ExternalId);
         }

@@ -15,8 +15,6 @@ using LinaSys.KnowledgeStructure.Infrastructure;
 using LinaSys.Notification.Application;
 using LinaSys.Notification.Infrastructure;
 using LinaSys.Orchestration.Application;
-using LinaSys.Permissions.Application;
-using LinaSys.Permissions.Infrastructure;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.Auth;
 using LinaSys.Shared.Application.Behaviors;
@@ -28,8 +26,6 @@ using LinaSys.Shared.Infrastructure.Behaviors;
 using LinaSys.Shared.Infrastructure.Persistence;
 using LinaSys.Subscription.Application;
 using LinaSys.Subscription.Infrastructure;
-using LinaSys.SystemFeatures.Application;
-using LinaSys.SystemFeatures.Infrastructure;
 using LinaSys.UserManagement.Application;
 using LinaSys.UserManagement.Infrastructure;
 using LinaSys.Web.Auth;
@@ -37,7 +33,6 @@ using LinaSys.Web.Hubs;
 using LinaSys.Web.Infrastructure.Persistence;
 using LinaSys.Web.Infrastructure.Services;
 using LinaSys.Web.Filters;
-using LinaSys.Web.Middleware;
 using LinaSys.Web.ModelBinders;
 using LinaSys.Web.Services;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -133,17 +128,9 @@ builder.Services.AddNotificationApplication();
 //// Orchestration Module
 builder.Services.AddOrchestrationApplication();
 
-//// Permissions Domain
-builder.AddPermissionsInfrastructure();
-builder.Services.AddPermissionsApplication();
-
 //// Subscription Domain
 builder.AddSubscriptionInfrastructure();
 builder.Services.AddSubscriptionApplication();
-
-//// SystemFeatures Domain
-builder.AddSystemFeaturesInfrastructure();
-builder.Services.AddSystemFeaturesApplication();
 
 //// UserManagement Domain
 builder.AddUserManagementInfrastructure();
@@ -191,9 +178,6 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseMiddleware<ProtectedResourcesAuthorizationMiddleware>();
-app.UseMiddleware<UserContextValidatorMiddleware>();
 
 app.MapStaticAssets();
 

@@ -11,13 +11,14 @@ using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Areas.Diagnostics.Controllers;
 
 [Area("Diagnostics")]
 [Route("Diagnostics")]
-public class FormsController(ILogger<FormsController> logger, MediatorExecutor mediator, MediatorExecutor directMediator) : AuthorizedBaseController(logger, directMediator)
+public class FormsController(ILogger<FormsController> logger, MediatorExecutor mediator, MediatorExecutor directMediator, IApplicationUrlService applicationUrlService) : AuthorizedBaseController(logger, directMediator, applicationUrlService)
 {
     [HttpGet("Forms/List")]
     public IActionResult List()

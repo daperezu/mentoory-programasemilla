@@ -11,7 +11,6 @@
         <ProjectReference Include="..\UserManagement.Application\LinaSys.UserManagement.Application.csproj" />
         <ProjectReference Include="..\Notification.Application\LinaSys.Notification.Application.csproj" />
         <ProjectReference Include="..\Subscription.Application\LinaSys.Subscription.Application.csproj" />
-        <ProjectReference Include="..\SystemFeatures.Application\LinaSys.SystemFeatures.Application.csproj" />
     </ItemGroup>
 
     <ItemGroup>

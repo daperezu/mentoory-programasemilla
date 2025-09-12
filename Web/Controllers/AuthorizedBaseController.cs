@@ -7,7 +7,7 @@ using LinaSys.Shared.Application;
 using LinaSys.Web.Attributes;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Filters;
-using LinaSys.Web.Middleware;
+using LinaSys.Shared.Application.Services;
 using LinaSys.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +15,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace LinaSys.Web.Controllers;
 
 [Authorize]
-[ResourceAccessAuthorizationFilter.ResourceAccessAuthorization]
-public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor mediatorExecutor) : Controller
+[UserContextAuthorizationFilter.UserContextAuthorization]
+public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor mediatorExecutor, IApplicationUrlService applicationUrlService) : Controller
 {
     private EnrichedUserContextDto? _currentUserContext;
     private string? _currentUserId;
@@ -83,12 +83,13 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
     }
 
     protected MediatorExecutor MediatorExecutor { get; } = mediatorExecutor;
+    protected IApplicationUrlService ApplicationUrlService { get; } = applicationUrlService;
 
     protected void HandleInvalidCurrentUserContext()
     {
         if (!IsAuthenticated)
         {
-            Response.Redirect(ProtectedResourcesAuthorizationMiddleware.LoginPath);
+            Response.Redirect(ApplicationUrlService.GetLoginUrl());
             return;
         }
 
@@ -99,7 +100,7 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
     {
         if (!IsAuthenticated)
         {
-            Response.Redirect(ProtectedResourcesAuthorizationMiddleware.LoginPath);
+            Response.Redirect(ApplicationUrlService.GetLoginUrl());
         }
     }
 
@@ -157,7 +158,7 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
         if (!IsAuthenticated)
         {
             this.SetErrorToast("Debe iniciar sesión para acceder a esta funcionalidad.");
-            Response.Redirect(ProtectedResourcesAuthorizationMiddleware.LoginPath);
+            Response.Redirect(ApplicationUrlService.GetLoginUrl());
             throw new UnauthorizedAccessException("User must be authenticated.");
         }
 

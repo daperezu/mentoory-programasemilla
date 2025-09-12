@@ -129,9 +129,6 @@
     <Folder Include="subscription" />
     <Folder Include="subscription\Tables" />
     <Folder Include="subscription\Indexes" />
-    <Folder Include="systemfeatures" />
-    <Folder Include="systemfeatures\Tables" />
-    <Folder Include="systemfeatures\Indexes" />
     <Folder Include="diagnostics" />
     <Folder Include="diagnostics\Tables" />
     <Folder Include="diagnostics\Indexes" />
@@ -141,9 +138,6 @@
     <Folder Include="mentoring\Tables" />
     <Folder Include="assessment" />
     <Folder Include="assessment\Tables" />
-    <Folder Include="permissions" />
-    <Folder Include="permissions\Tables" />
-    <Folder Include="permissions\Indexes" />
     <Folder Include="businessincubators" />
     <Folder Include="businessincubators\Tables" />
     <Folder Include="businessincubators\Indexes" />
@@ -198,11 +192,6 @@
     <Build Include="subscription\Tables\PackageLimitOverrides.sql" />
     <Build Include="subscription\Tables\PackageVersions.sql" />
     <Build Include="subscription\Schema.sql" />
-    <Build Include="systemfeatures\Tables\WebFeatures.sql" />
-    <Build Include="systemfeatures\Schema.sql" />
-    <Build Include="systemfeatures\Indexes\IX_WebFeatures_AreaControllerAction.sql" />
-    <Build Include="systemfeatures\Indexes\IX_WebFeatures_IsMenu_Parent.sql" />
-    <Build Include="systemfeatures\Indexes\IX_WebFeatures_IsPublic.sql" />
     <None Include="PostDeployment\002.SeedPackagesLimits.sql" />
     <Build Include="diagnostics\Schema.sql" />
     <Build Include="diagnostics\Tables\Questions.sql" />
@@ -221,13 +210,6 @@
     <Build Include="knowledgestructure\Tables\Topics.sql" />
     <Build Include="mentoring\Schema.sql" />
     <Build Include="assessment\Schema.sql" />
-    <Build Include="permissions\Tables\ProtectedResources.sql" />
-    <Build Include="permissions\Tables\RoleProtectedResourcePermissions.sql" />
-    <Build Include="permissions\Tables\UserProtectedResourcePermissions.sql" />
-    <Build Include="permissions\Schema.sql" />
-    <Build Include="permissions\Indexes\IX_ProtectedResources_ResourceType.sql" />
-    <Build Include="permissions\Indexes\IX_RoleProtectedResourcePermissions_ProtectedResourceId.sql" />
-    <Build Include="permissions\Indexes\IX_UserProtectedResourcePermissions_ProtectedResourceIdUser.sql" />
     <Build Include="businessincubators\Tables\BusinessIncubators.sql">
       <AnsiNulls>On</AnsiNulls>
       <QuotedIdentifier>On</QuotedIdentifier>
@@ -359,7 +341,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="PostDeployment\001.SeedWebFeatures.sql" />
     <None Include="PostDeployment\005.SeedDashboardData.sql" />
     <None Include="PostDeployment\006.SeedStarterData.sql" />
     <None Include="PostDeployment\007.SeedAuthAccessTables.sql" />

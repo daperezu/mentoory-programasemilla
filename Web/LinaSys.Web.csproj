@@ -20,9 +20,6 @@
         <ProjectReference Include="..\KnowledgeStructure.Infrastructure\LinaSys.KnowledgeStructure.Infrastructure.csproj" />
         <ProjectReference Include="..\Orchestration.Application\LinaSys.Orchestration.Application.csproj" />
         <ProjectReference Include="..\Notification.Infrastructure\LinaSys.Notification.Infrastructure.csproj" />
-        <ProjectReference Include="..\Permissions.Application\LinaSys.Permissions.Application.csproj" />
-        <ProjectReference Include="..\Permissions.Infrastructure\LinaSys.Permissions.Infrastructure.csproj" />
-        <ProjectReference Include="..\SystemFeatures.Infrastructure\LinaSys.SystemFeatures.Infrastructure.csproj" />
         <ProjectReference Include="..\Core.Application\LinaSys.Core.Application.csproj" />
         <ProjectReference Include="..\Core.Infrastructure\LinaSys.Core.Infrastructure.csproj" />
         <ProjectReference Include="..\UserManagement.Application\LinaSys.UserManagement.Application.csproj" />
