@@ -34,6 +34,7 @@ public class GetCoordinatorDashboardCompleteDataQueryHandler(
         }
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var repoStopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         // Get complete dashboard data in a single optimized query
         var dashboardData = await repository.GetProjectDashboardDataAsync(
@@ -41,6 +42,12 @@ public class GetCoordinatorDashboardCompleteDataQueryHandler(
             timeProvider.UtcNow,
             request.DateRangeStart,
             cancellationToken);
+
+        repoStopwatch.Stop();
+        logger.LogInformation(
+            "Repository query completed in {ElapsedMs}ms for project {ProjectId}",
+            repoStopwatch.ElapsedMilliseconds,
+            request.ProjectId);
 
         if (dashboardData is null)
         {
@@ -52,10 +59,18 @@ public class GetCoordinatorDashboardCompleteDataQueryHandler(
         // Collect all user IDs for batch loading
         var allUserIds = dashboardData.AllUserIds.Distinct().ToList();
 
+        var usersStopwatch = System.Diagnostics.Stopwatch.StartNew();
+
         // Batch load all users to avoid N+1 queries
         var getUsersResult = await mediator.Send(
             new GetUsersByIdsQuery(allUserIds),
             cancellationToken);
+
+        usersStopwatch.Stop();
+        logger.LogInformation(
+            "User batch loading completed in {ElapsedMs}ms for {UserCount} users",
+            usersStopwatch.ElapsedMilliseconds,
+            allUserIds.Count);
 
         var userLookup = getUsersResult.IsSuccess && getUsersResult.Value != null
             ? getUsersResult.Value

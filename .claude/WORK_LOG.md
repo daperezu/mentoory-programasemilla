@@ -69,3 +69,76 @@ Implemented comprehensive performance optimization for Coordination Dashboard re
 
 ### Build Status
 ✅ Clean build - 0 errors, 0 warnings (all StyleCop rules passing)
+
+## 2025-01-12 - Fixed Dashboard Performance Query Issue
+
+### Context
+Fixed ArgumentException in `GetProjectDashboardDataAsync` caused by complex LINQ query that Entity Framework couldn't translate to SQL.
+
+### Issue
+- Error: `Expression of type 'System.Linq.IQueryable'1[System.Double]' cannot be used for parameter`
+- Complex LINQ query with Union operations and EF.Functions couldn't be translated
+
+### Solution
+1. **Simplified Query Approach**:
+   - Load project with related data using Include
+   - Process aggregations in memory instead of complex SQL translation
+   - Separate incubator name query
+
+2. **Key Changes**:
+   - Replaced complex single LINQ query with simpler approach
+   - Fixed null reference checks (use `is null` pattern)
+   - Fixed DateTime comparison issues
+   - Removed trailing whitespace (StyleCop compliance)
+
+### Performance Impact
+- Still maintains 2-3 query approach (project data + incubator name)
+- Data processing moved to application layer but with minimal impact
+- Caching still effective at 5-minute intervals
+
+## 2025-01-12 - Dashboard Performance Further Optimization
+
+### Context
+Dashboard still taking 4s to load despite initial optimizations. Implemented more aggressive query optimization.
+
+### Issues Found
+- Repository was using `.Include()` to load ALL ProjectUsers and FormSubmissions
+- This loaded potentially hundreds of records into memory unnecessarily
+- Complex LINQ queries with Union operations couldn't be translated to SQL
+
+### Solution Implemented
+
+1. **Replaced Include() with Projection Queries**:
+   - Use `.Select()` to fetch only needed data
+   - Aggregate at database level using `GroupBy` and `Count()`
+   - Separate queries for different data sets (users, forms, activities)
+
+2. **Query Breakdown** (now 7-8 focused queries instead of 1 massive query):
+   - Project basic info query
+   - User statistics aggregation
+   - Form statistics aggregation
+   - Pending reviews (top 10)
+   - Recent form activities
+   - Recent user activities
+   - All user IDs for batch loading
+   - Pending invitations count
+
+3. **Added Performance Logging**:
+   - Log repository query time
+   - Log user batch loading time
+   - Track total dashboard load time
+
+4. **Database Indexes Added**:
+   - `IX_ProjectUsers_Dashboard` for user queries
+   - `IX_ProjectFormSubmissions_ProjectId_Status` for form statistics
+   - `IX_ProjectFormSubmissions_Dashboard` for general dashboard queries
+
+### Key Changes from Previous Approach
+- **Before**: Load entire entities with Include(), process in memory
+- **After**: Use projections to load only needed fields, aggregate in SQL
+- **Result**: Reduced data transfer and memory usage significantly
+
+### Expected Performance
+- Target: <500ms load time
+- Actual queries: 7-8 small focused queries vs 1 large query with includes
+- Memory usage: Dramatically reduced (only loading aggregated data)

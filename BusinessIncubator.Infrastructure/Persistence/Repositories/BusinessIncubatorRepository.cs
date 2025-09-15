@@ -586,102 +586,172 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
         CancellationToken cancellationToken = default)
     {
         var cutoffDate = fromDate ?? currentTime.AddDays(-30);
-        var now = currentTime;
+        var recentDate = currentTime.AddDays(-7);
 
-        // Single optimized query with all necessary data
-        var query = from p in dbContext.Projects
-                    where p.Id == projectId
-                    select new Domain.DTOs.DashboardProjectData
-                    {
-                        ProjectId = p.Id,
-                        ProjectName = p.Name,
-                        ProjectKey = p.Key,
-                        IncubatorId = p.BusinessIncubatorId,
-                        IncubatorName = dbContext.BusinessIncubators
-                            .Where(b => b.Id == p.BusinessIncubatorId)
-                            .Select(b => b.Name)
-                            .FirstOrDefault() ?? string.Empty,
-
-                        // User statistics (calculated at database level)
-                        TotalUsers = p.ProjectUsers.Count(u => u.IsActive),
-                        ActiveUsers = p.ProjectUsers.Count(u => u.IsActive),
-                        RecentUsers = p.ProjectUsers.Count(u => u.JoinedAt > now.AddDays(-7)),
-                        UsersByRole = p.ProjectUsers
-                            .Where(u => u.IsActive)
-                            .GroupBy(u => u.Role)
-                            .Select(g => new { Role = g.Key, Count = g.Count() })
-                            .ToDictionary(x => x.Role, x => x.Count),
-
-                        // Form statistics (calculated at database level)
-                        TotalForms = p.FormSubmissions.Count(),
-                        CompletedForms = p.FormSubmissions.Count(f =>
-                            f.Status == ProjectFormSubmissionStatus.Submitted ||
-                            f.Status == ProjectFormSubmissionStatus.Approved),
-                        InProgressForms = p.FormSubmissions.Count(f =>
-                            f.Status == ProjectFormSubmissionStatus.Draft),
-                        NotStartedForms = Math.Max(0,
-                            p.ProjectUsers.Count(u => u.IsActive) - p.FormSubmissions.Count()),
-                        AverageCompletionHours = p.FormSubmissions
-                            .Where(f => f.SubmittedAt != null)
-                            .Select(f => (double)EF.Functions.DateDiffHour(f.StartedAt, f.SubmittedAt!.Value))
-                            .DefaultIfEmpty(0)
-                            .Average(),
-
-                        // Pending reviews (limited at database level)
-                        TotalPendingReviews = p.FormSubmissions.Count(f =>
-                            f.Status == ProjectFormSubmissionStatus.Submitted),
-                        PendingInvitations = p.ProjectInvitations.Count(i =>
-                            i.Status == ProjectInvitationStatus.Pending),
-                        PendingReviews = p.FormSubmissions
-                            .Where(f => f.Status == ProjectFormSubmissionStatus.Submitted)
-                            .OrderByDescending(f => f.SubmittedAt)
-                            .Take(10)
-                            .Select(f => new Domain.DTOs.PendingReviewData
-                            {
-                                Id = f.Id,
-                                UserId = f.ParticipantUserId,
-                                SubmittedAt = f.SubmittedAt ?? f.StartedAt,
-                                DaysWaiting = EF.Functions.DateDiffDay(f.SubmittedAt ?? f.StartedAt, now)
-                            })
-                            .ToList(),
-
-                        // Recent activities (limited at database level)
-                        RecentActivities = p.FormSubmissions
-                            .Where(f => f.SubmittedAt > cutoffDate)
-                            .OrderByDescending(f => f.SubmittedAt)
-                            .Take(10)
-                            .Select(f => new Domain.DTOs.ActivityData
-                            {
-                                UserId = f.ParticipantUserId,
-                                Action = "form_submitted",
-                                Timestamp = f.SubmittedAt!.Value
-                            })
-                            .Union(
-                                p.ProjectUsers
-                                    .Where(u => u.JoinedAt > cutoffDate)
-                                    .OrderByDescending(u => u.JoinedAt)
-                                    .Take(5)
-                                    .Select(u => new Domain.DTOs.ActivityData
-                                    {
-                                        UserId = u.UserId,
-                                        Action = "user_joined",
-                                        Timestamp = u.JoinedAt
-                                    }))
-                            .OrderByDescending(a => a.Timestamp)
-                            .Take(15)
-                            .ToList(),
-
-                        // Collect all user IDs for batch loading
-                        AllUserIds = p.ProjectUsers.Select(u => u.UserId)
-                            .Union(p.FormSubmissions.Select(f => f.ParticipantUserId))
-                            .Distinct()
-                            .ToList()
-                    };
-
-        return await query
+        // First, check if project exists with basic info
+        var projectInfo = await dbContext.Projects
             .AsNoTracking()
+            .Where(p => p.Id == projectId)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Key,
+                p.BusinessIncubatorId,
+                IncubatorName = dbContext.BusinessIncubators
+                    .Where(b => b.Id == p.BusinessIncubatorId)
+                    .Select(b => b.Name)
+                    .FirstOrDefault() ?? string.Empty
+            })
             .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
+
+        if (projectInfo is null)
+        {
+            return null;
+        }
+
+        // Get user statistics using projection
+        var userStats = await dbContext.Set<ProjectUser>()
+            .AsNoTracking()
+            .Where(pu => pu.ProjectId == projectId && pu.IsActive)
+            .GroupBy(pu => 1)
+            .Select(g => new
+            {
+                TotalUsers = g.Count(),
+                RecentUsers = g.Count(u => u.JoinedAt > recentDate),
+                UsersByRole = g.GroupBy(u => u.Role)
+                    .Select(rg => new { Role = rg.Key, Count = rg.Count() })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var totalUsers = userStats?.TotalUsers ?? 0;
+        var recentUsers = userStats?.RecentUsers ?? 0;
+        var usersByRole = userStats?.UsersByRole?.ToDictionary(x => x.Role, x => x.Count) ?? new Dictionary<string, int>();
+
+        // Get form statistics using projection
+        var formStats = await dbContext.Set<ProjectFormSubmission>()
+            .AsNoTracking()
+            .Where(f => f.ProjectId == projectId)
+            .GroupBy(f => 1)
+            .Select(g => new
+            {
+                TotalForms = g.Count(),
+                CompletedForms = g.Count(f =>
+                    f.Status == ProjectFormSubmissionStatus.Submitted ||
+                    f.Status == ProjectFormSubmissionStatus.Approved),
+                InProgressForms = g.Count(f => f.Status == ProjectFormSubmissionStatus.Draft),
+                PendingReviews = g.Count(f => f.Status == ProjectFormSubmissionStatus.Submitted),
+                AvgCompletionHours = g
+                    .Where(f => f.SubmittedAt.HasValue)
+                    .Select(f => (double?)EF.Functions.DateDiffHour(f.StartedAt, f.SubmittedAt!.Value))
+                    .Average() ?? 0
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var totalForms = formStats?.TotalForms ?? 0;
+        var completedForms = formStats?.CompletedForms ?? 0;
+        var inProgressForms = formStats?.InProgressForms ?? 0;
+        var totalPendingReviews = formStats?.PendingReviews ?? 0;
+        var avgCompletionHours = formStats?.AvgCompletionHours ?? 0;
+
+        // Get pending reviews (top 10)
+        var pendingReviews = await dbContext.Set<ProjectFormSubmission>()
+            .AsNoTracking()
+            .Where(f => f.ProjectId == projectId && f.Status == ProjectFormSubmissionStatus.Submitted)
+            .OrderByDescending(f => f.SubmittedAt)
+            .Take(10)
+            .Select(f => new Domain.DTOs.PendingReviewData
+            {
+                Id = f.Id,
+                UserId = f.ParticipantUserId,
+                SubmittedAt = f.SubmittedAt ?? f.StartedAt,
+                DaysWaiting = EF.Functions.DateDiffDay(f.SubmittedAt ?? f.StartedAt, currentTime)
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Get recent form activities
+        var formActivities = await dbContext.Set<ProjectFormSubmission>()
+            .AsNoTracking()
+            .Where(f => f.ProjectId == projectId && f.SubmittedAt > cutoffDate)
+            .OrderByDescending(f => f.SubmittedAt)
+            .Take(10)
+            .Select(f => new Domain.DTOs.ActivityData
+            {
+                UserId = f.ParticipantUserId,
+                Action = "form_submitted",
+                Timestamp = f.SubmittedAt!.Value
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Get recent user activities
+        var userActivities = await dbContext.Set<ProjectUser>()
+            .AsNoTracking()
+            .Where(u => u.ProjectId == projectId && u.IsActive && u.JoinedAt > cutoffDate)
+            .OrderByDescending(u => u.JoinedAt)
+            .Take(5)
+            .Select(u => new Domain.DTOs.ActivityData
+            {
+                UserId = u.UserId,
+                Action = "user_joined",
+                Timestamp = u.JoinedAt
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Combine and sort activities
+        var recentActivities = formActivities
+            .Concat(userActivities)
+            .OrderByDescending(a => a.Timestamp)
+            .Take(15)
+            .ToList();
+
+        // Get all unique user IDs for batch loading
+        var allUserIds = await dbContext.Set<ProjectUser>()
+            .AsNoTracking()
+            .Where(pu => pu.ProjectId == projectId && pu.IsActive)
+            .Select(pu => pu.UserId)
+            .Union(
+                dbContext.Set<ProjectFormSubmission>()
+                    .Where(f => f.ProjectId == projectId)
+                    .Select(f => f.ParticipantUserId))
+            .Distinct()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Get pending invitations count
+        var pendingInvitations = await dbContext.Set<ProjectInvitation>()
+            .AsNoTracking()
+            .CountAsync(i => i.ProjectId == projectId && i.Status == ProjectInvitationStatus.Pending, cancellationToken)
+            .ConfigureAwait(false);
+
+        return new Domain.DTOs.DashboardProjectData
+        {
+            ProjectId = projectInfo.Id,
+            ProjectName = projectInfo.Name,
+            ProjectKey = projectInfo.Key,
+            IncubatorId = projectInfo.BusinessIncubatorId,
+            IncubatorName = projectInfo.IncubatorName,
+            TotalUsers = totalUsers,
+            ActiveUsers = totalUsers,
+            RecentUsers = recentUsers,
+            UsersByRole = usersByRole,
+            TotalForms = totalForms,
+            CompletedForms = completedForms,
+            InProgressForms = inProgressForms,
+            NotStartedForms = Math.Max(0, totalUsers - totalForms),
+            AverageCompletionHours = avgCompletionHours,
+            TotalPendingReviews = totalPendingReviews,
+            PendingInvitations = pendingInvitations,
+            PendingReviews = pendingReviews,
+            RecentActivities = recentActivities,
+            AllUserIds = allUserIds
+        };
     }
 
     /// <inheritdoc/>
