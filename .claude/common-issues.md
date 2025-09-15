@@ -354,6 +354,47 @@ var userRoles = CurrentUserRoles;
 
 **Prevention**: Configure IDE to trim trailing whitespace on save
 
+### SA1407: Arithmetic Expressions Should Declare Precedence
+**Error**: `error SA1407: Arithmetic expressions should declare precedence`
+**Cause**: Complex mathematical expressions without explicit parentheses
+**Solution**: Add parentheses to clarify operator precedence
+```csharp
+// ❌ Wrong
+double a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+           Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+           Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+
+// ✅ Correct  
+double a = (Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2)) +
+           (Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+            Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2));
+```
+
+### Failure Method Parameter Format
+**Error**: `CS1503: cannot convert from 'string' to '(string Context, string Message)'`
+**Cause**: BaseCommandHandler Failure method expects tuple format
+**Solution**: 
+```csharp
+// ❌ Wrong
+return Failure(ResultErrorCodes.GenericError, "Error message");
+
+// ✅ Correct
+return Failure(ResultErrorCodes.GenericError, 
+    (nameof(GetNearbyProjectsQuery), "Error message"));
+```
+
+### EF Core Navigation Property Access in Lambda
+**Error**: `CS0122: 'Project.BusinessIncubator' is inaccessible due to its protection level`
+**Cause**: Internal navigation properties cannot be accessed in Lambda expressions
+**Solution**: Use string-based Include instead:
+```csharp
+// ❌ Wrong
+.Include(p => p.BusinessIncubator)
+
+// ✅ Correct
+.Include("BusinessIncubator")
+```
+
 ## SQL Server Database Project Issues
 
 ### Schema Changes in Wrong Location
