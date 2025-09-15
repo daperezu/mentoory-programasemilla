@@ -349,6 +349,7 @@
     <None Include="PostDeployment\010.SeedEmailTemplates.sql" />
     <None Include="PostDeployment\011.SeedProjectKnowledgeStructure.sql" />
     <None Include="PostDeployment\012.SeedProjectFormSubmissions.sql" />
+    <None Include="PostDeployment\013.SeedDemoProjectsWithGeolocation.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="PostDeployment\Script.PostDeployment.sql" />

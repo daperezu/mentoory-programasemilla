@@ -397,3 +397,4 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 .idea/
+Assets/phoenix-v1.22.0/

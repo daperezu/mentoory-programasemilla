@@ -9,6 +9,13 @@ public class HomeController : Controller
 {
     public IActionResult Index()
     {
+        // If user is not authenticated, redirect to public projects homepage
+        if (!User.Identity?.IsAuthenticated ?? true)
+        {
+            return RedirectToAction("Index", "Projects", new { area = "Public" });
+        }
+
+        // If authenticated, show the default home page or redirect to dashboard
         return View();
     }
 

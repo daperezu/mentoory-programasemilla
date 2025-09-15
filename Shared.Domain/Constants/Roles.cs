@@ -46,6 +46,11 @@ public static class Roles
     public const string GlobalAdministrator = "Global Administrator";
 
     /// <summary>
+    /// Observer role - public users who can view and express interest in projects.
+    /// </summary>
+    public const string Observer = "Observer";
+
+    /// <summary>
     /// Gets all coordinator-allowed roles for bulk invitations.
     /// </summary>
     public static readonly string[] CoordinatorAllowedRoles =
@@ -69,6 +74,7 @@ public static class Roles
         Facilitator,
         Liaison,
         Administrator,
-        GlobalAdministrator
+        GlobalAdministrator,
+        Observer
     ];
 }

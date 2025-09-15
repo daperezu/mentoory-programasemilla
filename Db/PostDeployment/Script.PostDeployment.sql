@@ -55,4 +55,12 @@ PRINT '[012.SeedProjectFormSubmissions.sql] Starting';
 :r .\012.SeedProjectFormSubmissions.sql
 PRINT '[012.SeedProjectFormSubmissions.sql] Finished';
 
+PRINT '[013.SeedDemoProjectsWithGeolocation.sql] Starting';
+:r .\013.SeedDemoProjectsWithGeolocation.sql
+PRINT '[013.SeedDemoProjectsWithGeolocation.sql] Finished';
+
+PRINT '[014.SeedProjectHeroImages.sql] Starting';
+:r .\014.SeedProjectHeroImages.sql
+PRINT '[014.SeedProjectHeroImages.sql] Finished';
+
 PRINT '[Script.PostDeployment.sql] Finished';

@@ -98,6 +98,9 @@ builder.Services.AddSharedApplication();
 // Register shared infrastructure services (including IFileStorageService)
 builder.AddSharedInfrastructureServices();
 
+// Register image rendering service (uses IFileStorageService)
+builder.Services.AddScoped<ImageRenderingService>();
+
 //// Auth Domain
 builder.AddAuthInfrastructure();
 builder.Services.AddAuthApplication();
