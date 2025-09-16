@@ -761,6 +761,13 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
         string? referrerUrl,
         DateTime createdAt,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all active projects with their stages for homepage display.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of active projects with stages loaded.</returns>
+    Task<List<Aggregates.BusinessIncubator.Project>> GetActiveProjectsWithStagesAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>

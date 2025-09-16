@@ -1,64 +1,135 @@
 # Current Working Session
 
-## 🎯 Current Status: REQ-011 Public Homepage Fully Implemented
-**Branch**: feature/home-page-ux  
+## 🎯 Current Status: REQ-012 Phoenix Homepage Redesign
+**Branch**: feature/home-redesign
 **Build**: ✅ Clean (0 errors, 0 warnings)
-**Session Date**: 2025-01-15
-**Today's Focus**: Completed REQ-011 Optimizations and Interest Tracking
+**Session Date**: 2025-09-16
+**Today's Focus**: Fixed EF Core issues & Implemented Project Details Page (Phase 4)
 
 ### Progress Status
 
-**Completed ✅:**
-- Database schema changes (Projects table + indexes + ProjectInterests table)
-- GeoCoordinate value object with validation and Haversine distance
-- GeohashHelper utility class with full encode/decode/neighbor logic
-- Project entity updated with geolocation properties and methods
-- GetNearbyProjectsQuery with geohash optimization and neighbor search
-- Repository methods for geohash queries with EF Core configuration
-- PublicProjectsController with nearby search and interest tracking endpoints
-- RecordProjectInterestCommand with full tracking implementation
-- Browser geolocation JavaScript with fallback and project display
-- Public homepage view with responsive design and map placeholder
-- Observer role added to system with database seed scripts
-- Added Shared.Infrastructure reference to Application layer
-- Full StyleCop compliance with zero warnings
+**Completed Today ✅:**
+- Fixed EF Core Include error for private collections (_projectStages, ProjectUsers)
+- Created GetProjectDetailsQuery and handler with proper repository methods
+- Created ProjectDetailDto for detailed project information
+- Updated ProjectsController Details action implementation
+- Created Phoenix-styled Details.cshtml view with timeline, badges, and CTAs
+- Resolved all build errors (nullable references, enum values, method signatures)
 
 **In Progress ⚠️:**
-- None - all tasks completed
+- Phase 5: Testing & Polish (pending runtime testing)
 
 **Pending 📋:**
-- Create public project details view
-- Add interactive map integration (future enhancement)
-- Performance testing with large datasets
+- Test the Details page with actual data
+- Verify both discovery modes work correctly
+- Complete responsive design validation
+- Performance optimization if needed
 
-### Today's Implementation
+### Key Features Implemented
 
-#### Key Files Created/Modified
-- **Database**: `Db/businessincubators/Tables/Projects.sql` (added geolocation columns)
-- **Domain**: `BusinessIncubator.Domain/ValueObjects/GeoCoordinate.cs`
-- **Infrastructure**: `Shared.Infrastructure/Geolocation/GeohashHelper.cs`
-- **Application**: `BusinessIncubator.Application/Public/Queries/GetNearbyProjectsQuery.cs`
-- **Web**: `LinaSys.Web/Controllers/PublicProjectsController.cs`
-- **Frontend**: `LinaSys.Web/wwwroot/js/public-projects.js`
+#### Dual Discovery Modes
+1. **Time-based (Default)**:
+   - No location permission required
+   - Shows top 10 projects sorted by start date
+   - Displays "Ordenado por: Fecha de inicio" indicator
 
-#### Technical Decisions Made
-- Used bounding box calculation in Application layer to avoid Infrastructure dependency
-- Observer role for public users without full registration requirements
-- Computed columns for GeohashPrefix5/6 for index optimization
-- Haversine distance calculation for precise proximity filtering
+2. **Location-based (Optional)**:
+   - Activated by "Usar mi Ubicación" button
+   - Maintains existing geolocation functionality from REQ-011
+   - Shows projects sorted by distance with radius selector
+   - Displays "Ordenado por: Cercanía" indicator
 
-### Next Session Priorities
-1. Test end-to-end functionality with database deployment
-2. Optimize geohash integration by adding Infrastructure reference to Application
-3. Complete interest tracking implementation
-4. Add business incubator name resolution to query
-5. Create public project details page
+#### Phoenix Components Used
+- Gradient hero section with animation
+- Card components with hover effects (`card-phoenix`)
+- Icon circles for feature cards
+- Timeline component for process steps
+- Sort indicator badges
+- Testimonial cards with avatar initials
+- Phoenix button styles (`btn-phoenix-primary`)
+
+### Files Created/Modified
+
+#### New Files
+- `BusinessIncubator.Application/Public/Queries/GetLatestProjectsQuery.cs`
+- `BusinessIncubator.Application/Public/Queries/GetLatestProjectsQueryHandler.cs`
+- `BusinessIncubator.Application/Public/Queries/LatestProjectsDto.cs`
+- `Web/wwwroot/css/public-phoenix.css`
+- `Web/wwwroot/js/public-projects-phoenix.js`
+- `Db/PostDeployment/015.SeedPhoenixDemoProjects.sql`
+
+#### Modified Files
+- `Web/Areas/Public/Controllers/ProjectsController.cs` - Added latest projects support
+- `Web/Areas/Public/Views/Projects/Index.cshtml` - Complete Phoenix redesign
+- `Web/Views/Shared/_PublicLayout.cshtml` - Phoenix navbar integration
+- `BusinessIncubator.Domain/Repositories/IBusinessIncubatorRepository.cs` - Added GetActiveProjectsWithStagesAsync
+- `BusinessIncubator.Infrastructure/Persistence/Repositories/BusinessIncubatorRepository.cs` - Implemented new method
+- `Db/PostDeployment/Script.PostDeployment.sql` - Added seed script reference
+
+### Database Seed Script Issues Fixed ✅
+
+#### Schema Mismatches Resolved:
+1. **BusinessIncubators table** - Removed non-existent columns (Url, Email, Phone)
+2. **ProjectUsers table** - Removed CreatedBy column (doesn't exist in schema)
+3. **AspNetUsers reference** - Changed from [auth].[Users] to [dbo].[AspNetUsers]
+4. **Username correction** - Changed to 'demo.starter' to match existing seed data
+
+#### Verification Results:
+- Database published successfully with 0 errors
+- 10 new Phoenix demo projects seeded
+- Total projects in database: 21
+- All projects have stages and geolocation data
+
+### Next Steps 🚀
+
+1. **Test Runtime Functionality**:
+   - Run application with `dotnet run --project Aspire.AppHost`
+   - Navigate to `/Public/Projects` to test homepage
+   - Click on a project to test Details page
+   - Verify location-based discovery mode
+
+2. **Complete Phase 5: Testing & Polish**:
+   - Validate responsive design on all screen sizes
+   - Test with seeded demo data (10 Phoenix projects)
+   - Optimize image loading if needed
+   - Verify Spanish translations
+
+3. **Prepare for Deployment**:
+   - Run database deployment: `.\Publish-LinaDb.ps1 -Publish`
+   - Create pull request from `feature/home-redesign` to `main`
+   - Update REQ-012 status to completed
+
+### Technical Notes
+
+#### Sorting Implementation
+```csharp
+// Time-based (default)
+projects.OrderBy(p => p.NextStageStartDate ?? DateTime.MaxValue)
+        .ThenBy(p => p.Name)
+
+// Location-based (when enabled)
+projects.OrderBy(p => p.DistanceKm)
+        .ThenBy(p => p.NextStageStartDate)
+```
+
+#### JavaScript Modes
+- Default loads latest projects on page load
+- Location button switches to proximity mode
+- Both modes use existing AJAX endpoints
+- Smooth scroll animations for navigation
+
+### Next Steps
+1. Deploy database changes: `.\Publish-LinaDb.ps1 -Publish`
+2. Run application to test homepage: `dotnet run --project Aspire.AppHost`
+3. Implement project details page (Phase 4)
+4. Complete testing and polish (Phase 5)
 
 ### Important Context
-- **Build Status**: Clean with 0 errors, 0 warnings after fixing StyleCop issues
-- **Architecture**: Follows Clean Architecture with proper layer separation
-- **Performance**: Dual filtering (geohash bounds + Haversine) for efficiency
-- **Security**: Anonymous access with Observer role for engagement tracking
+- **Build Status**: Clean with zero errors/warnings
+- **Architecture**: Follows Clean Architecture principles
+- **UI Language**: All user-facing text in Spanish
+- **Phoenix Version**: v1.22.0 components
+- **Geolocation**: REQ-011 functionality preserved
 
 ---
-*Ready for: End-to-end testing and optimization*
+*Status: Homepage redesign complete, ready for details page implementation*

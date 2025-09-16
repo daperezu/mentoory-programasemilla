@@ -1129,4 +1129,18 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
             new Microsoft.Data.SqlClient.SqlParameter("@referrerUrl", (object?)referrerUrl ?? DBNull.Value),
             new Microsoft.Data.SqlClient.SqlParameter("@createdAt", createdAt));
     }
+
+    /// <inheritdoc/>
+    public async Task<List<Project>> GetActiveProjectsWithStagesAsync(CancellationToken cancellationToken = default)
+    {
+        // Load projects with their stages and users
+        // Use string-based Include with proper navigation names
+        var projects = await dbContext.Projects
+            .Include("_projectStages") // Private field for ProjectStages (public property is ignored in EF)
+            .Include("ProjectUsers") // Navigation configured with backing field
+            .Where(p => !p.IsDeleted && p.Status == ProjectStatus.Active)
+            .ToListAsync(cancellationToken);
+
+        return projects;
+    }
 }

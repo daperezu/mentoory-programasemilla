@@ -106,6 +106,23 @@ await repository.UnitOfWork.SaveChangesAsync();
 // Right: entity.HasOne(e => e.NavigationProperty)
 ```
 
+### EF Core Include with DDD Private Collections
+**Error**: `InvalidIncludePathError: Unable to find navigation '_fieldName'`
+**Cause**: Different configuration patterns for private backing fields
+**Solution**: Check DbContext configuration to determine correct Include approach:
+
+```csharp
+// Case 1: Property explicitly ignored - use private field
+modelBuilder.Entity<Project>().Ignore(p => p.ProjectStages);
+// Include: .Include("_projectStages")
+
+// Case 2: Navigation configured with backing field - use public property
+entity.Navigation(e => e.ProjectUsers)
+    .UsePropertyAccessMode(PropertyAccessMode.Field)
+    .HasField("_projectUsers");
+// Include: .Include("ProjectUsers")
+```
+
 ## Modern UI Implementation Patterns (Phoenix Admin Template)
 
 ### Gradient Backgrounds
