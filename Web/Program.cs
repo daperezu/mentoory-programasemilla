@@ -90,6 +90,10 @@ builder.Services.AddScoped<IApplicationUrlService, ApplicationUrlService>();
 // Register Google Analytics service for web analytics tracking
 builder.Services.AddSingleton<IGoogleAnalyticsService, GoogleAnalyticsService>();
 
+// Register Google Maps configuration options
+builder.Services.Configure<LinaSys.Web.Options.GoogleMapsOptions>(
+    builder.Configuration.GetSection(LinaSys.Web.Options.GoogleMapsOptions.SectionName));
+
 #region Modules dependencies registration
 
 // Register shared application services (including IIntegrationEventService)

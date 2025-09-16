@@ -1,3 +1,4 @@
+using LinaSys.BusinessIncubator.Application.Public.Commands;
 using LinaSys.BusinessIncubator.Application.Public.Queries;
 using LinaSys.Shared.Application;
 using LinaSys.Web.Extensions;
@@ -31,12 +32,73 @@ public class ProjectsController : Controller
 
     /// <summary>
     /// Displays the public homepage with project discovery features.
+    /// Now loads projects by default without requiring location.
     /// </summary>
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        ViewData["Title"] = "Descubre Proyectos Cercanos";
+        ViewData["Title"] = "Descubre Proyectos de Emprendimiento";
+
+        // Load latest projects for initial display (time-based)
+        var query = new GetLatestProjectsQuery(MaxResults: 10, IncludeStages: true);
+        var result = await _mediatorExecutor.SendAndLogIfFailureAsync(query);
+
+        if (result.IsSuccess && result.Value != null)
+        {
+            // Populate image URLs
+            foreach (var project in result.Value.Projects)
+            {
+                if (string.IsNullOrWhiteSpace(project.HeroImageUrl))
+                {
+                    var encodedBlobId = !string.IsNullOrWhiteSpace(project.HeroImageBlobId)
+                        ? Uri.EscapeDataString(project.HeroImageBlobId)
+                        : "placeholder";
+                    project.HeroImageUrl = $"/Public/Images/{encodedBlobId}?type=hero&text={Uri.EscapeDataString(project.Name ?? "Proyecto")}";
+                }
+            }
+
+            ViewData["LatestProjects"] = result.Value;
+        }
+        else
+        {
+            ViewData["LatestProjects"] = new LatestProjectsDto { Projects = new List<LatestProjectDto>() };
+        }
+
         return View();
+    }
+
+    /// <summary>
+    /// Gets the latest projects sorted by start date (no location required).
+    /// Used for the default homepage view.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetLatestProjects(int? maxResults)
+    {
+        var query = new GetLatestProjectsQuery(
+            MaxResults: maxResults ?? 10,
+            IncludeStages: true);
+
+        var result = await _mediatorExecutor.SendAndLogIfFailureAsync(query);
+
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { error = "Error al obtener los proyectos más recientes." });
+        }
+
+        // Populate image URLs
+        var response = result.Value!;
+        foreach (var project in response.Projects)
+        {
+            if (string.IsNullOrWhiteSpace(project.HeroImageUrl))
+            {
+                var encodedBlobId = !string.IsNullOrWhiteSpace(project.HeroImageBlobId)
+                    ? Uri.EscapeDataString(project.HeroImageBlobId)
+                    : "placeholder";
+                project.HeroImageUrl = $"/Public/Images/{encodedBlobId}?type=hero&text={Uri.EscapeDataString(project.Name ?? "Proyecto")}";
+            }
+        }
+
+        return Json(response);
     }
 
     /// <summary>
@@ -84,12 +146,21 @@ public class ProjectsController : Controller
     /// Gets project details for public viewing.
     /// </summary>
     [HttpGet]
-    public IActionResult Details(Guid id)
+    public async Task<IActionResult> Details(Guid id)
     {
-        // TODO: Implement public project details view
-        ViewData["Title"] = "Detalles del Proyecto";
-        ViewData["ProjectId"] = id;
-        return View();
+        var query = new GetProjectDetailsQuery(id);
+        var result = await _mediatorExecutor.SendAndLogIfFailureAsync(query);
+
+        if (!result.IsSuccess || result.Value == null)
+        {
+            this.SetErrorToast("El proyecto no fue encontrado o no está disponible.");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var project = result.Value;
+        ViewData["Title"] = project.Name;
+
+        return View(project);
     }
 }
 

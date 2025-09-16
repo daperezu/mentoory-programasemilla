@@ -63,4 +63,8 @@ PRINT '[014.SeedProjectHeroImages.sql] Starting';
 :r .\014.SeedProjectHeroImages.sql
 PRINT '[014.SeedProjectHeroImages.sql] Finished';
 
+PRINT '[011.SeedPublicProjects.sql] Starting';
+:r .\011.SeedPublicProjects.sql
+PRINT '[011.SeedPublicProjects.sql] Finished';
+
 PRINT '[Script.PostDeployment.sql] Finished';
