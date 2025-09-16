@@ -356,6 +356,48 @@ public class ParticipantController(
         }
     }
 
+    [HttpGet]
+    public IActionResult FillFormOnBehalf(Guid projectId, string participantUserId)
+    {
+        try
+        {
+            if (projectId == Guid.Empty || string.IsNullOrEmpty(participantUserId))
+            {
+                this.SetErrorToast("Parámetros inválidos para completar el formulario.");
+                return RedirectToAction("Index");
+            }
+
+            var context = DemandCurrentUserContext(requireProject: true);
+
+            // Verify the coordinator has access to this project
+            // The DemandCurrentUserContext already validates this
+
+            // TODO: Verify participant exists and has access to this project
+            // This will be done in the ParticipantForm controller
+
+            // Redirect to the participant form with on-behalf parameters
+            // The form will be loaded with the participant's data but filled by the coordinator
+            return RedirectToAction("ParticipantForm", "Projects", new
+            {
+                area = "BusinessIncubators",
+                externalId = projectId,
+                onBehalfOfUserId = participantUserId
+            });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            this.SetErrorToast("No tiene permisos para completar formularios en nombre de otros.");
+            return RedirectToAction("Index");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error accessing fill form on behalf for user {UserId}, participant {ParticipantUserId}",
+                CurrentUserId, participantUserId);
+            this.SetErrorToast("Error al acceder al formulario.");
+            return RedirectToAction("Index");
+        }
+    }
+
     protected override string GetUserRole() => Roles.Coordinator;
 }
 

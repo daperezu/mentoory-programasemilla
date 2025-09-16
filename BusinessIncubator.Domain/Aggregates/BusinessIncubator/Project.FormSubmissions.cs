@@ -96,4 +96,59 @@ public partial class Project
             i.IdentificationNumber == participantUserId &&
             i.Status == ProjectInvitationStatus.Accepted);
     }
+
+    /// <summary>
+    /// Gets or creates a form submission on behalf of a participant.
+    /// </summary>
+    /// <param name="participantUserId">The participant user ID for whom the form is being filled.</param>
+    /// <param name="submittedByUserId">The user ID who is filling the form on behalf.</param>
+    /// <param name="currentDate">The current date/time.</param>
+    /// <returns>The form submission (existing draft or new on-behalf submission).</returns>
+    public ProjectFormSubmission GetOrCreateFormSubmissionOnBehalf(
+        string participantUserId,
+        string submittedByUserId,
+        DateTime currentDate)
+    {
+        EnsureNotDeleted();
+
+        // Check if there's an existing draft submission
+        var existingSubmission = _formSubmissions.FirstOrDefault(s =>
+            s.ParticipantUserId == participantUserId &&
+            s.Status == ProjectFormSubmissionStatus.Draft);
+
+        if (existingSubmission is not null)
+        {
+            // Update to on-behalf mode if not already
+            if (existingSubmission.SubmissionMode != SubmissionMode.OnBehalf)
+            {
+                // For now, return the existing submission
+                // A separate method could be added to update submission mode if needed
+                return existingSubmission;
+            }
+
+            return existingSubmission;
+        }
+
+        // Get current stage and phase
+        var currentStage = GetCurrentStage(currentDate);
+        var phase = currentStage is not null
+            ? ProjectFormSubmission.GetPhaseForStage(currentStage.Type)
+            : QuestionPhase.Start;
+
+        // Get current form schema version from knowledge structure
+        var currentVersion = ProjectKnowledgeStructure?.CurrentVersion ?? 1;
+
+        // Create new on-behalf submission
+        var submission = ProjectFormSubmission.CreateOnBehalf(
+            Id,
+            participantUserId,
+            submittedByUserId,
+            currentVersion,
+            phase,
+            currentStage?.Id,
+            currentDate);
+
+        _formSubmissions.Add(submission);
+        return submission;
+    }
 }

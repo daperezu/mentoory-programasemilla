@@ -926,6 +926,23 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
     }
 
     /// <inheritdoc/>
+    public async Task<bool> IsUserProjectCoordinatorAsync(long projectId, string userId, CancellationToken cancellationToken = default)
+    {
+        // Check if user is a coordinator or administrator for the project
+        // This checks against the ProjectUsers table with role filtering
+        var isCoordinator = await dbContext.Set<ProjectUser>()
+            .AnyAsync(pu =>
+                pu.ProjectId == projectId &&
+                pu.UserId == userId &&
+                pu.IsActive &&
+                (pu.Role == "Coordinator" || pu.Role == "Administrator" || pu.Role == "GlobalAdministrator"),
+                cancellationToken)
+            .ConfigureAwait(false);
+
+        return isCoordinator;
+    }
+
+    /// <inheritdoc/>
     public async Task<List<Project>> GetProjectsByIncubatorIdAsync(long incubatorId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Set<Project>()

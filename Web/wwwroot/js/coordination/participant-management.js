@@ -72,6 +72,17 @@
             e.preventDefault();
             loadParticipantStats(true);
         });
+        
+        // Fill form on behalf action
+        $(document).on('click', 'a[href="#fill-on-behalf"]', function(e) {
+            e.preventDefault();
+            const row = $(this).closest('tr');
+            const data = participantTable ? participantTable.row(row).data() : null;
+            
+            if (data) {
+                handleFillOnBehalf(data);
+            }
+        });
     }
     
     /**
@@ -202,6 +213,90 @@
             const searchValue = status === 'active' ? 'true' : status === 'inactive' ? 'false' : '';
             statusColumn.search(searchValue).draw();
         }
+    }
+    
+    /**
+     * Handle fill form on behalf action
+     */
+    function handleFillOnBehalf(participantData) {
+        // Check if participant has a pending form
+        if (!participantData.formStatus || participantData.formStatus === 'Sin formulario') {
+            showToast('Este participante no tiene formularios pendientes', 'warning');
+            return;
+        }
+        
+        // Check if form is already completed or approved
+        if (participantData.formStatus === 'Aprobado' || participantData.formStatus === 'Rechazado') {
+            showToast('El formulario de este participante ya fue procesado', 'info');
+            return;
+        }
+        
+        // Show confirmation modal
+        showConfirmModal(
+            'Completar formulario en nombre de',
+            `¿Está seguro que desea completar el formulario en nombre de <strong>${participantData.fullName}</strong>?<br><br>
+             <small class="text-muted">Nota: El formulario seguirá el flujo de aprobación normal después de enviarlo.</small>`,
+            'Continuar',
+            'Cancelar'
+        ).then(confirmed => {
+            if (confirmed) {
+                // Redirect to form editor in on-behalf mode
+                const projectId = participantData.projectExternalId || window.currentProjectId;
+                const participantUserId = participantData.userId;
+                
+                if (!projectId || !participantUserId) {
+                    showToast('No se pudo obtener la información necesaria', 'danger');
+                    return;
+                }
+                
+                // Navigate to form editor with on-behalf parameters
+                window.location.href = `/Coordination/Participant/FillFormOnBehalf?projectId=${projectId}&participantUserId=${participantUserId}`;
+            }
+        });
+    }
+    
+    /**
+     * Show confirmation modal
+     */
+    function showConfirmModal(title, message, confirmText, cancelText) {
+        return new Promise((resolve) => {
+            const modalHtml = `
+                <div class="modal fade" id="confirmModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${title}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>${message}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">${cancelText}</button>
+                                <button type="button" class="btn btn-primary" id="confirmBtn">${confirmText}</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('#confirmModal').remove();
+            $('body').append(modalHtml);
+            
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            
+            $('#confirmBtn').on('click', () => {
+                modal.hide();
+                resolve(true);
+            });
+            
+            document.getElementById('confirmModal').addEventListener('hidden.bs.modal', () => {
+                $('#confirmModal').remove();
+                resolve(false);
+            });
+            
+            modal.show();
+        });
     }
     
     /**

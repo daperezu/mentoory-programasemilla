@@ -648,6 +648,15 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     Task<bool> IsUserProjectParticipantAsync(long projectId, string userId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Checks if a user is a coordinator or administrator in a project.
+    /// </summary>
+    /// <param name="projectId">The project ID.</param>
+    /// <param name="userId">The user ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the user is a coordinator or administrator, otherwise false.</returns>
+    Task<bool> IsUserProjectCoordinatorAsync(long projectId, string userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Gets a feedback by its ID.
     /// </summary>
     /// <param name="feedbackId">The feedback ID.</param>

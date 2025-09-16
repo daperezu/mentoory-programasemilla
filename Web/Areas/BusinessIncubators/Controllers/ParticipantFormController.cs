@@ -36,7 +36,8 @@ public class ParticipantFormController(
     [Route("")]
     public async Task<IActionResult> Index(
         [FromRoute] Guid businessIncubatorExternalId,
-        [FromRoute] Guid projectExternalId)
+        [FromRoute] Guid projectExternalId,
+        [FromQuery] string? onBehalfOfUserId = null)
     {
         // Get current user ID
         if (!TryGetCurrentUserId(out var userId))
@@ -44,10 +45,29 @@ public class ParticipantFormController(
             return Unauthorized();
         }
 
+        // Determine if this is an on-behalf scenario
+        var isOnBehalf = !string.IsNullOrEmpty(onBehalfOfUserId);
+        var participantUserId = isOnBehalf ? onBehalfOfUserId : userId;
+
+        // If on-behalf mode, verify the current user is a coordinator/admin
+        if (isOnBehalf)
+        {
+            // Check if user has coordinator access
+            var coordinatorQuery = new LinaSys.BusinessIncubator.Application.Queries.IsUserProjectCoordinatorQuery(
+                projectExternalId, userId);
+            var coordinatorResult = await MediatorExecutor.SendAndLogIfFailureAsync(coordinatorQuery);
+
+            if (!coordinatorResult.IsSuccess || !coordinatorResult.Value)
+            {
+                this.SetErrorToast("No tiene permisos para completar formularios en nombre de otros.");
+                return RedirectToAction("Index", "Dashboard", new { area = "Participant" });
+            }
+        }
+
         // Get project and verify participant has access
         var projectQuery = new LinaSys.BusinessIncubator.Application.Queries.GetProjectByExternalIdQuery(
             projectExternalId,
-            CheckAccessForUserId: userId);
+            CheckAccessForUserId: participantUserId);
         var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
 
         if (!projectResult.IsSuccess || projectResult.Value is null)
@@ -58,7 +78,15 @@ public class ParticipantFormController(
         // Check if user has access through UserProjectAccess (Auth domain)
         if (projectResult.Value.HasAccess == false)
         {
-            TempData["ErrorMessage"] = "No tienes acceso a este proyecto.";
+            if (isOnBehalf)
+            {
+                TempData["ErrorMessage"] = "El participante no tiene acceso a este proyecto.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "No tienes acceso a este proyecto.";
+            }
+
             return RedirectToAction("Index", "Home");
         }
 
@@ -66,7 +94,7 @@ public class ParticipantFormController(
         var submission = await MediatorExecutor.SendOrThrowAsync(new GetFormSubmissionQuery
         {
             ProjectExternalId = projectExternalId,
-            ParticipantUserId = userId
+            ParticipantUserId = participantUserId!
         });
 
         // Load feedback if submission exists
@@ -124,7 +152,10 @@ public class ParticipantFormController(
             CanSubmit = submission.CanSubmit && !formFieldsReadOnly,
             IsReadOnly = formFieldsReadOnly,
             FeedbackReadOnly = feedbackReadOnly,
-            FeedbackConversations = feedbackConversations ?? new List<FeedbackConversationDto>()
+            FeedbackConversations = feedbackConversations ?? new List<FeedbackConversationDto>(),
+            IsOnBehalf = isOnBehalf,
+            ParticipantUserId = participantUserId,
+            CoordinatorUserId = isOnBehalf ? userId : null
         };
 
         return View(model);
@@ -152,24 +183,45 @@ public class ParticipantFormController(
             return Unauthorized();
         }
 
-        // For new submissions (submissionId is 0 or not provided), verify project access instead
-        if (model.SubmissionId > 0)
+        // Determine participant user ID based on whether this is on-behalf
+        var participantUserId = model.IsOnBehalf && !string.IsNullOrEmpty(model.ParticipantUserId)
+            ? model.ParticipantUserId
+            : userId;
+
+        // If on-behalf mode, verify coordinator permissions
+        if (model.IsOnBehalf)
         {
-            // Verify user owns this submission
-            var ownershipQuery = new LinaSys.BusinessIncubator.Application.Queries.VerifySubmissionOwnershipQuery(
-                model.ProjectId, model.SubmissionId, userId);
-            var ownershipResult = await MediatorExecutor.SendAndLogIfFailureAsync(ownershipQuery);
-            if (!ownershipResult.IsSuccess || !ownershipResult.Value)
+            var coordinatorQuery = new LinaSys.BusinessIncubator.Application.Queries.IsUserProjectCoordinatorQuery(
+                projectExternalId, userId);
+            var coordinatorResult = await MediatorExecutor.SendAndLogIfFailureAsync(coordinatorQuery);
+
+            if (!coordinatorResult.IsSuccess || !coordinatorResult.Value)
             {
                 return Forbid();
             }
         }
+
+        // For new submissions (submissionId is 0 or not provided), verify project access instead
+        if (model.SubmissionId > 0)
+        {
+            // Verify submission ownership (participant owns it, or coordinator is filling on behalf)
+            if (!model.IsOnBehalf)
+            {
+                var ownershipQuery = new LinaSys.BusinessIncubator.Application.Queries.VerifySubmissionOwnershipQuery(
+                    model.ProjectId, model.SubmissionId, participantUserId);
+                var ownershipResult = await MediatorExecutor.SendAndLogIfFailureAsync(ownershipQuery);
+                if (!ownershipResult.IsSuccess || !ownershipResult.Value)
+                {
+                    return Forbid();
+                }
+            }
+        }
         else
         {
-            // For new submissions, just verify the user has access to the project
+            // For new submissions, verify the participant has access to the project
             var projectQuery = new LinaSys.BusinessIncubator.Application.Queries.GetProjectByExternalIdQuery(
                 projectExternalId,
-                CheckAccessForUserId: userId);
+                CheckAccessForUserId: participantUserId);
             var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
 
             if (!projectResult.IsSuccess || projectResult.Value is null || projectResult.Value.HasAccess == false)
@@ -178,21 +230,44 @@ public class ParticipantFormController(
             }
         }
 
-        var command = new SaveDraftCommand
+        // Use the appropriate command based on whether this is on-behalf
+        if (model.IsOnBehalf)
         {
-            ProjectId = model.ProjectId,
-            ParticipantUserId = userId,
-            DraftData = model.DraftData
-        };
+            var onBehalfCommand = new LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.SaveDraftOnBehalf.SaveDraftOnBehalfCommand
+            {
+                ProjectId = model.ProjectId,
+                ParticipantUserId = participantUserId,
+                SubmittedByUserId = userId,
+                DraftData = model.DraftData
+            };
 
-        var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(onBehalfCommand);
 
-        if (result.IsFailure)
-        {
-            return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al procesar la solicitud."] });
+            if (result.IsFailure)
+            {
+                return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al procesar la solicitud."] });
+            }
+
+            return Ok(new { success = true, savedAt = DateTime.UtcNow, submissionId = result.Value, onBehalf = true });
         }
+        else
+        {
+            var command = new SaveDraftCommand
+            {
+                ProjectId = model.ProjectId,
+                ParticipantUserId = participantUserId,
+                DraftData = model.DraftData
+            };
 
-        return Ok(new { success = true, savedAt = DateTime.UtcNow, submissionId = result.Value });
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+
+            if (result.IsFailure)
+            {
+                return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al procesar la solicitud."] });
+            }
+
+            return Ok(new { success = true, savedAt = DateTime.UtcNow, submissionId = result.Value });
+        }
     }
 
     /// <summary>

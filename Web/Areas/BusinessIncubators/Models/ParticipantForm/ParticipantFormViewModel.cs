@@ -74,4 +74,19 @@ public class ParticipantFormViewModel
     /// Gets or sets the feedback conversations for this submission.
     /// </summary>
     public List<FeedbackConversationDto> FeedbackConversations { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the form is being filled on behalf of another user.
+    /// </summary>
+    public bool IsOnBehalf { get; set; }
+
+    /// <summary>
+    /// Gets or sets the participant user ID (the user for whom the form is being filled).
+    /// </summary>
+    public string? ParticipantUserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets the coordinator user ID (the user filling the form on behalf).
+    /// </summary>
+    public string? CoordinatorUserId { get; set; }
 }

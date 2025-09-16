@@ -463,6 +463,12 @@ public class BusinessIncubatorDbContext(DbContextOptions<BusinessIncubatorDbCont
                 .HasColumnType("nvarchar(max)");
             entity.Property(e => e.RejectionReason)
                 .HasMaxLength(500);
+            entity.Property(e => e.SubmittedByUserId)
+                .HasMaxLength(450);
+            entity.Property(e => e.SubmissionMode)
+                .HasConversion<int>()
+                .IsRequired()
+                .HasDefaultValue(LinaSys.BusinessIncubator.Domain.Enums.SubmissionMode.Self); // Default to Self
 
             entity.HasOne("Project").WithMany("FormSubmissions")
                 .HasForeignKey("ProjectId")

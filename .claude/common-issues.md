@@ -261,7 +261,33 @@ LinaSys.Web/Services/UserCrossDomainService.cs
 6. **Null safety**: Use proper null patterns (`is null`, `?.`, `??`)
 7. **File formatting**: Remove trailing whitespace, add newlines, fix commas
 8. **Enum ambiguity**: Use fully qualified names when duplicate enum names exist
-8. **Build verification**: Clean build required before testing
+9. **Partial class conflicts**: Check for duplicate method definitions across partial files
+10. **Build verification**: Clean build required before testing
+
+## Partial Class Method Conflicts
+
+### Duplicate Method Definition in Partial Classes
+**Error**: CS0111: Type already defines a member with the same parameter types
+**Cause**: Same method defined in multiple partial class files
+
+**Solution**:
+```csharp
+// ❌ Wrong - Method in both Project.cs and Project.FormSubmissions.cs
+// Project.cs
+public ProjectFormSubmission StartFormSubmission(string userId, DateTime date) { }
+
+// Project.FormSubmissions.cs  
+public ProjectFormSubmission StartFormSubmission(string userId, DateTime date) { }
+
+// ✅ Correct - Method only in one partial class file
+// Project.FormSubmissions.cs (dedicated file for form-related methods)
+public ProjectFormSubmission StartFormSubmission(string userId, DateTime date) { }
+```
+
+**Prevention**:
+- Group related methods in specific partial class files
+- Use clear file naming: `Entity.Category.cs` pattern
+- Check all partial files before adding new methods
 
 ## DataTable Custom Rendering
 
