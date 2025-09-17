@@ -4,6 +4,7 @@ param(
     [ValidateSet("Development", "Production")]
     [string]$Profile = "Development",
     [switch]$Force,
+    [switch]$GenerateScript,
     [string]$MSBuildPath,
     [string]$SqlPackagePath
 )
@@ -83,7 +84,7 @@ if (-not $MSBuildExe) {
 }
 $MSBuildExe = ($MSBuildExe.ToString()).Trim().Trim('"')
 
-if ($Publish) {
+if ($Publish -or $GenerateScript) {
     $SqlPackageExe = Resolve-SqlPackage -HintPath $SqlPackagePath
     if (-not $SqlPackageExe) {
         Write-Error "SqlPackage.exe not found. Install SQL Server Data Tools / SqlPackage or pass -SqlPackagePath 'C:\Path\To\SqlPackage.exe'."
@@ -93,7 +94,7 @@ if ($Publish) {
 }
 
 Write-Host "Using MSBuild: $MSBuildExe"
-if ($Publish) { Write-Host "Using SqlPackage: $SqlPackageExe" }
+if ($Publish -or $GenerateScript) { Write-Host "Using SqlPackage: $SqlPackageExe" }
 
 # Step 1: Build (use Start-Process to avoid quoting issues)
 Write-Host "Building SQL project: $SqlProjPath" -ForegroundColor Cyan
@@ -112,7 +113,31 @@ if (-not $dacpac) {
 }
 Write-Host "Found DACPAC: $($dacpac.FullName)" -ForegroundColor Green
 
-# Step 3: Publish (optional)
+# Step 3: Generate script (optional)
+if ($GenerateScript) {
+    $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $scriptFileName = "LinaDb_${Profile}_${timestamp}.sql"
+    $scriptPath = Join-Path $ScriptDir $scriptFileName
+
+    Write-Host "Generating deployment script: $scriptFileName" -ForegroundColor Cyan
+
+    $scriptArgs = @(
+        "/Action:Script",
+        "/SourceFile:$($dacpac.FullName)",
+        "/Profile:$PublishProfile",
+        "/OutputPath:$scriptPath"
+    )
+
+    $procScript = Start-Process -FilePath $SqlPackageExe -ArgumentList $scriptArgs -NoNewWindow -PassThru -Wait
+    if ($procScript.ExitCode -eq 0) {
+        Write-Host "Script generated successfully: $scriptPath" -ForegroundColor Green
+    } else {
+        Write-Error "Script generation failed with exit code $($procScript.ExitCode)"
+        exit $procScript.ExitCode
+    }
+}
+
+# Step 4: Publish (optional)
 if ($Publish) {
     if ($Profile -eq "Production" -and -not $Force) {
         $answer = Read-Host "You are about to publish to PRODUCTION using profile: $PublishProfile. Continue? (y/N)"
@@ -132,5 +157,7 @@ if ($Publish) {
         exit $proc2.ExitCode
     }
 } else {
-    Write-Host "Skipping publish step (use -Publish to enable)." -ForegroundColor Yellow
+    if (-not $GenerateScript) {
+        Write-Host "Skipping publish step (use -Publish to enable)." -ForegroundColor Yellow
+    }
 }

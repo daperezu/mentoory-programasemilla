@@ -62,13 +62,17 @@ DECLARE @DemoProjectId BIGINT = (SELECT TOP 1 Id FROM [businessincubators].[Proj
 
 IF @DemoProjectId IS NULL
 BEGIN
-    INSERT INTO [businessincubators].[Projects] 
-        (BusinessIncubatorId, ExternalId, Name, Description, [Key], Status, CreatedAt, CreatedBy, IsDeleted)
-    VALUES 
-        (@IncubatorId, NEWID(), 'Proyecto Demo Innovación', 'Proyecto demo de innovación tecnológica', 'INNOV-DEMO', 1, GETUTCDATE(), @CoordinatorUserId, 0);
-    
+    INSERT INTO [businessincubators].[Projects]
+        (BusinessIncubatorId, ExternalId, Name, Description, [Key],
+         Latitude, Longitude, Geohash, LocationName, LocationAddress,
+         Status, CreatedAt, CreatedBy, IsDeleted)
+    VALUES
+        (@IncubatorId, NEWID(), 'Proyecto Demo Innovación', 'Proyecto demo de innovación tecnológica', 'INNOV-DEMO',
+         9.928100, -84.090700, 'd1rgy8bpbpbp', 'San José Centro', 'Avenida Central, San José, Costa Rica',
+         1, GETUTCDATE(), @CoordinatorUserId, 0);
+
     SET @DemoProjectId = SCOPE_IDENTITY();
-    PRINT '[004.SeedStarterData.sql] Created demo project';
+    PRINT '[004.SeedStarterData.sql] Created demo project with geolocation (San José Centro)';
 END
 ELSE
 BEGIN

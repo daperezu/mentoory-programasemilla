@@ -39,6 +39,20 @@ public partial class Project : SoftDeletableEntity
 
     public ProjectStatus Status { get; private set; }
 
+    // Geolocation properties
+    public decimal? Latitude { get; private set; }
+    public decimal? Longitude { get; private set; }
+    public string? Geohash { get; private set; }
+    public string? GeohashPrefix5 => Geohash?.Length >= 5 ? Geohash.Substring(0, 5) : null;
+    public string? GeohashPrefix6 => Geohash?.Length >= 6 ? Geohash.Substring(0, 6) : null;
+    public string? LocationName { get; private set; }
+    public string? LocationAddress { get; private set; }
+    public DateTime? LocationLastUpdated { get; private set; }
+
+    // Hero image properties for public homepage (REQ-011)
+    public string? HeroImageBlobId { get; private set; }
+    public bool HasHeroImage { get; private set; }
+
     public IReadOnlyCollection<ProjectBlock> ProjectBlocks => _projectBlocks.AsReadOnly();
 
     public IReadOnlyCollection<ProjectInvitation> ProjectInvitations => _projectInvitations.AsReadOnly();
@@ -92,6 +106,85 @@ public partial class Project : SoftDeletableEntity
     }
 
     public bool HasSourceForm() => SourceFormId.HasValue;
+
+    public void UpdateLocation(
+        decimal latitude,
+        decimal longitude,
+        string geohash,
+        string? locationName,
+        string? locationAddress,
+        DateTime updatedAt,
+        IAuditContext auditContext)
+    {
+        EnsureNotDeleted();
+
+        // Validate latitude range (-90 to 90)
+        if (latitude < -90 || latitude > 90)
+        {
+            throw new ArgumentException("La latitud debe estar entre -90 y 90 grados.", nameof(latitude));
+        }
+
+        // Validate longitude range (-180 to 180)
+        if (longitude < -180 || longitude > 180)
+        {
+            throw new ArgumentException("La longitud debe estar entre -180 y 180 grados.", nameof(longitude));
+        }
+
+        if (string.IsNullOrWhiteSpace(geohash))
+        {
+            throw new ArgumentException("El geohash es requerido.", nameof(geohash));
+        }
+
+        Latitude = latitude;
+        Longitude = longitude;
+        Geohash = geohash;
+        LocationName = locationName?.Trim();
+        LocationAddress = locationAddress?.Trim();
+        LocationLastUpdated = updatedAt;
+
+        SetUpdated(auditContext);
+    }
+
+    public void ClearLocation(IAuditContext auditContext)
+    {
+        EnsureNotDeleted();
+
+        Latitude = null;
+        Longitude = null;
+        Geohash = null;
+        LocationName = null;
+        LocationAddress = null;
+        LocationLastUpdated = null;
+
+        SetUpdated(auditContext);
+    }
+
+    public bool HasLocation() => Latitude.HasValue && Longitude.HasValue;
+
+    public void SetHeroImage(string heroImageBlobId, IAuditContext auditContext)
+    {
+        EnsureNotDeleted();
+
+        if (string.IsNullOrWhiteSpace(heroImageBlobId))
+        {
+            throw new ArgumentException("Hero image blob ID cannot be null or empty.", nameof(heroImageBlobId));
+        }
+
+        HeroImageBlobId = heroImageBlobId;
+        HasHeroImage = true;
+
+        SetUpdated(auditContext);
+    }
+
+    public void RemoveHeroImage(IAuditContext auditContext)
+    {
+        EnsureNotDeleted();
+
+        HeroImageBlobId = null;
+        HasHeroImage = false;
+
+        SetUpdated(auditContext);
+    }
 
     public ProjectBlock AddBlock(string name, long? sourceBlockId, IAuditContext auditContext)
     {

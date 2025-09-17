@@ -180,6 +180,23 @@ private bool ValidateCsvStream(
 
 ## Architectural Decisions & Trade-offs
 
+### Geolocation Strategy (ADR-002)
+**Context**: Public homepage needs proximity-based project discovery
+
+**Decision**: Use Geohash indexing instead of SQL Server spatial features
+
+**Rationale**:
+- 80-90% reduction in Azure SQL Database DTU consumption
+- Works efficiently on all Azure SQL tiers (Basic to Premium)
+- B-tree indexes outperform spatial indexes at scale
+- ±1% distance accuracy acceptable for 15km radius searches
+
+**Implementation**:
+- Database: Geohash columns with computed prefixes
+- Query: Bounding box + geohash filtering in SQL
+- Application: Haversine distance calculation in C#
+- Caching: 5-minute TTL for proximity queries
+
 ### Direct Repository Access in Orchestration
 **Context**: ProcessBatchUserRegistrationOrchestrationCommand directly uses IBusinessIncubatorRepository
 

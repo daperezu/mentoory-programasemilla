@@ -1,0 +1,327 @@
+@{
+    ViewData["Title"] = "Panel del Observador";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3">
+                <i class="fas fa-binoculars me-2"></i>Panel del Observador
+            </h1>
+            <p class="text-muted">Gestiona los proyectos que sigues y descubre nuevas oportunidades.</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-muted mb-2">Proyectos Seguidos</h6>
+                            <h3 class="mb-0" id="followedCount">0</h3>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-star fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-muted mb-2">Proyectos Cercanos</h6>
+                            <h3 class="mb-0" id="nearbyCount">0</h3>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-map-marker-alt fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-muted mb-2">Nuevos Esta Semana</h6>
+                            <h3 class="mb-0" id="newCount">0</h3>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-sparkles fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="text-muted mb-2">Próximas Convocatorias</h6>
+                            <h3 class="mb-0" id="upcomingCount">0</h3>
+                        </div>
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-calendar-alt fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Interests Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star me-2"></i>Proyectos que Sigues
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="myInterestsContainer" class="row">
+                        <div class="col-12 text-center py-5">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Cargando...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nearby Projects Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-map me-2"></i>Proyectos Cercanos
+                        </h5>
+                        <button class="btn btn-sm btn-outline-primary" id="btnEnableLocation">
+                            <i class="fas fa-location-arrow me-2"></i>Actualizar Ubicación
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="nearbyProjectsContainer" class="row">
+                        <div class="col-12 text-center py-5">
+                            <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Comparte tu ubicación para ver proyectos cercanos</p>
+                            <button class="btn btn-primary" onclick="requestLocation()">
+                                <i class="fas fa-location-arrow me-2"></i>Compartir Ubicación
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMyInterests();
+            checkLocationAndLoadNearby();
+        });
+
+        async function loadMyInterests() {
+            try {
+                const response = await fetch('/Observer/Projects/GetMyInterests');
+                if (response.ok) {
+                    const interests = await response.json();
+                    displayMyInterests(interests);
+                    document.getElementById('followedCount').textContent = interests.length;
+                }
+            } catch (error) {
+                console.error('Error loading interests:', error);
+            }
+        }
+
+        function displayMyInterests(interests) {
+            const container = document.getElementById('myInterestsContainer');
+            
+            if (interests.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Aún no sigues ningún proyecto</p>
+                        <a href="/Public/Projects" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Explorar Proyectos
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = interests.map(interest => `
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">${interest.projectName}</h6>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    Siguiendo desde: ${new Date(interest.interestedAt).toLocaleDateString('es-CR')}
+                                </small>
+                            </p>
+                            <button class="btn btn-sm btn-outline-danger" onclick="removeInterest('${interest.projectId}')">
+                                <i class="fas fa-times me-1"></i>Dejar de seguir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function removeInterest(projectId) {
+            if (!confirm('¿Estás seguro de que quieres dejar de seguir este proyecto?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/Observer/Projects/RemoveInterest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({ projectId: projectId })
+                });
+
+                if (response.ok) {
+                    loadMyInterests();
+                    showToast('Proyecto removido de tu lista', 'success');
+                }
+            } catch (error) {
+                console.error('Error removing interest:', error);
+                showToast('Error al remover el proyecto', 'danger');
+            }
+        }
+
+        function checkLocationAndLoadNearby() {
+            if (navigator.geolocation) {
+                const hasConsent = localStorage.getItem('locationConsent') === 'true';
+                if (hasConsent) {
+                    requestLocation();
+                }
+            }
+        }
+
+        function requestLocation() {
+            if (!navigator.geolocation) {
+                showToast('Tu navegador no soporta geolocalización', 'warning');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    localStorage.setItem('locationConsent', 'true');
+                    loadNearbyProjects(position.coords.latitude, position.coords.longitude);
+                },
+                error => {
+                    console.error('Location error:', error);
+                    showToast('No se pudo obtener tu ubicación', 'warning');
+                }
+            );
+        }
+
+        async function loadNearbyProjects(lat, lng) {
+            try {
+                const response = await fetch('/Public/Projects/GetNearbyProjects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        latitude: lat,
+                        longitude: lng,
+                        radiusKm: 15
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayNearbyProjects(data.items || []);
+                    document.getElementById('nearbyCount').textContent = (data.items || []).length;
+                }
+            } catch (error) {
+                console.error('Error loading nearby projects:', error);
+            }
+        }
+
+        function displayNearbyProjects(projects) {
+            const container = document.getElementById('nearbyProjectsContainer');
+            
+            if (projects.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No hay proyectos cercanos en tu área</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = projects.map(project => `
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-title">${project.name}</h6>
+                            <p class="card-text">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                ${project.distanceKm ? project.distanceKm.toFixed(1) + ' km' : 'Ubicación no disponible'}
+                            </p>
+                            <button class="btn btn-sm btn-primary" onclick="expressInterest('${project.externalId}')">
+                                <i class="fas fa-star me-1"></i>Seguir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function expressInterest(projectId) {
+            try {
+                const response = await fetch('/Observer/Projects/RecordInterest', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('[name="__RequestVerificationToken"]').value
+                    },
+                    body: JSON.stringify({
+                        projectId: projectId,
+                        interestType: 'Interest'
+                    })
+                });
+
+                if (response.ok) {
+                    loadMyInterests();
+                    showToast('Ahora sigues este proyecto', 'success');
+                } else {
+                    showToast('Error al seguir el proyecto', 'danger');
+                }
+            } catch (error) {
+                console.error('Error expressing interest:', error);
+                showToast('Error al seguir el proyecto', 'danger');
+            }
+        }
+
+        function showToast(message, type) {
+            // Using the global showToast function from the Phoenix template
+            if (typeof window.showToast === 'function') {
+                window.showToast(message, type);
+            } else {
+                console.log(`[${type}] ${message}`);
+            }
+        }
+    </script>
+}

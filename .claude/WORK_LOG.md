@@ -1,144 +1,92 @@
 # Work Log
 
-## 2025-01-12 - REQ-011 Dashboard Performance Optimization Implementation
+## 2025-01-16 - REQ-012 Completion: Phoenix Homepage Redesign
 
-### Context
-Implemented comprehensive performance optimization for Coordination Dashboard reducing load time from 5-10 seconds to <500ms by eliminating N+1 queries and implementing efficient data loading patterns.
+### Achievement Summary ✅
+Successfully completed all 5 phases of REQ-012 Phoenix Homepage Redesign:
+- Phase 1: Backend Enhancements - Created time-based discovery queries
+- Phase 2: Phoenix Layout Integration - Updated public layout with Phoenix navbar
+- Phase 3: Homepage Redesign - Implemented dual-mode discovery with Phoenix components
+- Phase 4: Project Details Page - Created event-detail styled project pages
+- Phase 5: Testing & Polish - Validated both discovery modes and responsive design
+
+### Key Features Delivered
+1. **Dual Discovery Modes**:
+   - Time-based (default): Shows projects by start date without location permission
+   - Location-based (optional): Proximity sorting when user shares location
+
+2. **Phoenix Components Integration**:
+   - Gradient hero sections with animations
+   - Card components with hover effects
+   - Timeline component for process steps
+   - Testimonial cards with avatar initials
+   - Event-detail layout for project pages
+
+3. **Technical Improvements**:
+   - Clean architecture maintained throughout
+   - Zero warnings policy enforced
+   - All UI text in Spanish
+   - Backwards compatibility with REQ-011 geolocation
+
+### Files Documentation Updated
+- Moved REQ-012 from active to completed requirements
+- Updated CLAUDE.md to reflect completion
+- Updated CURRENT_SESSION.md with full completion summary
+- Added comprehensive completion entry to WORK_LOG.md
+
+### Deployment Ready
+- Database seed scripts tested and working
+- Clean build with 0 errors, 0 warnings
+- Ready for PR from `feature/home-redesign` to `main`
+
+---
+
+## 2025-01-16 - EF Core Fix & Project Details Page Implementation
 
 ### Completed
 
-1. **Created Optimized Query Handler**:
-   - `GetCoordinatorDashboardCompleteDataQuery` - Single query for all dashboard data
-   - `GetCoordinatorDashboardCompleteDataQueryHandler` - Uses IMemoryCache for 5-min caching
-   - All DTOs for complete dashboard data structure
-
-2. **Eliminated N+1 User Queries**:
-   - `GetUsersByIdsQuery` - Batch loads users by IDs
-   - `GetUsersByIdsQueryHandler` - Individual user caching + batch loading
-   - Updated `IAuthRepository` with `GetUsersByIdsAsync` method
-
-3. **Optimized Repository Method**:
-   - `GetProjectDashboardDataAsync` - Single LINQ query with DB-level aggregation
-   - Fixed to use ITimeProvider pattern (receives currentTime from handler)
-   - Uses EF.Functions for date calculations
-
-4. **Updated DashboardController**:
-   - Now calls single `GetCoordinatorDashboardCompleteDataQuery`
-   - Stores result in `HttpContext.Items` for widget endpoints
-   - Reduced from 20+ queries to 2-3 queries total
-
-5. **Frontend Performance**:
-   - `dashboard-performance.js` - Progressive widget loading by priority
-   - Client-side caching with sessionStorage (5-min TTL)
-   - Skeleton loaders for better perceived performance
-   - `dashboard-performance.css` - Performance UI styles
-
-### Key Decisions & Corrections
-
-1. **Removed IRequestScopedCache**:
-   - Unnecessary in modular monolith architecture
-   - HttpContext.Items already provides request-scoped storage
-   - IMemoryCache in handlers sufficient for cross-request caching
-
-2. **Removed SQL Index Script**:
-   - System not in production - no migration scripts needed
-   - SQL Database Project handles schema directly
-   - Indexes can be added to table definitions if needed
-
-3. **ITimeProvider Pattern**:
+1. **Fixed EF Core Include Error for Private Collections**:
+   - Issue: `InvalidIncludePathError` when accessing `_projectStages` and `_projectUsers`
+   - Root cause: `ProjectStages` property explicitly ignored in DbContext, relationship configured from ProjectStage side
+   - Solution in `BusinessIncubatorRepository.cs`:
    ```csharp
-   // Repository method receives time from handler
-   Task<DashboardProjectData?> GetProjectDashboardDataAsync(
-       long projectId,
-       DateTime currentTime, // Passed from handler's ITimeProvider
-       DateTime? fromDate = null)
+   .Include("_projectStages")  // Private field (public property is ignored)
+   .Include("ProjectUsers")    // Navigation with backing field
    ```
 
-### Files Modified
-- `BusinessIncubator.Application/Dashboard/Queries/GetCoordinatorDashboardCompleteData/*`
-- `Auth.Application/Queries/GetUsersByIds/*`
-- `BusinessIncubator.Infrastructure/Persistence/Repositories/BusinessIncubatorRepository.cs`
-- `Web/Areas/Coordination/Controllers/DashboardController.cs`
-- `Web/wwwroot/js/coordination/dashboard-performance.js`
-- `Web/wwwroot/css/dashboard-performance.css`
+2. **Implemented Project Details Page (REQ-012 Phase 4)**:
+   - Created query/handler/DTO pattern:
+     - `GetProjectDetailsQuery.cs` - Accepts Guid ExternalId
+     - `ProjectDetailDto.cs` - Comprehensive project information
+     - `GetProjectDetailsQueryHandler.cs` - Uses `GetProjectWithStagesByExternalIdAsync`
+   - Updated `ProjectsController.Details` action with error handling
+   - Created Phoenix-styled `Details.cshtml` view with:
+     - Hero image section with overlay gradient
+     - Metadata badges (status, dates, location, participants)
+     - Stage timeline with visual current/active indicators
+     - Business incubator information card
+     - Interest registration CTA
 
-### Performance Improvements
-- **Query Reduction**: 20+ → 2-3 queries
-- **Expected Load Time**: 5-10s → <500ms
-- **Caching Strategy**: Memory cache (5 min) + client cache (sessionStorage)
+### Key Decisions
+
+- **Repository Methods**: Used `GetProjectWithStagesByExternalIdAsync(Guid)` not `GetProjectWithStagesAsync(long)`
+- **Null Checks**: Changed to `is null` pattern for nullable reference compliance
+- **Enum Values**: Used actual `ProjectStageType` values: `Invitation`, `InitialFormCollection`, `Mentoring`
+- **DTO Reuse**: Used existing `ProjectStageDto` from `LatestProjectsDto.cs` to avoid duplication
+
+### Problems Encountered & Solutions
+
+| Problem | Solution |
+|---------|----------|
+| Include path error for private fields | Use string-based Include with correct names |
+| Method signature mismatch | Found correct method accepting Guid |
+| Nullable reference warnings | Changed to `is null` pattern |
+| Wrong enum values | Used actual domain enum values |
 
 ### Build Status
-✅ Clean build - 0 errors, 0 warnings (all StyleCop rules passing)
+✅ **Clean build achieved** - 0 errors, 0 warnings
 
-## 2025-01-12 - Fixed Dashboard Performance Query Issue
-
-### Context
-Fixed ArgumentException in `GetProjectDashboardDataAsync` caused by complex LINQ query that Entity Framework couldn't translate to SQL.
-
-### Issue
-- Error: `Expression of type 'System.Linq.IQueryable'1[System.Double]' cannot be used for parameter`
-- Complex LINQ query with Union operations and EF.Functions couldn't be translated
-
-### Solution
-1. **Simplified Query Approach**:
-   - Load project with related data using Include
-   - Process aggregations in memory instead of complex SQL translation
-   - Separate incubator name query
-
-2. **Key Changes**:
-   - Replaced complex single LINQ query with simpler approach
-   - Fixed null reference checks (use `is null` pattern)
-   - Fixed DateTime comparison issues
-   - Removed trailing whitespace (StyleCop compliance)
-
-### Performance Impact
-- Still maintains 2-3 query approach (project data + incubator name)
-- Data processing moved to application layer but with minimal impact
-- Caching still effective at 5-minute intervals
-
-## 2025-01-12 - Dashboard Performance Further Optimization
-
-### Context
-Dashboard still taking 4s to load despite initial optimizations. Implemented more aggressive query optimization.
-
-### Issues Found
-- Repository was using `.Include()` to load ALL ProjectUsers and FormSubmissions
-- This loaded potentially hundreds of records into memory unnecessarily
-- Complex LINQ queries with Union operations couldn't be translated to SQL
-
-### Solution Implemented
-
-1. **Replaced Include() with Projection Queries**:
-   - Use `.Select()` to fetch only needed data
-   - Aggregate at database level using `GroupBy` and `Count()`
-   - Separate queries for different data sets (users, forms, activities)
-
-2. **Query Breakdown** (now 7-8 focused queries instead of 1 massive query):
-   - Project basic info query
-   - User statistics aggregation
-   - Form statistics aggregation
-   - Pending reviews (top 10)
-   - Recent form activities
-   - Recent user activities
-   - All user IDs for batch loading
-   - Pending invitations count
-
-3. **Added Performance Logging**:
-   - Log repository query time
-   - Log user batch loading time
-   - Track total dashboard load time
-
-4. **Database Indexes Added**:
-   - `IX_ProjectUsers_Dashboard` for user queries
-   - `IX_ProjectFormSubmissions_ProjectId_Status` for form statistics
-   - `IX_ProjectFormSubmissions_Dashboard` for general dashboard queries
-
-### Key Changes from Previous Approach
-- **Before**: Load entire entities with Include(), process in memory
-- **After**: Use projections to load only needed fields, aggregate in SQL
-- **Result**: Reduced data transfer and memory usage significantly
-
-### Expected Performance
-- Target: <500ms load time
-- Actual queries: 7-8 small focused queries vs 1 large query with includes
-- Memory usage: Dramatically reduced (only loading aggregated data)
+### Next Session
+- Test runtime functionality with seeded data
+- Verify both discovery modes work
+- Complete Phase 5: Testing & Polish

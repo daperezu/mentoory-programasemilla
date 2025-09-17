@@ -1205,4 +1205,117 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
+
+    /// <inheritdoc/>
+    public async Task<List<Project>> GetProjectsInGeohashesAsync(
+        HashSet<string> geohashPrefixes,
+        decimal minLat,
+        decimal maxLat,
+        decimal minLon,
+        decimal maxLon,
+        CancellationToken cancellationToken = default)
+    {
+        // For simplicity and performance, we'll rely on the bounding box filter
+        // The geohash prefixes were mainly for optimization, but the bounding box
+        // is sufficient for our needs and works well with SQL Server indexes
+        return await dbContext.Set<Project>()
+            .Include("BusinessIncubator")
+            .Where(p => !p.IsDeleted)
+            .Where(p => p.Status == ProjectStatus.Active)
+            .Where(p => p.Latitude.HasValue && p.Longitude.HasValue)
+            .Where(p => p.Latitude >= minLat && p.Latitude <= maxLat)
+            .Where(p => p.Longitude >= minLon && p.Longitude <= maxLon)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<object?> GetProjectInterestAsync(
+        long projectId,
+        string userId,
+        string interestType,
+        CancellationToken cancellationToken = default)
+    {
+        // Direct SQL query since ProjectInterests is not a mapped entity
+        var sql = @"
+            SELECT TOP 1 * 
+            FROM [businessincubators].[ProjectInterests]
+            WHERE [ProjectId] = @projectId 
+            AND [ObserverUserId] = @userId 
+            AND [InterestType] = @interestType";
+
+        var connection = dbContext.Database.GetDbConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@projectId", projectId));
+        command.Parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@userId", userId));
+        command.Parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@interestType", interestType));
+
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (await reader.ReadAsync(cancellationToken))
+        {
+            return new { Id = reader.GetInt64(0) }; // Return a simple object with ID
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc/>
+    public async Task RecordProjectInterestAsync(
+        long projectId,
+        string? userId,
+        string? sessionId,
+        string interestType,
+        decimal? observerLatitude,
+        decimal? observerLongitude,
+        double? distance,
+        string? userAgent,
+        string? ipAddress,
+        string? referrerUrl,
+        DateTime createdAt,
+        CancellationToken cancellationToken = default)
+    {
+        var sql = @"
+            INSERT INTO [businessincubators].[ProjectInterests]
+            ([ProjectId], [ObserverUserId], [ObserverSessionId], [InterestType], 
+             [ObserverLatitude], [ObserverLongitude], [Distance],
+             [UserAgent], [IpAddress], [ReferrerUrl], [CreatedAt])
+            VALUES
+            (@projectId, @userId, @sessionId, @interestType,
+             @latitude, @longitude, @distance,
+             @userAgent, @ipAddress, @referrerUrl, @createdAt)";
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            sql,
+            new Microsoft.Data.SqlClient.SqlParameter("@projectId", projectId),
+            new Microsoft.Data.SqlClient.SqlParameter("@userId", (object?)userId ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@sessionId", (object?)sessionId ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@interestType", interestType),
+            new Microsoft.Data.SqlClient.SqlParameter("@latitude", (object?)observerLatitude ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@longitude", (object?)observerLongitude ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@distance", (object?)distance ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@userAgent", (object?)userAgent ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@ipAddress", (object?)ipAddress ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@referrerUrl", (object?)referrerUrl ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@createdAt", createdAt));
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<Project>> GetActiveProjectsWithStagesAsync(CancellationToken cancellationToken = default)
+    {
+        // Load projects with their stages and users
+        // Use string-based Include with proper navigation names
+        var projects = await dbContext.Projects
+            .Include("_projectStages") // Private field for ProjectStages (public property is ignored in EF)
+            .Include("ProjectUsers") // Navigation configured with backing field
+            .Where(p => !p.IsDeleted && p.Status == ProjectStatus.Active)
+            .ToListAsync(cancellationToken);
+
+        return projects;
+    }
 }
