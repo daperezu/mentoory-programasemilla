@@ -40,6 +40,20 @@ public class AuthRepository(UserManager<User> userManager, RoleManager<IdentityR
         return users.ToDictionary(u => u.Email!, u => u);
     }
 
+    public async Task<List<User>> GetUsersByIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken = default)
+    {
+        var idList = userIds.ToList();
+        if (!idList.Any())
+        {
+            return new List<User>();
+        }
+
+        return await userManager.Users
+            .Where(u => idList.Contains(u.Id))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<(bool Success, IEnumerable<string> Errors)> CreateUserAsync(User user, string password, CancellationToken cancellationToken = default)
     {
         var result = await userManager.CreateAsync(user, password);

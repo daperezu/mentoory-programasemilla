@@ -1,4 +1,5 @@
-﻿using LinaSys.Shared.Domain.SeedWork;
+﻿using LinaSys.BusinessIncubator.Domain.DTOs;
+using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.BusinessIncubator.Domain.Repositories;
 
@@ -395,6 +396,20 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The Project entity with its users if found, otherwise null.</returns>
     Task<Aggregates.BusinessIncubator.Project?> GetProjectWithUsersAsync(long projectId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets optimized dashboard data for a project in a single query.
+    /// </summary>
+    /// <param name="projectId">The project ID.</param>
+    /// <param name="currentTime">The current UTC time.</param>
+    /// <param name="fromDate">Optional date filter for recent activity.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dashboard project data with all statistics calculated at database level.</returns>
+    Task<DashboardProjectData?> GetProjectDashboardDataAsync(
+        long projectId,
+        DateTime currentTime,
+        DateTime? fromDate = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a project with its stages by external ID.
