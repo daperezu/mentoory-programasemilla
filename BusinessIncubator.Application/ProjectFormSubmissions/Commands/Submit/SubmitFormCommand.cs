@@ -31,4 +31,10 @@ public sealed record SubmitFormCommand : IBaseRequest
     /// Gets the user agent of the submitter.
     /// </summary>
     public string UserAgent { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Gets the user ID of who actually submitted (for on-behalf submissions).
+    /// Null if the participant submitted themselves.
+    /// </summary>
+    public string? SubmittedByUserId { get; init; }
 }

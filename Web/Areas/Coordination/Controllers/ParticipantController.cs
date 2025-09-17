@@ -47,6 +47,7 @@ public class ParticipantController(
             {
                 ProjectId = context.ProjectId!.Value,
                 ProjectName = project.Name,
+                ProjectExternalId = project.ExternalId,
                 IncubatorId = context.IncubatorId!.Value,
                 IncubatorName = context.IncubatorName ?? string.Empty,
             };
@@ -357,7 +358,7 @@ public class ParticipantController(
     }
 
     [HttpGet]
-    public IActionResult FillFormOnBehalf(Guid projectId, string participantUserId)
+    public async Task<IActionResult> FillFormOnBehalf([FromQuery] Guid projectId, [FromQuery] string participantUserId)
     {
         try
         {
@@ -372,17 +373,25 @@ public class ParticipantController(
             // Verify the coordinator has access to this project
             // The DemandCurrentUserContext already validates this
 
+            // Get the incubator external ID
+            var incubatorQuery = new LinaSys.BusinessIncubator.Application.Queries.GetIncubatorByIdQuery(context.IncubatorId!.Value);
+            var incubatorResult = await Mediator.SendAndLogIfFailureAsync(incubatorQuery);
+
+            if (!incubatorResult.IsSuccess || incubatorResult.Value == null)
+            {
+                this.SetErrorToast("No se pudo obtener la información de la incubadora.");
+                return RedirectToAction("Index");
+            }
+
+            var incubatorExternalId = incubatorResult.Value.ExternalId;
+
             // TODO: Verify participant exists and has access to this project
             // This will be done in the ParticipantForm controller
 
             // Redirect to the participant form with on-behalf parameters
-            // The form will be loaded with the participant's data but filled by the coordinator
-            return RedirectToAction("ParticipantForm", "Projects", new
-            {
-                area = "BusinessIncubators",
-                externalId = projectId,
-                onBehalfOfUserId = participantUserId
-            });
+            // Using the correct URL format for the ParticipantFormController
+            var url = $"/BusinessIncubators/{incubatorExternalId}/Projects/{projectId}/ParticipantForm?onBehalfOfUserId={participantUserId}";
+            return Redirect(url);
         }
         catch (UnauthorizedAccessException)
         {
@@ -412,6 +421,11 @@ public class CoordinatorParticipantManagementViewModel
     /// Gets or sets the project name.
     /// </summary>
     public string ProjectName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the project external ID.
+    /// </summary>
+    public Guid ProjectExternalId { get; set; }
 
     /// <summary>
     /// Gets or sets the incubator ID.

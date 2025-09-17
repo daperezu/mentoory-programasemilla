@@ -105,17 +105,34 @@ public class UserContextAuthorizationFilter(
             }
         }
 
-        // Try to get from action arguments
+        // Try to get from query string
+        if (context.HttpContext.Request.Query.TryGetValue(parameterName, out var queryValue))
+        {
+            var queryStringValue = queryValue.FirstOrDefault();
+            if (!string.IsNullOrEmpty(queryStringValue))
+            {
+                if (TryConvertValue<T>(queryStringValue, out var convertedQueryValue))
+                {
+                    return convertedQueryValue;
+                }
+            }
+        }
+
+        // Try to get from action arguments (for model binding scenarios)
         if (context.ActionDescriptor is Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor actionDescriptor)
         {
             var parameter = actionDescriptor.Parameters
                 .FirstOrDefault(p => string.Equals(p.Name, parameterName, StringComparison.OrdinalIgnoreCase));
 
-            if (parameter != null && context.HttpContext.Request.RouteValues.TryGetValue(parameterName, out var value))
+            if (parameter != null)
             {
-                if (TryConvertValue<T>(value, out var convertedValue))
+                // Check if it's in the route values (already checked above, but being thorough)
+                if (context.HttpContext.Request.RouteValues.TryGetValue(parameterName, out var value))
                 {
-                    return convertedValue;
+                    if (TryConvertValue<T>(value, out var convertedValue))
+                    {
+                        return convertedValue;
+                    }
                 }
             }
         }

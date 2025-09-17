@@ -298,12 +298,33 @@ public class ParticipantFormController(
             return BadRequest(new { errors = new[] { "Debe guardar el formulario antes de enviarlo." } });
         }
 
-        // Verify user owns this submission
+        // Determine participant user ID based on whether this is on-behalf
+        var participantUserId = model.IsOnBehalf && !string.IsNullOrEmpty(model.ParticipantUserId)
+            ? model.ParticipantUserId
+            : userId;
+
+        // If on-behalf mode, verify coordinator permissions
+        if (model.IsOnBehalf)
+        {
+            var coordinatorQuery = new LinaSys.BusinessIncubator.Application.Queries.IsUserProjectCoordinatorQuery(
+                projectExternalId, userId);
+            var coordinatorResult = await MediatorExecutor.SendAndLogIfFailureAsync(coordinatorQuery);
+
+            if (!coordinatorResult.IsSuccess || !coordinatorResult.Value)
+            {
+                logger.LogWarning("User {UserId} attempted to submit on behalf without coordinator permissions", userId);
+                return Forbid();
+            }
+        }
+
+        // Verify submission ownership using the correct participant user ID
         var ownershipQuery = new LinaSys.BusinessIncubator.Application.Queries.VerifySubmissionOwnershipQuery(
-            model.ProjectId, model.SubmissionId, userId);
+            model.ProjectId, model.SubmissionId, participantUserId);
         var ownershipResult = await MediatorExecutor.SendAndLogIfFailureAsync(ownershipQuery);
         if (!ownershipResult.IsSuccess || !ownershipResult.Value)
         {
+            logger.LogWarning("Ownership verification failed for submission {SubmissionId} and participant {ParticipantUserId}",
+                model.SubmissionId, participantUserId);
             return Forbid();
         }
 
@@ -315,9 +336,10 @@ public class ParticipantFormController(
         {
             ProjectId = model.ProjectId,
             SubmissionId = model.SubmissionId,
-            ParticipantUserId = userId,
+            ParticipantUserId = participantUserId,  // Use the correct participant ID
             IpAddress = ipAddress,
-            UserAgent = userAgent
+            UserAgent = userAgent,
+            SubmittedByUserId = model.IsOnBehalf ? userId : null // Track who actually submitted
         };
 
         var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
@@ -327,11 +349,26 @@ public class ParticipantFormController(
             return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al procesar la solicitud."] });
         }
 
+        // Determine redirect URL based on submission mode using ApplicationUrlService
+        string redirectUrl;
+        if (model.IsOnBehalf)
+        {
+            // Coordinator submitted on behalf - redirect back to participant management
+            redirectUrl = ApplicationUrlService.GetCoordinatorParticipantManagementUrl();
+        }
+        else
+        {
+            // Participant submitted their own form - redirect to their dashboard
+            redirectUrl = ApplicationUrlService.GetParticipantDashboardUrl();
+        }
+
         return Ok(new
         {
             success = true,
-            message = "Formulario enviado exitosamente. Recibirá una notificación cuando sea revisado.",
-            redirectUrl = Url.Action("Index", "Dashboard", new { area = "Participant" })
+            message = model.IsOnBehalf
+                ? "Formulario enviado exitosamente en nombre del participante."
+                : "Formulario enviado exitosamente. Recibirá una notificación cuando sea revisado.",
+            redirectUrl = redirectUrl
         });
     }
 
