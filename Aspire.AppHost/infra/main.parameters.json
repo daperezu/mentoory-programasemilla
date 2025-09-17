@@ -5,6 +5,15 @@
       "principalId": {
         "value": "${AZURE_PRINCIPAL_ID}"
       },
+      "googleanalytics_enabled": {
+        "value": "${AZURE_GOOGLEANALYTICS_ENABLED}"
+      },
+      "googleanalytics_measurementid": {
+        "value": "${AZURE_GOOGLEANALYTICS_MEASUREMENTID}"
+      },
+      "googlemaps_apikey": {
+        "value": "${AZURE_GOOGLEMAPS_APIKEY}"
+      },
       "mailgun_apikey": {
         "value": "${AZURE_MAILGUN_APIKEY}"
       },
