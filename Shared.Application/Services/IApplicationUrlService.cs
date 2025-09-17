@@ -92,4 +92,16 @@ public interface IApplicationUrlService
     /// </summary>
     /// <returns>The absolute URL for the logout page.</returns>
     string GetLogoutUrl();
+
+    /// <summary>
+    /// Gets the URL for the coordinator participant management page.
+    /// </summary>
+    /// <returns>The absolute URL for the participant management page.</returns>
+    string GetCoordinatorParticipantManagementUrl();
+
+    /// <summary>
+    /// Gets the URL for the participant dashboard.
+    /// </summary>
+    /// <returns>The absolute URL for the participant dashboard.</returns>
+    string GetParticipantDashboardUrl();
 }

@@ -32,6 +32,11 @@ public class ProjectWithParticipantsDto
     public string Key { get; set; } = string.Empty;
 
     /// <summary>
+    /// Gets or sets the project external identifier.
+    /// </summary>
+    public Guid ExternalId { get; set; }
+
+    /// <summary>
     /// Gets or sets the list of project users.
     /// </summary>
     public List<ProjectUserDto> ProjectUsers { get; set; } = [];
@@ -108,6 +113,7 @@ public class GetProjectWithParticipantsQueryHandler(IBusinessIncubatorRepository
             Id = project.Id,
             Name = project.Name,
             Key = project.Key,
+            ExternalId = project.ExternalId,
             ProjectUsers = project.ProjectUsers?.Select(u => new ProjectUserDto
             {
                 UserId = u.UserId,

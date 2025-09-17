@@ -21,4 +21,14 @@ public class SaveDraftModel
     /// Gets or sets the draft data.
     /// </summary>
     public DraftDataDto DraftData { get; set; } = null!;
+
+    /// <summary>
+    /// Gets or sets the participant user ID when saving on behalf.
+    /// </summary>
+    public string? ParticipantUserId { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this is an on-behalf save.
+    /// </summary>
+    public bool IsOnBehalf { get; set; }
 }

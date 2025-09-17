@@ -349,6 +349,18 @@
                 }
             }
             
+            @if (Model.IsOnBehalf)
+            {
+                <div class="alert alert-info mb-3" role="alert">
+                    <i class="fas fa-user-edit me-2"></i>
+                    <strong>Completando formulario en nombre del participante</strong>
+                    <div class="mt-2 small">
+                        <i class="fas fa-info-circle"></i> Está completando este formulario en nombre de un participante. 
+                        El formulario seguirá el flujo de aprobación normal después de enviarlo.
+                    </div>
+                </div>
+            }
+            
             <div class="form-card phoenix-card">
                 <div class="card-header phoenix-gradient d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0">
@@ -411,7 +423,10 @@
             submissionId: @(Model.SubmissionId?.ToString() ?? "null"),
             canSubmit: @(Model.CanSubmit ? "true" : "false"),
             isReadOnly: @(Model.IsReadOnly ? "true" : "false"),
-            feedbackReadOnly: @(Model.FeedbackReadOnly ? "true" : "false")
+            feedbackReadOnly: @(Model.FeedbackReadOnly ? "true" : "false"),
+            isOnBehalf: @(Model.IsOnBehalf ? "true" : "false"),
+            participantUserId: '@(Model.ParticipantUserId ?? "")',
+            coordinatorUserId: '@(Model.CoordinatorUserId ?? "")'
         };
 
         // Initial draft data

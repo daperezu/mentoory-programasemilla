@@ -102,6 +102,11 @@
             Url = "#", 
             IconClass = "fas fa-eye", 
             Text = "Ver Detalle" 
+        },
+        new() { 
+            Url = "#fill-on-behalf",
+            IconClass = "fas fa-file-edit", 
+            Text = "Completar formulario en nombre de"
         }
     };
 }
@@ -190,5 +195,9 @@
            show-filter-toggle="true"></datatable>
 
 @section Scripts {
+    <script>
+        // Make project external ID available to JavaScript
+        window.currentProjectId = '@Model.ProjectExternalId';
+    </script>
     <script src="~/js/coordination/participant-management.js"></script>
 }

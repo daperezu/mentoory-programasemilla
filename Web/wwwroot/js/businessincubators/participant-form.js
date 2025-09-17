@@ -1333,7 +1333,9 @@
                     credentials: 'same-origin',
                     body: JSON.stringify({
                         projectId: this.config.projectIdNumeric,
-                        submissionId: this.config.submissionId || 0
+                        submissionId: this.config.submissionId || 0,
+                        isOnBehalf: this.config.isOnBehalf === true || this.config.isOnBehalf === 'true',
+                        participantUserId: this.config.participantUserId || null
                     })
                 });
 
@@ -1525,7 +1527,9 @@
                     body: JSON.stringify({
                         projectId: this.config.projectIdNumeric,
                         submissionId: this.config.submissionId || 0,
-                        draftData: this.convertToPascalCase(draftData)
+                        draftData: this.convertToPascalCase(draftData),
+                        isOnBehalf: this.config.isOnBehalf === true || this.config.isOnBehalf === 'true',
+                        participantUserId: this.config.participantUserId || null
                     })
                 });
 

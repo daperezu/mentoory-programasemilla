@@ -21,9 +21,11 @@ CREATE TABLE [businessincubators].[ProjectFormSubmissions] (
     [LastAutoSaveAt]     DATETIME2 NULL,
     [TotalQuestions]     INT NOT NULL DEFAULT 0,
     [AnsweredQuestions]  INT NOT NULL DEFAULT 0,
+    [SubmittedByUserId]  NVARCHAR(450) NULL,   -- User who actually submitted (for on-behalf submissions)
+    [SubmissionMode]     INT NOT NULL DEFAULT 1, -- 1=Self, 2=OnBehalf
     CONSTRAINT [PK_ProjectFormSubmissions] PRIMARY KEY CLUSTERED ([Id]),
     CONSTRAINT [FK_ProjectFormSubmissions_Projects] FOREIGN KEY ([ProjectId]) REFERENCES [businessincubators].[Projects] ([Id]) ON DELETE CASCADE,
     CONSTRAINT [FK_ProjectFormSubmissions_ProjectStages] FOREIGN KEY ([ProjectStageId]) REFERENCES [businessincubators].[ProjectStages] ([Id])
     -- Note: Cross-schema foreign keys are not included to maintain modular boundaries
-    -- - ParticipantUserId, ApprovedByUserId, and CoordinatorUserId reference auth/identity system (validated at application layer)
+    -- - ParticipantUserId, ApprovedByUserId, CoordinatorUserId, and SubmittedByUserId reference auth/identity system (validated at application layer)
 );

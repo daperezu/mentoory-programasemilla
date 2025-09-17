@@ -20,7 +20,9 @@ public class ProjectFormSubmission : Entity
         int formSchemaVersion,
         QuestionPhase phase,
         long? projectStageId,
-        DateTime startedAt)
+        DateTime startedAt,
+        string? submittedByUserId = null,
+        SubmissionMode submissionMode = SubmissionMode.Self)
     {
         ExternalId = Guid.NewGuid();
         ProjectId = projectId;
@@ -33,6 +35,8 @@ public class ProjectFormSubmission : Entity
         CompletionPercentage = 0;
         TotalQuestions = 0;
         AnsweredQuestions = 0;
+        SubmittedByUserId = submittedByUserId;
+        SubmissionMode = submissionMode;
     }
 
     /// <summary>
@@ -141,6 +145,16 @@ public class ProjectFormSubmission : Entity
     public int AnsweredQuestions { get; private set; }
 
     /// <summary>
+    /// Gets the user ID who submitted the form (for on-behalf submissions).
+    /// </summary>
+    public string? SubmittedByUserId { get; private set; }
+
+    /// <summary>
+    /// Gets the submission mode (Self or OnBehalf).
+    /// </summary>
+    public SubmissionMode SubmissionMode { get; private set; }
+
+    /// <summary>
     /// Navigation property for EF Core.
     /// </summary>
     internal virtual Project Project { get; private set; } = null!;
@@ -199,6 +213,47 @@ public class ProjectFormSubmission : Entity
     }
 
     /// <summary>
+    /// Creates a new form submission on behalf of a participant.
+    /// </summary>
+    /// <param name="projectId">The project ID.</param>
+    /// <param name="participantUserId">The participant user ID for whom the form is being filled.</param>
+    /// <param name="submittedByUserId">The user ID who is filling the form on behalf.</param>
+    /// <param name="formSchemaVersion">The current form schema version.</param>
+    /// <param name="phase">The question phase.</param>
+    /// <param name="projectStageId">The project stage ID (optional).</param>
+    /// <param name="startedAt">The start timestamp.</param>
+    /// <returns>A new form submission instance for on-behalf submission.</returns>
+    public static ProjectFormSubmission CreateOnBehalf(
+        long projectId,
+        string participantUserId,
+        string submittedByUserId,
+        int formSchemaVersion,
+        QuestionPhase phase,
+        long? projectStageId,
+        DateTime startedAt)
+    {
+        if (phase == QuestionPhase.None)
+        {
+            throw new ArgumentException("La fase no puede ser None.", nameof(phase));
+        }
+
+        if (string.IsNullOrWhiteSpace(submittedByUserId))
+        {
+            throw new ArgumentException("El ID del usuario que completa en nombre de otro es requerido.", nameof(submittedByUserId));
+        }
+
+        return new ProjectFormSubmission(
+            projectId,
+            participantUserId,
+            formSchemaVersion,
+            phase,
+            projectStageId,
+            startedAt,
+            submittedByUserId,
+            SubmissionMode.OnBehalf);
+    }
+
+    /// <summary>
     /// Saves a draft of the form data with progress tracking.
     /// </summary>
     /// <param name="draftData">The form data as JSON.</param>
@@ -238,7 +293,8 @@ public class ProjectFormSubmission : Entity
     /// Submits the form for review.
     /// </summary>
     /// <param name="submittedAt">The submission timestamp.</param>
-    public void Submit(DateTime submittedAt)
+    /// <param name="submittedByUserId">Optional: The user ID who is submitting (for on-behalf submissions).</param>
+    public void Submit(DateTime submittedAt, string? submittedByUserId = null)
     {
         if (Status != ProjectFormSubmissionStatus.Draft)
         {
@@ -252,6 +308,13 @@ public class ProjectFormSubmission : Entity
 
         Status = ProjectFormSubmissionStatus.Submitted;
         SubmittedAt = submittedAt;
+
+        // Update the submitter if provided (for on-behalf submissions)
+        if (!string.IsNullOrWhiteSpace(submittedByUserId))
+        {
+            SubmittedByUserId = submittedByUserId;
+            SubmissionMode = SubmissionMode.OnBehalf;
+        }
     }
 
     /// <summary>

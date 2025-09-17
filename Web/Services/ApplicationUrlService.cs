@@ -142,6 +142,30 @@ public class ApplicationUrlService(
         return GetAbsoluteUrl(relativeUrl);
     }
 
+    /// <inheritdoc/>
+    public string GetCoordinatorParticipantManagementUrl()
+    {
+        var urlHelper = GetUrlHelper();
+        var relativeUrl = urlHelper.Action(
+            action: "Index",
+            controller: "Participant",
+            values: new { area = "Coordination" });
+
+        return GetAbsoluteUrl(relativeUrl);
+    }
+
+    /// <inheritdoc/>
+    public string GetParticipantDashboardUrl()
+    {
+        var urlHelper = GetUrlHelper();
+        var relativeUrl = urlHelper.Action(
+            action: "Index",
+            controller: "Dashboard",
+            values: new { area = "Participant" });
+
+        return GetAbsoluteUrl(relativeUrl);
+    }
+
     private IUrlHelper GetUrlHelper()
     {
         var actionContext = actionContextAccessor.ActionContext;
