@@ -48,6 +48,14 @@ public interface IAuthRepository
     Task<Dictionary<string, AggregatesModel.User.User>> GetUsersByEmailsAsync(IEnumerable<string> emails, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets users by a list of user IDs for batch loading to avoid N+1 queries.
+    /// </summary>
+    /// <param name="userIds">The list of user IDs.</param>
+    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>List of users found.</returns>
+    Task<List<AggregatesModel.User.User>> GetUsersByIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Creates a new user with the specified password.
     /// </summary>
     /// <param name="user">The user to create.</param>

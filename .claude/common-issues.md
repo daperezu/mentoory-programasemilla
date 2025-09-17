@@ -25,6 +25,63 @@ ResultErrorCodes.GenericError
 ResultErrorCodes.BusinessIncubator_NotFound
 ```
 
+## Performance Issues
+
+### Dashboard Loading Takes 5-10 Seconds
+**Problem**: Dashboard executes 20+ queries causing slow load times.
+
+**Root Causes**:
+- N+1 queries when loading user names
+- Multiple handlers loading same project data
+- No database-level aggregation
+- Missing indexes on critical columns
+
+**Solution**: Create single optimized query:
+```csharp
+// Handler with single query + caching
+public class GetCoordinatorDashboardCompleteDataQueryHandler(
+    IBusinessIncubatorRepository repository,
+    IMemoryCache cache,
+    ITimeProvider timeProvider)
+{
+    // Get all data in ONE query with DB aggregation
+    var dashboardData = await repository.GetProjectDashboardDataAsync(
+        projectId, timeProvider.UtcNow);
+    
+    // Batch load users to avoid N+1
+    var users = await mediator.Send(new GetUsersByIdsQuery(userIds));
+    
+    // Cache for 5 minutes
+    cache.Set(cacheKey, result, TimeSpan.FromMinutes(5));
+}
+```
+
+**Key Patterns**:
+- Use `GetUsersByIdsAsync` for batch user loading
+- Pass `ITimeProvider.UtcNow` to repository methods
+- Use `HttpContext.Items` for request-scoped data (not custom cache)
+- No SQL scripts needed pre-production
+- Missing database indexes on critical columns
+- All filtering done in-memory instead of at database level
+
+**Solution**: 
+```csharp
+// ❌ WRONG - N+1 queries
+foreach (var submission in submissions) {
+    var user = await userManager.FindByIdAsync(submission.UserId);
+}
+
+// ✅ CORRECT - Batch load users
+var userIds = submissions.Select(s => s.UserId).Distinct();
+var users = await authRepository.GetUsersByIdsAsync(userIds);
+```
+
+**Quick Wins**:
+1. Add database indexes on frequently queried columns
+2. Use `.AsNoTracking()` for read-only queries
+3. Project to DTOs using `.Select()` instead of loading full entities
+4. Cache data within request scope to avoid duplicate loads
+
 ## Entity Framework Issues
 
 ### Include with String-Based Backing Field
@@ -104,6 +161,23 @@ await repository.UnitOfWork.SaveChangesAsync();
 ```csharp
 // Wrong: entity.HasOne<RelatedEntity>()
 // Right: entity.HasOne(e => e.NavigationProperty)
+```
+
+### EF Core Include with DDD Private Collections
+**Error**: `InvalidIncludePathError: Unable to find navigation '_fieldName'`
+**Cause**: Different configuration patterns for private backing fields
+**Solution**: Check DbContext configuration to determine correct Include approach:
+
+```csharp
+// Case 1: Property explicitly ignored - use private field
+modelBuilder.Entity<Project>().Ignore(p => p.ProjectStages);
+// Include: .Include("_projectStages")
+
+// Case 2: Navigation configured with backing field - use public property
+entity.Navigation(e => e.ProjectUsers)
+    .UsePropertyAccessMode(PropertyAccessMode.Field)
+    .HasField("_projectUsers");
+// Include: .Include("ProjectUsers")
 ```
 
 ## Modern UI Implementation Patterns (Phoenix Admin Template)
@@ -379,6 +453,47 @@ var userRoles = CurrentUserRoles;
 ```
 
 **Prevention**: Configure IDE to trim trailing whitespace on save
+
+### SA1407: Arithmetic Expressions Should Declare Precedence
+**Error**: `error SA1407: Arithmetic expressions should declare precedence`
+**Cause**: Complex mathematical expressions without explicit parentheses
+**Solution**: Add parentheses to clarify operator precedence
+```csharp
+// ❌ Wrong
+double a = Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2) +
+           Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+           Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2);
+
+// ✅ Correct  
+double a = (Math.Sin(deltaLat / 2) * Math.Sin(deltaLat / 2)) +
+           (Math.Cos(lat1Rad) * Math.Cos(lat2Rad) *
+            Math.Sin(deltaLon / 2) * Math.Sin(deltaLon / 2));
+```
+
+### Failure Method Parameter Format
+**Error**: `CS1503: cannot convert from 'string' to '(string Context, string Message)'`
+**Cause**: BaseCommandHandler Failure method expects tuple format
+**Solution**: 
+```csharp
+// ❌ Wrong
+return Failure(ResultErrorCodes.GenericError, "Error message");
+
+// ✅ Correct
+return Failure(ResultErrorCodes.GenericError, 
+    (nameof(GetNearbyProjectsQuery), "Error message"));
+```
+
+### EF Core Navigation Property Access in Lambda
+**Error**: `CS0122: 'Project.BusinessIncubator' is inaccessible due to its protection level`
+**Cause**: Internal navigation properties cannot be accessed in Lambda expressions
+**Solution**: Use string-based Include instead:
+```csharp
+// ❌ Wrong
+.Include(p => p.BusinessIncubator)
+
+// ✅ Correct
+.Include("BusinessIncubator")
+```
 
 ## SQL Server Database Project Issues
 

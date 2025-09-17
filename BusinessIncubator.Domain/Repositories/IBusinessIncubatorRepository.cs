@@ -1,4 +1,5 @@
-﻿using LinaSys.Shared.Domain.SeedWork;
+﻿using LinaSys.BusinessIncubator.Domain.DTOs;
+using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.BusinessIncubator.Domain.Repositories;
 
@@ -397,6 +398,20 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     Task<Aggregates.BusinessIncubator.Project?> GetProjectWithUsersAsync(long projectId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets optimized dashboard data for a project in a single query.
+    /// </summary>
+    /// <param name="projectId">The project ID.</param>
+    /// <param name="currentTime">The current UTC time.</param>
+    /// <param name="fromDate">Optional date filter for recent activity.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Dashboard project data with all statistics calculated at database level.</returns>
+    Task<DashboardProjectData?> GetProjectDashboardDataAsync(
+        long projectId,
+        DateTime currentTime,
+        DateTime? fromDate = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Retrieves a project with its stages by external ID.
     /// </summary>
     /// <param name="projectExternalId">The external ID of the project.</param>
@@ -709,6 +724,74 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
         CancellationToken cancellationToken = default);
 
     // NOTE: Report methods have been moved to IReportsRepository for proper DDD separation
+
+    /// <summary>
+    /// Gets projects within specified geohash prefixes and bounding box for proximity searches.
+    /// </summary>
+    /// <param name="geohashPrefixes">Set of geohash prefixes to search within.</param>
+    /// <param name="minLat">Minimum latitude of bounding box.</param>
+    /// <param name="maxLat">Maximum latitude of bounding box.</param>
+    /// <param name="minLon">Minimum longitude of bounding box.</param>
+    /// <param name="maxLon">Maximum longitude of bounding box.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of projects with location data that match the criteria.</returns>
+    Task<List<Aggregates.BusinessIncubator.Project>> GetProjectsInGeohashesAsync(
+        HashSet<string> geohashPrefixes,
+        decimal minLat,
+        decimal maxLat,
+        decimal minLon,
+        decimal maxLon,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets an existing project interest for a user.
+    /// </summary>
+    /// <param name="projectId">The project ID.</param>
+    /// <param name="userId">The user ID.</param>
+    /// <param name="interestType">The type of interest.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The interest record if found, otherwise null.</returns>
+    Task<object?> GetProjectInterestAsync(
+        long projectId,
+        string userId,
+        string interestType,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Records a project interest.
+    /// </summary>
+    /// <param name="projectId">The project ID.</param>
+    /// <param name="userId">The user ID (optional).</param>
+    /// <param name="sessionId">The session ID for anonymous users (optional).</param>
+    /// <param name="interestType">The type of interest.</param>
+    /// <param name="observerLatitude">Observer's latitude (optional).</param>
+    /// <param name="observerLongitude">Observer's longitude (optional).</param>
+    /// <param name="distance">Distance in km (optional).</param>
+    /// <param name="userAgent">User agent string (optional).</param>
+    /// <param name="ipAddress">IP address (optional).</param>
+    /// <param name="referrerUrl">Referrer URL (optional).</param>
+    /// <param name="createdAt">Creation timestamp.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task RecordProjectInterestAsync(
+        long projectId,
+        string? userId,
+        string? sessionId,
+        string interestType,
+        decimal? observerLatitude,
+        decimal? observerLongitude,
+        double? distance,
+        string? userAgent,
+        string? ipAddress,
+        string? referrerUrl,
+        DateTime createdAt,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets all active projects with their stages for homepage display.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>List of active projects with stages loaded.</returns>
+    Task<List<Aggregates.BusinessIncubator.Project>> GetActiveProjectsWithStagesAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>

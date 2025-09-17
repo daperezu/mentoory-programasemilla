@@ -10,6 +10,7 @@ IResourceBuilder<ParameterResource>? mailgunDomain = null;
 IResourceBuilder<ParameterResource>? mailgunApiKey = null;
 IResourceBuilder<ParameterResource>? googleAnalyticsMeasurementId = null;
 IResourceBuilder<ParameterResource>? googleAnalyticsEnabled = null;
+IResourceBuilder<ParameterResource>? googleMapsApiKey = null;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -36,6 +37,8 @@ else //// Running in Azure
 
     googleAnalyticsMeasurementId = builder.AddParameter("googleanalytics-measurementid", secret: true);
     googleAnalyticsEnabled = builder.AddParameter("googleanalytics-enabled");
+
+    googleMapsApiKey = builder.AddParameter("googlemaps-apikey", secret: true);
 }
 
 var appSettingsJson = AppsettingsLoader.SerializeUserJsonConfiguration(builder.ExecutionContext.IsRunMode, out var appSettingsJsonHash);
@@ -60,6 +63,12 @@ if (googleAnalyticsMeasurementId != null && googleAnalyticsEnabled != null)
     webProject
         .WithEnvironment("GoogleAnalytics__MeasurementId", googleAnalyticsMeasurementId)
         .WithEnvironment("GoogleAnalytics__Enabled", googleAnalyticsEnabled);
+}
+
+if (googleMapsApiKey != null)
+{
+    webProject
+        .WithEnvironment("GoogleMaps__ApiKey", googleMapsApiKey);
 }
 
 builder.Build().Run();

@@ -113,6 +113,30 @@ public class BusinessIncubatorDbContext(DbContextOptions<BusinessIncubatorDbCont
                 .HasColumnName("SourceFormId")
                 .IsRequired(false);
 
+            // Geolocation properties
+            entity.Property(e => e.Latitude)
+                .HasColumnType("decimal(10, 8)")
+                .IsRequired(false);
+
+            entity.Property(e => e.Longitude)
+                .HasColumnType("decimal(11, 8)")
+                .IsRequired(false);
+
+            entity.Property(e => e.Geohash)
+                .HasMaxLength(12)
+                .IsRequired(false);
+
+            entity.Property(e => e.LocationName)
+                .HasMaxLength(200)
+                .IsRequired(false);
+
+            entity.Property(e => e.LocationAddress)
+                .HasMaxLength(500)
+                .IsRequired(false);
+
+            entity.Property(e => e.LocationLastUpdated)
+                .IsRequired(false);
+
             entity.HasOne("BusinessIncubator").WithMany("Projects")
                 .HasForeignKey("BusinessIncubatorId")
                 .OnDelete(DeleteBehavior.ClientSetNull);

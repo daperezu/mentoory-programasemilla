@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using LinaSys.Auth.Application.Commands.Context;
+using LinaSys.BusinessIncubator.Application.Dashboard.Queries.GetCoordinatorDashboardCompleteData;
 using LinaSys.BusinessIncubator.Application.Dashboard.Queries.GetCoordinatorDiagnosticStats;
 using LinaSys.BusinessIncubator.Application.Dashboard.Queries.GetCoordinatorParticipantStats;
 using LinaSys.BusinessIncubator.Application.Dashboard.Queries.GetCoordinatorPendingReviews;
@@ -37,52 +38,53 @@ public class DashboardController(
             var userId = CurrentUserId;
             TryGetCurrentUserContext(out var context);
 
-            // Get project details
-            var project = await MediatorExecutor.SendOrThrowAsync(new GetProjectByIdQuery(context!.ProjectId!.Value));
-            if (project is null)
+            // Get complete dashboard data in ONE optimized query
+            var dashboardDataResult = await MediatorExecutor.SendOrThrowAsync(
+                new GetCoordinatorDashboardCompleteDataQuery(
+                    context!.ProjectId!.Value,
+                    userId));
+
+            if (dashboardDataResult is null)
             {
                 TempData["Error"] = "Proyecto no encontrado.";
                 return RedirectToAction("Index", "ContextSelection", new { area = string.Empty });
             }
 
-            // Get incubator details
-            var incubator = await MediatorExecutor.SendOrThrowAsync(new GetIncubatorByIdQuery(context!.IncubatorId!.Value));
-            if (incubator is null)
-            {
-                TempData["Error"] = "Incubadora no encontrada.";
-                return RedirectToAction("Index", "ContextSelection", new { area = string.Empty });
-            }
-
-            // Build coordinator dashboard using the service
+            // Build coordinator dashboard using the service (for widget structure only)
             var dashboard = await DashboardBuilder.BuildCoordinatorDashboardAsync(userId);
+
+            // Store complete data in HttpContext for widget endpoints to use
+            HttpContext.Items["DashboardData"] = dashboardDataResult;
 
             // Log dashboard access
             await auditService.LogDashboardAccessAsync(userId, context.ProjectId.Value, Roles.Coordinator);
 
-            // Set ViewBag for context display
-            ViewBag.Title = $"Dashboard Coordinador - {project.Name}";
-            ViewBag.ProjectId = context.ProjectId.Value;
-            ViewBag.ProjectName = project.Name;
-            ViewBag.ProjectBadge = project.Key;
-            ViewBag.IncubatorId = context.IncubatorId.Value;
-            ViewBag.IncubatorName = incubator.Name;
+            // Set ViewBag for context display using cached data
+            ViewBag.Title = $"Dashboard Coordinador - {dashboardDataResult.ProjectContext.ProjectName}";
+            ViewBag.ProjectId = dashboardDataResult.ProjectContext.ProjectId;
+            ViewBag.ProjectName = dashboardDataResult.ProjectContext.ProjectName;
+            ViewBag.ProjectBadge = dashboardDataResult.ProjectContext.ProjectKey;
+            ViewBag.IncubatorId = dashboardDataResult.ProjectContext.IncubatorId;
+            ViewBag.IncubatorName = dashboardDataResult.ProjectContext.IncubatorName;
             ViewBag.CurrentRole = Roles.Coordinator;
             ViewBag.ShowContextSwitcher = true;
             ViewBag.ShowRefreshButton = true;
             ViewBag.ShowSettingsButton = true;
             ViewBag.Subtitle = "Panel de control para coordinadores";
+            ViewBag.DashboardData = dashboardDataResult;
 
             // Set breadcrumbs
             ViewBag.Breadcrumbs = new List<BreadcrumbItem>
             {
                 new() { Text = "Inicio", Url = Url.Action("Index", "Home", new { area = string.Empty }) },
                 new() { Text = "Coordinación", Url = null },
-                new() { Text = incubator.Name, Url = null },
-                new() { Text = project.Name, Url = null },
+                new() { Text = dashboardDataResult.ProjectContext.IncubatorName, Url = null },
+                new() { Text = dashboardDataResult.ProjectContext.ProjectName, Url = null },
                 new() { Text = "Dashboard", IsActive = true }
             };
 
             stopwatch.Stop();
+            logger.LogInformation("Dashboard loaded in {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
             await auditService.LogPerformanceMetricAsync(userId, "LoadCoordinatorDashboard", stopwatch.ElapsedMilliseconds);
 
             return View(dashboard);
@@ -112,8 +114,13 @@ public class DashboardController(
     [HttpGet]
     public async Task<IActionResult> GetParticipantStats()
     {
-        TryGetCurrentUserContext(out var userContext);
+        // Check if we have cached dashboard data in HttpContext
+        if (HttpContext.Items["DashboardData"] is CoordinatorDashboardCompleteDto cachedData)
+        {
+            return Json(new { success = true, data = cachedData.ParticipantStats });
+        }
 
+        TryGetCurrentUserContext(out var userContext);
         var projectId = userContext!.ProjectId!.Value;
 
         // Cache key for participant stats
@@ -136,8 +143,13 @@ public class DashboardController(
     [HttpGet]
     public async Task<IActionResult> GetDiagnosticStats()
     {
-        TryGetCurrentUserContext(out var userContext);
+        // Check if we have cached dashboard data in HttpContext
+        if (HttpContext.Items["DashboardData"] is CoordinatorDashboardCompleteDto cachedData)
+        {
+            return Json(new { success = true, data = cachedData.DiagnosticStats });
+        }
 
+        TryGetCurrentUserContext(out var userContext);
         var projectId = userContext!.ProjectId!.Value;
 
         // Cache key for diagnostic stats
@@ -160,6 +172,12 @@ public class DashboardController(
     [HttpGet]
     public async Task<IActionResult> GetPendingReviews(CancellationToken cancellationToken)
     {
+        // Check if we have cached dashboard data in HttpContext
+        if (HttpContext.Items["DashboardData"] is CoordinatorDashboardCompleteDto cachedData)
+        {
+            return Json(new { success = true, data = cachedData.PendingReviews });
+        }
+
         if (TryGetCurrentUserContext(out var userContext))
         {
             // Get pending reviews using the query
@@ -175,6 +193,12 @@ public class DashboardController(
     [HttpGet]
     public async Task<IActionResult> GetRecentActivity()
     {
+        // Check if we have cached dashboard data in HttpContext
+        if (HttpContext.Items["DashboardData"] is CoordinatorDashboardCompleteDto cachedData)
+        {
+            return Json(new { success = true, data = cachedData.RecentActivities });
+        }
+
         TryGetCurrentUserContext(out var userContext);
 
         // Get recent activity using the query

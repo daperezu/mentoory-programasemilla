@@ -579,6 +579,181 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
             .ConfigureAwait(false);
     }
 
+    public async Task<Domain.DTOs.DashboardProjectData?> GetProjectDashboardDataAsync(
+        long projectId,
+        DateTime currentTime,
+        DateTime? fromDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        var cutoffDate = fromDate ?? currentTime.AddDays(-30);
+        var recentDate = currentTime.AddDays(-7);
+
+        // First, check if project exists with basic info
+        var projectInfo = await dbContext.Projects
+            .AsNoTracking()
+            .Where(p => p.Id == projectId)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Key,
+                p.BusinessIncubatorId,
+                IncubatorName = dbContext.BusinessIncubators
+                    .Where(b => b.Id == p.BusinessIncubatorId)
+                    .Select(b => b.Name)
+                    .FirstOrDefault() ?? string.Empty
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (projectInfo is null)
+        {
+            return null;
+        }
+
+        // Get user statistics using projection
+        var userStats = await dbContext.Set<ProjectUser>()
+            .AsNoTracking()
+            .Where(pu => pu.ProjectId == projectId && pu.IsActive)
+            .GroupBy(pu => 1)
+            .Select(g => new
+            {
+                TotalUsers = g.Count(),
+                RecentUsers = g.Count(u => u.JoinedAt > recentDate),
+                UsersByRole = g.GroupBy(u => u.Role)
+                    .Select(rg => new { Role = rg.Key, Count = rg.Count() })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var totalUsers = userStats?.TotalUsers ?? 0;
+        var recentUsers = userStats?.RecentUsers ?? 0;
+        var usersByRole = userStats?.UsersByRole?.ToDictionary(x => x.Role, x => x.Count) ?? new Dictionary<string, int>();
+
+        // Get form statistics using projection
+        var formStats = await dbContext.Set<ProjectFormSubmission>()
+            .AsNoTracking()
+            .Where(f => f.ProjectId == projectId)
+            .GroupBy(f => 1)
+            .Select(g => new
+            {
+                TotalForms = g.Count(),
+                CompletedForms = g.Count(f =>
+                    f.Status == ProjectFormSubmissionStatus.Submitted ||
+                    f.Status == ProjectFormSubmissionStatus.Approved),
+                InProgressForms = g.Count(f => f.Status == ProjectFormSubmissionStatus.Draft),
+                PendingReviews = g.Count(f => f.Status == ProjectFormSubmissionStatus.Submitted),
+                AvgCompletionHours = g
+                    .Where(f => f.SubmittedAt.HasValue)
+                    .Select(f => (double?)EF.Functions.DateDiffHour(f.StartedAt, f.SubmittedAt!.Value))
+                    .Average() ?? 0
+            })
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var totalForms = formStats?.TotalForms ?? 0;
+        var completedForms = formStats?.CompletedForms ?? 0;
+        var inProgressForms = formStats?.InProgressForms ?? 0;
+        var totalPendingReviews = formStats?.PendingReviews ?? 0;
+        var avgCompletionHours = formStats?.AvgCompletionHours ?? 0;
+
+        // Get pending reviews (top 10)
+        var pendingReviews = await dbContext.Set<ProjectFormSubmission>()
+            .AsNoTracking()
+            .Where(f => f.ProjectId == projectId && f.Status == ProjectFormSubmissionStatus.Submitted)
+            .OrderByDescending(f => f.SubmittedAt)
+            .Take(10)
+            .Select(f => new Domain.DTOs.PendingReviewData
+            {
+                Id = f.Id,
+                UserId = f.ParticipantUserId,
+                SubmittedAt = f.SubmittedAt ?? f.StartedAt,
+                DaysWaiting = EF.Functions.DateDiffDay(f.SubmittedAt ?? f.StartedAt, currentTime)
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Get recent form activities
+        var formActivities = await dbContext.Set<ProjectFormSubmission>()
+            .AsNoTracking()
+            .Where(f => f.ProjectId == projectId && f.SubmittedAt > cutoffDate)
+            .OrderByDescending(f => f.SubmittedAt)
+            .Take(10)
+            .Select(f => new Domain.DTOs.ActivityData
+            {
+                UserId = f.ParticipantUserId,
+                Action = "form_submitted",
+                Timestamp = f.SubmittedAt!.Value
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Get recent user activities
+        var userActivities = await dbContext.Set<ProjectUser>()
+            .AsNoTracking()
+            .Where(u => u.ProjectId == projectId && u.IsActive && u.JoinedAt > cutoffDate)
+            .OrderByDescending(u => u.JoinedAt)
+            .Take(5)
+            .Select(u => new Domain.DTOs.ActivityData
+            {
+                UserId = u.UserId,
+                Action = "user_joined",
+                Timestamp = u.JoinedAt
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Combine and sort activities
+        var recentActivities = formActivities
+            .Concat(userActivities)
+            .OrderByDescending(a => a.Timestamp)
+            .Take(15)
+            .ToList();
+
+        // Get all unique user IDs for batch loading
+        var allUserIds = await dbContext.Set<ProjectUser>()
+            .AsNoTracking()
+            .Where(pu => pu.ProjectId == projectId && pu.IsActive)
+            .Select(pu => pu.UserId)
+            .Union(
+                dbContext.Set<ProjectFormSubmission>()
+                    .Where(f => f.ProjectId == projectId)
+                    .Select(f => f.ParticipantUserId))
+            .Distinct()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Get pending invitations count
+        var pendingInvitations = await dbContext.Set<ProjectInvitation>()
+            .AsNoTracking()
+            .CountAsync(i => i.ProjectId == projectId && i.Status == ProjectInvitationStatus.Pending, cancellationToken)
+            .ConfigureAwait(false);
+
+        return new Domain.DTOs.DashboardProjectData
+        {
+            ProjectId = projectInfo.Id,
+            ProjectName = projectInfo.Name,
+            ProjectKey = projectInfo.Key,
+            IncubatorId = projectInfo.BusinessIncubatorId,
+            IncubatorName = projectInfo.IncubatorName,
+            TotalUsers = totalUsers,
+            ActiveUsers = totalUsers,
+            RecentUsers = recentUsers,
+            UsersByRole = usersByRole,
+            TotalForms = totalForms,
+            CompletedForms = completedForms,
+            InProgressForms = inProgressForms,
+            NotStartedForms = Math.Max(0, totalUsers - totalForms),
+            AverageCompletionHours = avgCompletionHours,
+            TotalPendingReviews = totalPendingReviews,
+            PendingInvitations = pendingInvitations,
+            PendingReviews = pendingReviews,
+            RecentActivities = recentActivities,
+            AllUserIds = allUserIds
+        };
+    }
+
     /// <inheritdoc/>
     public async Task<Project?> GetProjectWithStagesByExternalIdAsync(Guid projectExternalId, CancellationToken cancellationToken = default)
     {
@@ -1046,5 +1221,118 @@ public class BusinessIncubatorRepository(BusinessIncubatorDbContext dbContext)
             .OrderByDescending(s => s.SubmittedAt ?? s.StartedAt)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<Project>> GetProjectsInGeohashesAsync(
+        HashSet<string> geohashPrefixes,
+        decimal minLat,
+        decimal maxLat,
+        decimal minLon,
+        decimal maxLon,
+        CancellationToken cancellationToken = default)
+    {
+        // For simplicity and performance, we'll rely on the bounding box filter
+        // The geohash prefixes were mainly for optimization, but the bounding box
+        // is sufficient for our needs and works well with SQL Server indexes
+        return await dbContext.Set<Project>()
+            .Include("BusinessIncubator")
+            .Where(p => !p.IsDeleted)
+            .Where(p => p.Status == ProjectStatus.Active)
+            .Where(p => p.Latitude.HasValue && p.Longitude.HasValue)
+            .Where(p => p.Latitude >= minLat && p.Latitude <= maxLat)
+            .Where(p => p.Longitude >= minLon && p.Longitude <= maxLon)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc/>
+    public async Task<object?> GetProjectInterestAsync(
+        long projectId,
+        string userId,
+        string interestType,
+        CancellationToken cancellationToken = default)
+    {
+        // Direct SQL query since ProjectInterests is not a mapped entity
+        var sql = @"
+            SELECT TOP 1 * 
+            FROM [businessincubators].[ProjectInterests]
+            WHERE [ProjectId] = @projectId 
+            AND [ObserverUserId] = @userId 
+            AND [InterestType] = @interestType";
+
+        var connection = dbContext.Database.GetDbConnection();
+        await using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.Parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@projectId", projectId));
+        command.Parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@userId", userId));
+        command.Parameters.Add(new Microsoft.Data.SqlClient.SqlParameter("@interestType", interestType));
+
+        if (connection.State != System.Data.ConnectionState.Open)
+        {
+            await connection.OpenAsync(cancellationToken);
+        }
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (await reader.ReadAsync(cancellationToken))
+        {
+            return new { Id = reader.GetInt64(0) }; // Return a simple object with ID
+        }
+
+        return null;
+    }
+
+    /// <inheritdoc/>
+    public async Task RecordProjectInterestAsync(
+        long projectId,
+        string? userId,
+        string? sessionId,
+        string interestType,
+        decimal? observerLatitude,
+        decimal? observerLongitude,
+        double? distance,
+        string? userAgent,
+        string? ipAddress,
+        string? referrerUrl,
+        DateTime createdAt,
+        CancellationToken cancellationToken = default)
+    {
+        var sql = @"
+            INSERT INTO [businessincubators].[ProjectInterests]
+            ([ProjectId], [ObserverUserId], [ObserverSessionId], [InterestType], 
+             [ObserverLatitude], [ObserverLongitude], [Distance],
+             [UserAgent], [IpAddress], [ReferrerUrl], [CreatedAt])
+            VALUES
+            (@projectId, @userId, @sessionId, @interestType,
+             @latitude, @longitude, @distance,
+             @userAgent, @ipAddress, @referrerUrl, @createdAt)";
+
+        await dbContext.Database.ExecuteSqlRawAsync(
+            sql,
+            new Microsoft.Data.SqlClient.SqlParameter("@projectId", projectId),
+            new Microsoft.Data.SqlClient.SqlParameter("@userId", (object?)userId ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@sessionId", (object?)sessionId ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@interestType", interestType),
+            new Microsoft.Data.SqlClient.SqlParameter("@latitude", (object?)observerLatitude ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@longitude", (object?)observerLongitude ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@distance", (object?)distance ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@userAgent", (object?)userAgent ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@ipAddress", (object?)ipAddress ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@referrerUrl", (object?)referrerUrl ?? DBNull.Value),
+            new Microsoft.Data.SqlClient.SqlParameter("@createdAt", createdAt));
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<Project>> GetActiveProjectsWithStagesAsync(CancellationToken cancellationToken = default)
+    {
+        // Load projects with their stages and users
+        // Use string-based Include with proper navigation names
+        var projects = await dbContext.Projects
+            .Include("_projectStages") // Private field for ProjectStages (public property is ignored in EF)
+            .Include("ProjectUsers") // Navigation configured with backing field
+            .Where(p => !p.IsDeleted && p.Status == ProjectStatus.Active)
+            .ToListAsync(cancellationToken);
+
+        return projects;
     }
 }

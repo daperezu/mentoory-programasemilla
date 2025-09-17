@@ -8,6 +8,20 @@
     [Key] NVARCHAR(1000) NOT NULL,
     [SourceFormId] BIGINT NULL,
     
+    -- Geolocation fields
+    [Latitude] DECIMAL(10, 8) NULL,
+    [Longitude] DECIMAL(11, 8) NULL,
+    [Geohash] VARCHAR(12) NULL,
+    [GeohashPrefix5] AS LEFT([Geohash], 5) PERSISTED,
+    [GeohashPrefix6] AS LEFT([Geohash], 6) PERSISTED,
+    [LocationName] NVARCHAR(200) NULL,
+    [LocationAddress] NVARCHAR(500) NULL,
+    [LocationLastUpdated] DATETIME2 NULL,
+
+    -- Hero image fields for public homepage (REQ-011)
+    [HeroImageBlobId] NVARCHAR(450) NULL,
+    [HasHeroImage] BIT NOT NULL CONSTRAINT [DF_Projects_HasHeroImage] DEFAULT (0),
+    
     [Status] INT NOT NULL CONSTRAINT [DF_Projects_Status] DEFAULT (1),
     
     -- Auditing
