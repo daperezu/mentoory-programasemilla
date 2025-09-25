@@ -1,89 +1,77 @@
 # Work Log
 
-## 2025-09-16 - Documentation Review and Environment Preparation
+## 2025-01-18 - REQ-013 Registration Email Refactoring ✅ COMPLETED
 
-### Completed Tasks
-1. **Comprehensive Documentation Review**:
-   - Read and analyzed all knowledge base files (.claude/ directory)
-   - Verified project structure and architectural patterns
-   - Confirmed clean build status (0 errors, 0 warnings)
+### Planning Phase
+1. **Analyzed Registration Flow**:
+   - Reviewed `Register.cshtml.cs` - found Clean Architecture violation
+   - Email handling directly in web layer (lines 46-57)
+   - Identified duplicate commands: `RegisterUserCommand` vs `CreateUserCommand`
 
-2. **Environment Status Check**:
-   - Branch: `feature/diagnostics-charts` (note: different from session notes)
-   - No active requirements found in `.claude/requirements/active/`
-   - REQ-012 Phoenix Homepage Redesign confirmed as completed
+2. **Created Requirement Document**:
+   - Documented as REQ-013 in `.claude/requirements/active/`
+   - Initial plan: Update RegisterUserCommand to publish events
+   - Comprehensive implementation plan with testing strategy
 
-3. **Key Observations**:
-   - Project uses Clean Architecture with DDD
-   - Strict StyleCop enforcement (TreatWarningsAsErrors=true)
-   - All UI text must be in Spanish
-   - System not yet in production (direct schema changes allowed)
+3. **Revised to Simpler Approach**:
+   - Key insight: `CreateUserCommand` already does everything needed
+   - Already publishes `UserAccountCreatedIntegrationEvent`
+   - Already generates email confirmation tokens
+   - Event handler already sends welcome emails
 
-### Important Patterns Identified
-- **MediatorExecutor Pattern**: Controllers must use MediatorExecutor, not IMediator directly
-- **Result Pattern**: Commands/Queries use IBaseRequest<T> with Result wrapping
-- **Integration Events**: Cross-domain communication via MediatR events
-- **Repository Pattern**: Domain repositories with UnitOfWork for persistence
+### Implementation Phase ✅
+1. **Updated Register.cshtml.cs**:
+   - Replaced `RegisterUserCommand` with `CreateUserCommand`
+   - Removed direct email handling code (lines 46-57)
+   - Removed unused dependencies:
+     - `IAuthRepository` from constructor
+     - `SendEmailCommand` usage
+     - Imports: `System.Text`, `System.Text.Encodings.Web`, `Microsoft.AspNetCore.WebUtilities`
+   - Added comment explaining email is sent via event handler
 
-### Files Updated
-- `CURRENT_SESSION.md`: Updated to reflect current status and next steps
-- `WORK_LOG.md`: Added this entry for documentation review
+2. **Deleted RegisterUserCommand.cs**:
+   - Complete removal instead of marking obsolete
+   - Eliminated 59 lines of duplicate code
+   - Cleaner codebase with single user creation path
 
-### Next Session Priorities
-1. Align branch name with actual work (diagnostics-charts vs home-redesign)
-2. Check for new requirements to implement
-3. Consider implementing diagnostic charts feature (per branch name)
-4. Deploy REQ-012 if not yet deployed
-
-### Environment Ready
-- Clean build maintained
-- Documentation up to date
-- Ready for new feature development
-
-### Completed
-
-1. **Fixed EF Core Include Error for Private Collections**:
-   - Issue: `InvalidIncludePathError` when accessing `_projectStages` and `_projectUsers`
-   - Root cause: `ProjectStages` property explicitly ignored in DbContext, relationship configured from ProjectStage side
-   - Solution in `BusinessIncubatorRepository.cs`:
-   ```csharp
-   .Include("_projectStages")  // Private field (public property is ignored)
-   .Include("ProjectUsers")    // Navigation with backing field
-   ```
-
-2. **Implemented Project Details Page (REQ-012 Phase 4)**:
-   - Created query/handler/DTO pattern:
-     - `GetProjectDetailsQuery.cs` - Accepts Guid ExternalId
-     - `ProjectDetailDto.cs` - Comprehensive project information
-     - `GetProjectDetailsQueryHandler.cs` - Uses `GetProjectWithStagesByExternalIdAsync`
-   - Updated `ProjectsController.Details` action with error handling
-   - Created Phoenix-styled `Details.cshtml` view with:
-     - Hero image section with overlay gradient
-     - Metadata badges (status, dates, location, participants)
-     - Stage timeline with visual current/active indicators
-     - Business incubator information card
-     - Interest registration CTA
+3. **Clean Architecture Achieved**:
+   - Web layer no longer handles infrastructure concerns
+   - Email sending delegated to event-driven system
+   - Single responsibility principle restored
 
 ### Key Decisions
+- **Use existing infrastructure**: Reused `CreateUserCommand` instead of modifying `RegisterUserCommand`
+- **Complete deletion**: Removed `RegisterUserCommand` entirely instead of marking obsolete
+- **Minimal changes**: Two file changes only (one update, one deletion)
+- **Event-driven**: Leveraged existing integration event system
 
-- **Repository Methods**: Used `GetProjectWithStagesByExternalIdAsync(Guid)` not `GetProjectWithStagesAsync(long)`
-- **Null Checks**: Changed to `is null` pattern for nullable reference compliance
-- **Enum Values**: Used actual `ProjectStageType` values: `Invitation`, `InitialFormCollection`, `Mentoring`
-- **DTO Reuse**: Used existing `ProjectStageDto` from `LatestProjectsDto.cs` to avoid duplication
+### Pattern Discovered
+**Command Reuse Pattern**: When multiple entry points need same functionality:
+```csharp
+// Instead of duplicating logic across commands
+RegisterUserCommand -> Creates user (no events)
+CreateUserCommand -> Creates user + events
 
-### Problems Encountered & Solutions
+// Consolidate to single command
+All paths -> CreateUserCommand (handles everything)
+```
 
-| Problem | Solution |
-|---------|----------|
-| Include path error for private fields | Use string-based Include with correct names |
-| Method signature mismatch | Found correct method accepting Guid |
-| Nullable reference warnings | Changed to `is null` pattern |
-| Wrong enum values | Used actual domain enum values |
+### Files Modified
+- ✅ `Web\Areas\Identity\Pages\Account\Register.cshtml.cs` - Updated to use CreateUserCommand
+- ✅ `Auth.Application\Commands\RegisterUserCommand.cs` - DELETED
 
-### Build Status
-✅ **Clean build achieved** - 0 errors, 0 warnings
+### Benefits Achieved
+1. **Clean Architecture Compliance**: Web layer no longer handles email infrastructure
+2. **Code Reduction**: Eliminated 59 lines of duplicate command code
+3. **Single Source of Truth**: One command for user creation across the system
+4. **Event-Driven**: Email notifications properly handled via integration events
+5. **Maintainability**: Reduced cognitive load with single user creation path
 
-### Next Session
-- Test runtime functionality with seeded data
-- Verify both discovery modes work
-- Complete Phase 5: Testing & Polish
+### Testing Recommendations
+- Verify registration flow end-to-end
+- Confirm email with confirmation link is sent
+- Test that no duplicate emails are sent
+- Verify error handling for existing users
+- Check that user can confirm email and login
+
+---

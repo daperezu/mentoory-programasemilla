@@ -204,6 +204,6 @@ public class ApplicationUrlService(
 
     private string GetBaseUrl()
     {
-        return configuration["Application:BaseUrl"] ?? "https://localhost:5038";
+        return configuration["Application:BaseUrl"] ?? "https://localhost:7032";
     }
 }

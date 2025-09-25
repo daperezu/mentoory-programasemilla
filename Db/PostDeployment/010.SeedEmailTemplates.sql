@@ -440,27 +440,8 @@ SET @WelcomeEmailConfirmRequiredHTML = N'<!DOCTYPE html>
                     <li><strong>Confirmas tu correo</strong> haciendo clic en el botón verde</li>
                     <li><strong>Tu cuenta se activa</strong> inmediatamente</li>
                     <li><strong>Serás redirigido</strong> a la página de inicio de sesión</li>
-                    <li><strong>Podrás acceder</strong> con las credenciales que te proporcionamos</li>
+                    <li><strong>Podrás acceder</strong> con tus credenciales</li>
                 </ol>
-            </div>
-
-            <div class="credentials-box">
-                <h3 style="margin-top: 0; color: #0056b3;">🔑 Tus credenciales de acceso</h3>
-                <p style="color: #6c757d;">Una vez confirmada tu cuenta, podrás iniciar sesión con:</p>
-                <div style="margin: 15px 0;">
-                    <strong>Identificación:</strong> <span style="font-family: monospace; background: white; padding: 5px 10px; border-radius: 4px;">{{Email}}</span>
-                </div>
-                <div style="margin: 15px 0;">
-                    <strong>Contraseña temporal:</strong> <span style="font-family: monospace; background: white; padding: 5px 10px; border-radius: 4px;">{{TemporaryPassword}}</span>
-                </div>
-                <p style="color: #dc3545; font-weight: 600; margin-top: 15px;">
-                    ⚠️ Por seguridad, deberás cambiar esta contraseña temporal en tu primer inicio de sesión
-                </p>
-            </div>
-
-            <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 25px 0;">
-                <h4 style="margin-top: 0; color: #2e7d32;">💡 Consejo importante</h4>
-                <p>Guarda este correo hasta que hayas confirmado tu cuenta y cambiado tu contraseña. Contiene información importante para tu primer acceso.</p>
             </div>
 
             <p><strong>¿Necesitas ayuda?</strong><br>
