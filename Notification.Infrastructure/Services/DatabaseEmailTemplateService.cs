@@ -19,7 +19,7 @@ public class DatabaseEmailTemplateService(
     private static readonly Regex VariableRegex = new(@"\{\{(\w+)\}\}", RegexOptions.Compiled);
     private readonly string _applicationName = configuration["Application:Name"] ?? "Mentoory";
     private readonly string _logoUrl = configuration["Application:LogoUrl"] ?? "https://www.mentoory.com/assets/logo-full-color-120.png";
-    private readonly string _websiteUrl = configuration["Application:WebsiteUrl"] ?? "https://www.mentoorys.com";
+    private readonly string _websiteUrl = configuration["Application:WebsiteUrl"] ?? "https://www.mentoory.com";
     private readonly string _supportEmail = configuration["Application:SupportEmail"] ?? "soporte@mentoory.com";
 
     public string GenerateAccountCreationEmail(
