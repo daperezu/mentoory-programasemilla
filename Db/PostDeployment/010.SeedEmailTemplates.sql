@@ -9,6 +9,7 @@
 DECLARE @WelcomeEmailHTML NVARCHAR(MAX);
 DECLARE @WelcomeEmailWithPasswordHTML NVARCHAR(MAX);
 DECLARE @WelcomeEmailConfirmRequiredHTML NVARCHAR(MAX);
+DECLARE @WelcomeEmailConfirmRequiredWithPasswordHTML NVARCHAR(MAX);
 DECLARE @PasswordResetHTML NVARCHAR(MAX);
 DECLARE @FormApprovedHTML NVARCHAR(MAX);
 DECLARE @FormRejectedHTML NVARCHAR(MAX);
@@ -338,7 +339,7 @@ WHEN NOT MATCHED THEN
     VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
 
 -- Welcome Email Template with Email Confirmation Required
-SET @WelcomeEmailConfirmRequiredHTML = N'<!DOCTYPE html>
+SET @WelcomeEmailConfirmRequiredWithPasswordHTML = N'<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8">
@@ -461,6 +462,148 @@ SET @WelcomeEmailConfirmRequiredHTML = N'<!DOCTYPE html>
             <div style="background: #e8f5e9; padding: 20px; border-radius: 8px; margin: 25px 0;">
                 <h4 style="margin-top: 0; color: #2e7d32;">💡 Consejo importante</h4>
                 <p>Guarda este correo hasta que hayas confirmado tu cuenta y cambiado tu contraseña. Contiene información importante para tu primer acceso.</p>
+            </div>
+
+            <p><strong>¿Necesitas ayuda?</strong><br>
+            Si tienes problemas para confirmar tu cuenta o acceder al sistema, contáctanos en <a href="mailto:{{SupportEmail}}">{{SupportEmail}}</a></p>
+        </div>
+        
+        <div class="footer">
+            <p>© {{CurrentYear}} {{ApplicationName}}. Todos los derechos reservados.</p>
+            <p>Si no solicitaste esta cuenta, puedes ignorar este correo de forma segura.</p>
+        </div>
+    </div>
+</body>
+</html>';
+
+-- Seed/Update welcome-email-confirm-required-with-password template
+MERGE [notification].[EmailTemplates] AS target
+USING (SELECT 
+    'welcome-email-confirm-required-with-password' AS [Key],
+    'Correo de Bienvenida - Confirmación Requerida' AS [Name],
+    '🚀 ¡Bienvenido a {{ApplicationName}}! - Confirma tu cuenta' AS [Subject],
+    @WelcomeEmailConfirmRequiredWithPasswordHTML AS [BodyHtml],
+    'es' AS [Language],
+    1 AS [IsActive]
+) AS source
+ON target.[Key] = source.[Key]
+WHEN MATCHED THEN
+    UPDATE SET 
+        [Name] = source.[Name],
+        [Subject] = source.[Subject],
+        [BodyHtml] = source.[BodyHtml],
+        [Language] = source.[Language],
+        [IsActive] = source.[IsActive],
+        [UpdatedAt] = GETDATE()
+WHEN NOT MATCHED THEN
+    INSERT ([Key], [Name], [Subject], [BodyHtml], [Language], [IsActive], [CreatedAt], [UpdatedAt])
+    VALUES (source.[Key], source.[Name], source.[Subject], source.[BodyHtml], source.[Language], source.[IsActive], GETDATE(), GETDATE());
+
+-- Welcome Email Template with Email Confirmation Required
+SET @WelcomeEmailConfirmRequiredHTML = N'<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Bienvenido a {{ApplicationName}}! - Confirma tu cuenta</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, ''Segoe UI'', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+            color: #856404;
+        }
+        .btn-primary {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 18px;
+            margin: 20px auto;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+            text-align: center;
+        }
+        .steps-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .credentials-box {
+            background: #e7f3ff;
+            border: 2px solid #b3d7ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>¡Bienvenido a {{ApplicationName}}! 🎉</h1>
+            <p style="margin: 10px 0 0 0; font-size: 18px;">Tu cuenta está casi lista</p>
+        </div>
+        
+        <div class="content">
+            <p style="font-size: 18px;">Hola <strong>{{FullName}}</strong>,</p>
+            
+            <div class="warning-box">
+                <h3 style="margin-top: 0;">⚠️ ACCIÓN REQUERIDA: Confirma tu correo electrónico</h3>
+                <p>Tu cuenta ha sido creada exitosamente, pero <strong>debes confirmar tu dirección de correo electrónico antes de poder iniciar sesión</strong>.</p>
+            </div>
+
+            <div style="text-align: center; margin: 40px 0;">
+                <h2 style="color: #28a745;">Paso 1: Confirma tu cuenta</h2>
+                <p>Haz clic en el siguiente botón para activar tu cuenta:</p>
+                <a href="{{ConfirmationUrl}}" class="btn-primary">✅ Confirmar mi cuenta ahora</a>
+            </div>
+
+            <div class="steps-box">
+                <h3 style="margin-top: 0;">📋 ¿Qué sucederá después?</h3>
+                <ol>
+                    <li><strong>Confirmas tu correo</strong> haciendo clic en el botón verde</li>
+                    <li><strong>Tu cuenta se activa</strong> inmediatamente</li>
+                    <li><strong>Serás redirigido</strong> a la página de inicio de sesión</li>
+                    <li><strong>Podrás acceder</strong> con tus credenciales</li>
+                </ol>
             </div>
 
             <p><strong>¿Necesitas ayuda?</strong><br>

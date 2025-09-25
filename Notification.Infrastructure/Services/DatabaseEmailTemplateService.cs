@@ -17,10 +17,10 @@ public class DatabaseEmailTemplateService(
     ILogger<DatabaseEmailTemplateService> logger) : IEmailTemplateService
 {
     private static readonly Regex VariableRegex = new(@"\{\{(\w+)\}\}", RegexOptions.Compiled);
-    private readonly string _applicationName = configuration["Application:Name"] ?? "LinaSys";
-    private readonly string _logoUrl = configuration["Application:LogoUrl"] ?? "https://linasys.com/assets/logo-full-color-120.png";
-    private readonly string _websiteUrl = configuration["Application:WebsiteUrl"] ?? "https://linasys.com";
-    private readonly string _supportEmail = configuration["Application:SupportEmail"] ?? "soporte@linasys.com";
+    private readonly string _applicationName = configuration["Application:Name"] ?? "Mentoory";
+    private readonly string _logoUrl = configuration["Application:LogoUrl"] ?? "https://www.mentoory.com/assets/logo-full-color-120.png";
+    private readonly string _websiteUrl = configuration["Application:WebsiteUrl"] ?? "https://www.mentoory.com";
+    private readonly string _supportEmail = configuration["Application:SupportEmail"] ?? "soporte@mentoory.com";
 
     public string GenerateAccountCreationEmail(
         string fullName,
@@ -189,16 +189,21 @@ public class DatabaseEmailTemplateService(
             ["LoginUrl"] = loginUrl
         };
 
-        // If email is not confirmed, add confirmation URL and use confirmation template
+        // If email is not confirmed, add confirmation URL and use appropriate confirmation template
         if (!emailConfirmed && !string.IsNullOrEmpty(confirmationUrl))
         {
             variables["ConfirmationUrl"] = confirmationUrl;
+
+            // Use different confirmation template based on whether there's a temporary password
             if (!string.IsNullOrEmpty(temporaryPassword))
             {
                 variables["TemporaryPassword"] = temporaryPassword;
+                return RenderTemplate("welcome-email-confirm-required-with-password", variables);
             }
-
-            return RenderTemplate("welcome-email-confirm-required", variables);
+            else
+            {
+                return RenderTemplate("welcome-email-confirm-required", variables);
+            }
         }
 
         // Use different template based on whether there's a temporary password

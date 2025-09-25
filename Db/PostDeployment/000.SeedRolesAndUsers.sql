@@ -141,7 +141,7 @@ BEGIN
 END
 ELSE
 BEGIN
-    SET @DemoCoordinatorUserId = (SELECT TOP 1 Id FROM [dbo].[AspNetUsers] WHERE UserName = 'demo.admin');
+    SET @DemoCoordinatorUserId = (SELECT TOP 1 Id FROM [dbo].[AspNetUsers] WHERE UserName = 'demo.coordinator');
 END
 
 -- Ensure Demo Administrator User Exists

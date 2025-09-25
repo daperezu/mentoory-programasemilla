@@ -1,20 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.Encodings.Web;
 using LinaSys.Auth.Application.Commands;
-using LinaSys.Auth.Domain.AggregatesModel.User;
-using LinaSys.Auth.Domain.Repositories;
-using LinaSys.Notification.Application.Commands;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
 
 namespace LinaSys.Web.Areas.Identity.Pages.Account;
 
 [AllowAnonymous]
 public class RegisterModel(
-    IAuthRepository authRepository,
     MediatR.IMediator mediatR,
     ILogger<RegisterModel> logger) : PageModel
 {
@@ -34,7 +27,13 @@ public class RegisterModel(
         returnUrl ??= Url.Content("~/");
         if (ModelState.IsValid)
         {
-            var result = await mediatR.Send(new RegisterUserCommand(Input.Username, Input.Email, Input.Password, Input.Name)).ConfigureAwait(false);
+            var result = await mediatR.Send(new CreateUserCommand(
+                Email: Input.Email,
+                Password: Input.Password,
+                Username: Input.Username,
+                Identification: Input.Username,
+                EmailConfirmed: false,
+                IsTemporaryPassword: false)).ConfigureAwait(false);
 
             var userCreated = result.Value;
             var errors = result.ErrorMessages;
@@ -43,19 +42,7 @@ public class RegisterModel(
             {
                 logger.LogInformation("User created a new account with password.");
 
-                var code = await authRepository.GenerateEmailConfirmationTokenAsync(userCreated);
-                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                var callbackUrl = Url.Page(
-                    "/Account/ConfirmEmail",
-                    pageHandler: null,
-                    values: new { area = "Identity", userId = userCreated.Id, code = code, returnUrl = returnUrl },
-                    protocol: Request.Scheme);
-
-                await mediatR.Send(new SendEmailCommand(
-                    Input.Email,
-                    "Confirm your email",
-                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl!)}'>clicking here</a>."));
-
+                // Email will be sent automatically via UserAccountCreatedIntegrationEvent handler
                 return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
             }
 
