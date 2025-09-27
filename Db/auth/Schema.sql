@@ -1,1 +1,1 @@
-﻿----- Since we are using Microsoft.Identity, we must use the default schema [dbo] for the tables
+----- Since we are using Microsoft.Identity, we must use the default schema [dbo] for the tables

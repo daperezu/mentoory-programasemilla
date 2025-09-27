@@ -1,4 +1,4 @@
-﻿CREATE TABLE [businessincubators].[BusinessIncubators]
+CREATE TABLE [businessincubators].[BusinessIncubators]
 (
     [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [ExternalId] UNIQUEIDENTIFIER NOT NULL,

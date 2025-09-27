@@ -1,4 +1,4 @@
-﻿CREATE TABLE [knowledgestructure].[SubjectResources]
+CREATE TABLE [knowledgestructure].[SubjectResources]
 (
     [Id] BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
     [SubjectId] BIGINT NOT NULL,

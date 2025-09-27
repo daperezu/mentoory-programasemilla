@@ -1,4 +1,4 @@
-﻿CREATE TABLE [mentoring].[Modules]
+CREATE TABLE [mentoring].[Modules]
 (
     [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [ProgramId] BIGINT NOT NULL,

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [knowledgestructure].[KnowledgeStructureTopics]
+CREATE TABLE [knowledgestructure].[KnowledgeStructureTopics]
 (
     [Id] BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
     [KnowledgeStructureModuleId] BIGINT NOT NULL,

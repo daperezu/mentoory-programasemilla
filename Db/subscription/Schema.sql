@@ -1,1 +1,1 @@
-﻿CREATE SCHEMA [subscription]
+CREATE SCHEMA [subscription]

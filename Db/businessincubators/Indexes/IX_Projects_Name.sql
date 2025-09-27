@@ -1,1 +1,1 @@
-﻿CREATE NONCLUSTERED INDEX [IX_Projects_Name] ON [businessincubators].[Projects] ([Name])
+CREATE NONCLUSTERED INDEX [IX_Projects_Name] ON [businessincubators].[Projects] ([Name])

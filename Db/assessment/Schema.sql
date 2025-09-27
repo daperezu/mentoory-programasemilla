@@ -1,1 +1,1 @@
-﻿CREATE SCHEMA [assessment]
+CREATE SCHEMA [assessment]
