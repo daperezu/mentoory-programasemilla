@@ -1,4 +1,4 @@
-﻿CREATE TABLE [mentoring].[ProgramMentors]
+CREATE TABLE [mentoring].[ProgramMentors]
 (
     [ProgramId] BIGINT NOT NULL,
     [MentorUserId] NVARCHAR(450) NOT NULL,

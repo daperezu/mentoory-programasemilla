@@ -1,4 +1,4 @@
-﻿CREATE TABLE [subscription].[PackageKnowledgeStructureOverride]
+CREATE TABLE [subscription].[PackageKnowledgeStructureOverride]
 (
     [BusinessIncubatorPackageId] BIGINT NOT NULL,
     [KnowledgeStructureId] BIGINT NOT NULL,

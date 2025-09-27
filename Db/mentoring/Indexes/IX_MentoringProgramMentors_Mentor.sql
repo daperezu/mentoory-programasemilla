@@ -1,2 +1,2 @@
-﻿CREATE NONCLUSTERED INDEX IX_ProgramMentors_Mentor
+CREATE NONCLUSTERED INDEX IX_ProgramMentors_Mentor
     ON [mentoring].[ProgramMentors] ([MentorUserId]);

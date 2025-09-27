@@ -1,1 +1,1 @@
-﻿CREATE SCHEMA [knowledgestructure]
+CREATE SCHEMA [knowledgestructure]

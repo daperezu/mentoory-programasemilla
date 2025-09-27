@@ -1,1 +1,1 @@
-﻿CREATE SCHEMA [diagnostics]
+CREATE SCHEMA [diagnostics]

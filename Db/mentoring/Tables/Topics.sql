@@ -1,4 +1,4 @@
-﻿CREATE TABLE [mentoring].[Topics]
+CREATE TABLE [mentoring].[Topics]
 (
     [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [ModuleId] BIGINT NOT NULL,

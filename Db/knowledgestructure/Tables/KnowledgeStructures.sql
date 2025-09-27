@@ -1,4 +1,4 @@
-﻿CREATE TABLE [knowledgestructure].[KnowledgeStructures]
+CREATE TABLE [knowledgestructure].[KnowledgeStructures]
 (
     [Id] BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
     [Name] NVARCHAR(200) NOT NULL,

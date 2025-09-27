@@ -1,4 +1,4 @@
-﻿CREATE TABLE [diagnostics].[DiagnosisAnswers] (
+CREATE TABLE [diagnostics].[DiagnosisAnswers] (
     [Id] BIGINT IDENTITY(1,1) NOT NULL,
     [UserProjectDiagnosisId] BIGINT NULL,
     [ProjectId] BIGINT NOT NULL,

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [subscription].[PackageLimitOverrides]
+CREATE TABLE [subscription].[PackageLimitOverrides]
 (
     [BusinessIncubatorPackageId] BIGINT NOT NULL,
     [Type] INT NOT NULL,

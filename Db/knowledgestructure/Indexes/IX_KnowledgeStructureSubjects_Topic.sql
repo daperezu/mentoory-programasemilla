@@ -1,2 +1,2 @@
-﻿CREATE INDEX IX_KnowledgeStructureSubjects_Topic
+CREATE INDEX IX_KnowledgeStructureSubjects_Topic
     ON [knowledgestructure].[KnowledgeStructureSubjects] ([KnowledgeStructureTopicId]);

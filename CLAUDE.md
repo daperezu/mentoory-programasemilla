@@ -14,7 +14,7 @@
 - **Run with Aspire**: `dotnet run --project Aspire.AppHost`
 - **Run Web Only**: `dotnet run --project LinaSys.Web`
 - **Test**: `dotnet test`
-- **Database Build**: `cd LindaDb && MSBuild LinaDb.sqlproj -p:Configuration=Debug`
+- **Database Build**: `cd Db && dotnet build` (generates DACPAC with PostDeployment scripts)
 - **Infrastructure**: `docker compose --file infrastructure-docker-compose.yml up -d`
 
 ## 📚 Knowledge Base
@@ -49,22 +49,23 @@
 - ✅ IApplicationUrlService GetLogoutUrl method implementation
 
 ## 🎯 Current Context
-- **Branch**: `feature/registration-email`
-- **Status**: ✅ REQ-013 Implementation COMPLETED
-- **Build Status**: ✅ Clean build - 0 errors, 0 warnings
+- **Branch**: `develop`
+- **Status**: ✅ Database Build Fixed
+- **Build Status**: ✅ Clean build - 0 errors, 0 warnings (All projects)
 - **Session File**: `.claude/CURRENT_SESSION.md` ← *Start here for today's work*
 - **Full History**: `.claude/WORK_LOG.md` ← *Detailed progress archive*
 
-### Completed Today
-- ✅ **REQ-013 Implementation**: Updated registration to use CreateUserCommand
-- ✅ **Clean Architecture**: Removed email handling from web layer
-- ✅ **Code Cleanup**: Deleted duplicate RegisterUserCommand entirely
-- ✅ **Documentation**: Updated all tracking documents
+### Recently Completed
+- ✅ **Database Build Fix** (2025-09-27): Fixed 144 SQL syntax errors in LinaDb project
+- ✅ **UTF-8 BOM Removal**: Stripped byte order marks from all SQL files
+- ✅ **Index Syntax**: Corrected INCLUDE/WHERE clause ordering (INCLUDE must come first)
+- ✅ **DACPAC Generation**: Build produces valid 275K DACPAC file
+- ✅ **Publish Script**: `./publish-linadb.sh` working correctly
 
 ### What's Next
-1. **Test registration flow**: Verify emails are sent correctly
-2. **Create PR**: Submit changes for code review
-3. **Check pending requirements**: Review `.claude/requirements/pending/`
+1. **Review Requirements**: Check `.claude/requirements/active/` and `.claude/requirements/pending/`
+2. **Database Deployment**: Test publish to SQL Server with `./publish-linadb.sh -p`
+3. **Continue Development**: Resume active feature work
 
 ## Critical Reminders
 - ⚠️ **Zero Warnings Policy**: `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`
@@ -72,6 +73,7 @@
 - 🌍 **Spanish Only**: All UI text, messages, and validation in Spanish
 - 🏗️ **Clean Architecture**: No web dependencies in Domain/Application layers
 - ✅ **Clean Build Required**: Fix all errors and warnings before committing
+- 📁 **Database PostDeployment**: Located at `/PostDeployment/` (project root, outside `Db/` to avoid MSBuild.Sdk.SqlProj validation)
 
 ## Quick Reference
 

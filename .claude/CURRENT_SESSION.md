@@ -1,56 +1,45 @@
 # Current Working Session
 
-## 🎯 Current Status: REQ-013 Implementation COMPLETED ✅
-**Branch**: feature/registration-email
+## 🎯 Current Status: Database Build Fixed ✅
+**Branch**: develop
 **Build**: ✅ Clean (0 errors, 0 warnings)
-**Session Date**: 2025-01-18
-**Completed Task**: REQ-013 - Registration Email Refactoring
+**Session Date**: 2025-09-27
+**Completed Task**: Fixed database build errors - DACPAC generation successful
 
 ### Progress Status
-- ✅ Analyzed current registration flow and identified issues
-- ✅ Created comprehensive requirement document (REQ-013)
-- ✅ Revised plan to use simpler approach (reuse CreateUserCommand)
-- ✅ Documentation updated and approved
-- ✅ Implementation completed successfully
+- ✅ Fixed all SQL syntax errors (144 errors → 0 errors)
+- ✅ Removed UTF-8 BOM characters from SQL files
+- ✅ Fixed filtered index syntax (INCLUDE before WHERE)
+- ✅ Deleted problematic geohash index files (IX_Projects_GeohashPrefix5/6)
+- ✅ Removed duplicate notification/notification.sql file
+- ✅ Fixed missing line terminators in SQL files
+- ✅ Build generates valid DACPAC (275K)
+- ✅ Publish script working correctly
 
-### Implementation Completed 🎉
+### What's Next
+1. Test database publish with `./publish-linadb.sh -p` when SQL Server is running
+2. Review pending requirements in `.claude/requirements/active/` and `.claude/requirements/pending/`
+3. Continue with active development work
 
-**Changes Made (REQ-013)**:
-1. ✅ Updated `Register.cshtml.cs`:
-   - Replaced `RegisterUserCommand` with `CreateUserCommand`
-   - Removed email handling code (lines 46-57)
-   - Removed unused dependencies (IAuthRepository, SendEmailCommand)
-   - Simplified constructor and imports
-2. ✅ Deleted `RegisterUserCommand.cs` entirely (more aggressive than marking obsolete)
-3. ✅ Email now sent via existing UserAccountCreatedIntegrationEvent handler
-4. ✅ Clean Architecture compliance achieved
+### Key Pattern: SQL Server Filtered Index Syntax
+**CRITICAL**: INCLUDE must come BEFORE WHERE in filtered indexes:
+```sql
+-- ✅ CORRECT
+CREATE INDEX [name] ON [table] ([columns])
+INCLUDE ([included_columns])
+WHERE [filter_condition];
 
-### Key Decisions
-- Used existing `CreateUserCommand` instead of modifying `RegisterUserCommand`
-- Deleted `RegisterUserCommand` entirely instead of marking obsolete (cleaner approach)
-- This eliminates code duplication and leverages already-tested functionality
+-- ❌ WRONG - Causes "Incorrect syntax near 'INCLUDE'" error
+CREATE INDEX [name] ON [table] ([columns])
+WHERE [filter_condition]
+INCLUDE ([included_columns]);
+```
 
-### Files Modified
-- ✅ `Web\Areas\Identity\Pages\Account\Register.cshtml.cs` - Updated to use CreateUserCommand
-- ✅ `Auth.Application\Commands\RegisterUserCommand.cs` - DELETED (not just obsolete)
-
-### Important Results
-- `CreateUserCommand` already publishes events and generates tokens
-- `UserAccountCreatedHandler` already sends welcome emails
-- No new infrastructure needed - everything already works
-- Clean Architecture compliance achieved with minimal changes
-- Code is cleaner with duplicate command removed
-
-### Testing Required
-- Manual testing of registration flow
-- Verify welcome email with confirmation link is sent
-- Confirm no duplicate emails
-- Test error scenarios
-
-### Next Steps
-- Move REQ-013 to completed folder
-- Consider creating PR for review
-- Monitor logs after deployment
+### Notes
+- Database project uses MSBuild.Sdk.SqlProj 3.2.0 for cross-platform builds
+- PostDeployment scripts are at `/PostDeployment/` (project root, outside Db/)
+- UTF-8 BOM characters cause SQL parser errors in MSBuild.Sdk.SqlProj
+- SQL files must have proper line terminators
 
 ---
-*Status: REQ-013 Implementation COMPLETE. Ready for testing and review.*
+*Status: Database build fixed and ready for deployment*

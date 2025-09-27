@@ -1,1 +1,1 @@
-﻿CREATE SCHEMA [businessincubators]
+CREATE SCHEMA [businessincubators]

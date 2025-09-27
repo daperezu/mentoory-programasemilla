@@ -1,4 +1,4 @@
-﻿CREATE TABLE [subscription].[PackageVersionLimits]
+CREATE TABLE [subscription].[PackageVersionLimits]
 (
     [PackageVersionId] BIGINT NOT NULL,
     [Type] INT NOT NULL,
