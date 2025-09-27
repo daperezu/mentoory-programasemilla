@@ -1,0 +1,13 @@
+# Texto por defecto: normaliza a LF en el repo
+* text=auto eol=lf
+
+# Archivos que deben quedar CRLF en Windows (si los usas)
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# Archivos siempre binarios
+*.png  binary
+*.jpg  binary
+*.pdf  binary
+*.zip  binary
