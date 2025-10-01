@@ -50,22 +50,24 @@
 
 ## 🎯 Current Context
 - **Branch**: `develop`
-- **Status**: ✅ Database Build Fixed
+- **Status**: ✅ REQ-014 Planned - Aspire Runtime Optimization
 - **Build Status**: ✅ Clean build - 0 errors, 0 warnings (All projects)
 - **Session File**: `.claude/CURRENT_SESSION.md` ← *Start here for today's work*
 - **Full History**: `.claude/WORK_LOG.md` ← *Detailed progress archive*
 
+### Active Requirements
+- **REQ-014**: Aspire Runtime Optimization (Memory: 255MB → 50MB target)
+  - Status: Documentation complete, ready for implementation
+  - Next: Create SlimServiceDefaults.cs
+
 ### Recently Completed
+- ✅ **REQ-014 Planning** (2025-01-30): Created full specification and implementation guide
 - ✅ **Database Build Fix** (2025-09-27): Fixed 144 SQL syntax errors in LinaDb project
-- ✅ **UTF-8 BOM Removal**: Stripped byte order marks from all SQL files
-- ✅ **Index Syntax**: Corrected INCLUDE/WHERE clause ordering (INCLUDE must come first)
-- ✅ **DACPAC Generation**: Build produces valid 275K DACPAC file
-- ✅ **Publish Script**: `./publish-linadb.sh` working correctly
 
 ### What's Next
-1. **Review Requirements**: Check `.claude/requirements/active/` and `.claude/requirements/pending/`
-2. **Database Deployment**: Test publish to SQL Server with `./publish-linadb.sh -p`
-3. **Continue Development**: Resume active feature work
+1. **Implement REQ-014**: Start with `Aspire.ServiceDefaults/SlimExtensions.cs`
+2. **Test Optimization**: Verify memory reduction locally
+3. **Review Other Requirements**: Check `.claude/requirements/pending/` for next priorities
 
 ## Critical Reminders
 - ⚠️ **Zero Warnings Policy**: `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>`

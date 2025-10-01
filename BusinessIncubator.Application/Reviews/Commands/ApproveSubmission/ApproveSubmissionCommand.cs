@@ -1,9 +1,7 @@
 ﻿using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Notification.Application.Commands;
-using LinaSys.Notification.Application.Templates;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using LinaSys.Shared.Application.Services;
 using LinaSys.Shared.Domain.SeedWork;
 using MediatR;
 using Microsoft.Extensions.Logging;

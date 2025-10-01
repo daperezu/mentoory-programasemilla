@@ -1,4 +1,3 @@
-using LinaSys.KnowledgeStructure.Domain.Aggregates.Subject;
 using LinaSys.KnowledgeStructure.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;

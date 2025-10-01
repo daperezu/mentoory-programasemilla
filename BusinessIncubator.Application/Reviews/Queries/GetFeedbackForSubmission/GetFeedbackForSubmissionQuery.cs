@@ -2,8 +2,6 @@ using LinaSys.BusinessIncubator.Domain.Enums;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using LinaSys.Shared.Application.Services;
-using LinaSys.Shared.Domain.SeedWork;
 using Microsoft.Extensions.Logging;
 
 namespace LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission;
@@ -66,7 +64,7 @@ public class FeedbackConversationDto
     public string AuthorName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the feedback is from a participant.
+    /// Gets or sets a value indicating whether gets or sets whether the feedback is from a participant.
     /// </summary>
     public bool IsFromParticipant { get; set; }
 
@@ -102,7 +100,7 @@ public class FeedbackReplyDto
     public string AuthorName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the reply is from a participant.
+    /// Gets or sets a value indicating whether gets or sets whether the reply is from a participant.
     /// </summary>
     public bool IsFromParticipant { get; set; }
 

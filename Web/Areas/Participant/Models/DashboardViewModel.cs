@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace LinaSys.Web.Areas.Participant.Models;
+﻿namespace LinaSys.Web.Areas.Participant.Models;
 
 public class DashboardViewModel
 {

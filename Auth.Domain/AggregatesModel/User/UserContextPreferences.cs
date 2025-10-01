@@ -31,7 +31,7 @@ public class UserContextPreferences
     public DateTime UpdatedAt { get; set; }
 
     /// <summary>
-    /// Navigation property to the user.
+    /// Gets or sets navigation property to the user.
     /// </summary>
     public virtual User User { get; set; } = default!;
 }

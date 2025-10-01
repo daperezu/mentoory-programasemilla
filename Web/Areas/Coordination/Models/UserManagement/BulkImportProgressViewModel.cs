@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace LinaSys.Web.Areas.Coordination.Models.UserManagement;
+﻿namespace LinaSys.Web.Areas.Coordination.Models.UserManagement;
 
 /// <summary>
 /// View model for displaying bulk import progress.

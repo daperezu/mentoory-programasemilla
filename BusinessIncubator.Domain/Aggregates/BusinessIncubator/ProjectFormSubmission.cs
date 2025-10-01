@@ -155,12 +155,12 @@ public class ProjectFormSubmission : Entity
     public SubmissionMode SubmissionMode { get; private set; }
 
     /// <summary>
-    /// Navigation property for EF Core.
+    /// Gets navigation property for EF Core.
     /// </summary>
     internal virtual Project Project { get; private set; } = null!;
 
     /// <summary>
-    /// Navigation property for the project stage.
+    /// Gets navigation property for the project stage.
     /// </summary>
     internal virtual ProjectStage? ProjectStage { get; private set; }
 
@@ -184,7 +184,6 @@ public class ProjectFormSubmission : Entity
     /// </summary>
     /// <param name="projectId">The project ID.</param>
     /// <param name="participantUserId">The participant user ID.</param>
-    /// <param name="formId">The form ID.</param>
     /// <param name="formSchemaVersion">The current form schema version.</param>
     /// <param name="phase">The question phase.</param>
     /// <param name="projectStageId">The project stage ID (optional).</param>
@@ -285,7 +284,7 @@ public class ProjectFormSubmission : Entity
         DraftData = draftData;
         AnsweredQuestions = answeredQuestions;
         TotalQuestions = totalQuestions;
-        CompletionPercentage = totalQuestions > 0 ? (answeredQuestions * 100) / totalQuestions : 0;
+        CompletionPercentage = (answeredQuestions * 100) / totalQuestions;
         LastAutoSaveAt = autoSaveTime;
     }
 
@@ -548,7 +547,6 @@ public class ProjectFormSubmission : Entity
     /// </summary>
     /// <param name="projectId">The project ID.</param>
     /// <param name="participantUserId">The participant user ID.</param>
-    /// <param name="formId">The form ID.</param>
     /// <param name="formSchemaVersion">The current form schema version.</param>
     /// <param name="startedAt">The start timestamp.</param>
     /// <returns>A new form submission instance.</returns>

@@ -1,7 +1,5 @@
 using LinaSys.BusinessIncubator.Application.Project.Commands.UpdateProjectStage;
-using LinaSys.BusinessIncubator.Application.Project.Queries;
 using LinaSys.BusinessIncubator.Domain.Enums;
-using LinaSys.Shared.Application;
 using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Areas.BusinessIncubators.Models.ProjectStages;
 using LinaSys.Web.Controllers;

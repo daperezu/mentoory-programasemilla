@@ -9,12 +9,12 @@ namespace LinaSys.Shared.Application.IntegrationEvents;
 public interface IIntegrationEvent : INotification
 {
     /// <summary>
-    /// Unique identifier for this integration event.
+    /// Gets unique identifier for this integration event.
     /// </summary>
     Guid EventId { get; }
 
     /// <summary>
-    /// The time when this event occurred.
+    /// Gets the time when this event occurred.
     /// </summary>
     DateTime OccurredOn { get; }
 }

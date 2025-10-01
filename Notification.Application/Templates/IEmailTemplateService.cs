@@ -8,6 +8,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates an account creation email with project invitation.
     /// </summary>
+    /// <returns></returns>
     string GenerateAccountCreationEmail(
         string fullName,
         string email,
@@ -18,6 +19,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates a project invitation email.
     /// </summary>
+    /// <returns></returns>
     string GenerateProjectInvitationEmail(
         string fullName,
         string projectName,
@@ -26,6 +28,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates an invitation reminder email.
     /// </summary>
+    /// <returns></returns>
     string GenerateInvitationReminderEmail(
         string fullName,
         string projectName,
@@ -35,6 +38,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates a form submission confirmation email.
     /// </summary>
+    /// <returns></returns>
     string GenerateFormSubmissionConfirmationEmail(
         string participantName,
         string projectName,
@@ -44,6 +48,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates a form approved email.
     /// </summary>
+    /// <returns></returns>
     string GenerateFormApprovedEmail(
         string participantName,
         string projectName,
@@ -52,6 +57,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates a form rejected email.
     /// </summary>
+    /// <returns></returns>
     string GenerateFormRejectedEmail(
         string participantName,
         string projectName,
@@ -61,6 +67,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates a review request email.
     /// </summary>
+    /// <returns></returns>
     string GenerateReviewRequestEmail(
         string participantName,
         string projectName,
@@ -72,6 +79,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates a form submission admin notification email.
     /// </summary>
+    /// <returns></returns>
     string GenerateFormSubmissionAdminNotificationEmail(
         string reviewerName,
         string projectName,
@@ -94,6 +102,7 @@ public interface IEmailTemplateService
     /// <param name="loginUrl">URL to the login page.</param>
     /// <param name="emailConfirmed">Whether the email is already confirmed.</param>
     /// <param name="confirmationUrl">URL for email confirmation (null if already confirmed).</param>
+    /// <returns></returns>
     string GenerateWelcomeEmail(
         string fullName,
         string loginCredential,
@@ -105,6 +114,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates a password reset email.
     /// </summary>
+    /// <returns></returns>
     string GeneratePasswordResetEmail(
         string fullName,
         string email,
@@ -115,6 +125,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates an email change verification email.
     /// </summary>
+    /// <returns></returns>
     string GenerateEmailChangeVerificationEmail(
         string fullName,
         string oldEmail,
@@ -124,6 +135,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates an identification change notification email.
     /// </summary>
+    /// <returns></returns>
     string GenerateIdentificationChangeNotificationEmail(
         string fullName,
         string oldIdentification,
@@ -135,6 +147,7 @@ public interface IEmailTemplateService
     /// <summary>
     /// Generates a project stage activated email.
     /// </summary>
+    /// <returns></returns>
     string GenerateProjectStageActivatedEmail(
         string participantName,
         string projectName,

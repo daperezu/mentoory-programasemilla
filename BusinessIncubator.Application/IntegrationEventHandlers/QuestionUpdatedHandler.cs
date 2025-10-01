@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using LinaSys.BusinessIncubator.Domain.Enums;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Diagnostics.Application.IntegrationEvents;
-using LinaSys.Shared.Domain.SeedWork;
+
 namespace LinaSys.BusinessIncubator.Application.IntegrationEventHandlers;
 
 /// <summary>

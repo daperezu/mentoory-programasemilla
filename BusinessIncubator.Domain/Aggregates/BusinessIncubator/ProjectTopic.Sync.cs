@@ -15,6 +15,7 @@ public partial class ProjectTopic
     /// <summary>
     /// Synchronizes this topic from its source.
     /// </summary>
+    /// <returns></returns>
     public SyncResult SyncFromSource(
         Dictionary<long, Topic>? sourceTopics,
         Dictionary<long, Subject>? sourceSubjects,

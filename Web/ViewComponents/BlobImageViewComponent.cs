@@ -4,7 +4,7 @@ using LinaSys.Web.Services;
 namespace LinaSys.Web.ViewComponents;
 
 /// <summary>
-/// ViewComponent for rendering blob images with automatic fallback
+/// ViewComponent for rendering blob images with automatic fallback.
 /// </summary>
 public class BlobImageViewComponent : ViewComponent
 {

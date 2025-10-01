@@ -1,4 +1,3 @@
-using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 
 namespace LinaSys.UserManagement.Application.Commands.UpdateUserLocation;

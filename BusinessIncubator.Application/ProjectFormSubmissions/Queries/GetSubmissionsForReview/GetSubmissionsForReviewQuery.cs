@@ -13,7 +13,7 @@ public sealed record GetSubmissionsForReviewQuery : IBaseRequest<List<Submission
     public Guid ProjectExternalId { get; init; }
 
     /// <summary>
-    /// Gets whether to include only pending submissions.
+    /// Gets a value indicating whether gets whether to include only pending submissions.
     /// </summary>
     public bool OnlyPending { get; init; } = true;
 }

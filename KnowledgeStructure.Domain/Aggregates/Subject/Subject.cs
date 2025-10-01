@@ -1,5 +1,4 @@
-﻿using LinaSys.KnowledgeStructure.Domain.Aggregates.KnowledgeStructure;
-using LinaSys.Shared.Domain.SeedWork;
+﻿using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.KnowledgeStructure.Domain.Aggregates.Subject;
 

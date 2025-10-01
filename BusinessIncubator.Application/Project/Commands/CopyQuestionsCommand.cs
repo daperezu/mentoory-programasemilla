@@ -1,10 +1,8 @@
-﻿using System.Linq;
-using FluentValidation;
+﻿using FluentValidation;
 using LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.BusinessIncubator.Application.Project.Commands;
 

@@ -59,6 +59,7 @@ public partial class ProjectKnowledgeStructure : Entity
     /// <summary>
     /// Creates a ProjectKnowledgeStructure for testing purposes with an empty structure.
     /// </summary>
+    /// <returns></returns>
     public static ProjectKnowledgeStructure CreateForTesting()
     {
         return new ProjectKnowledgeStructure(
@@ -73,6 +74,7 @@ public partial class ProjectKnowledgeStructure : Entity
     /// <summary>
     /// Creates a ProjectKnowledgeStructure for testing purposes with the given questions.
     /// </summary>
+    /// <returns></returns>
     public static ProjectKnowledgeStructure CreateForTestingWithQuestions(List<ProjectQuestion> questions)
     {
         var structure = CreateForTesting();

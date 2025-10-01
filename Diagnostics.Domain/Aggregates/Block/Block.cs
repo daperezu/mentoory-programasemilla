@@ -1,5 +1,4 @@
 ﻿using LinaSys.Diagnostics.Domain.Aggregates.Form;
-using LinaSys.Diagnostics.Domain.Enums;
 using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.Diagnostics.Domain.Aggregates.Block;

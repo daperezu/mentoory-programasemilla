@@ -75,7 +75,7 @@ public class ParticipantItem
     public string JoinedAt { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the active status.
+    /// Gets or sets a value indicating whether gets or sets the active status.
     /// </summary>
     public bool IsActive { get; set; }
 

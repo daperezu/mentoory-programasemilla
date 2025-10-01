@@ -1,8 +1,5 @@
 using System.Security.Claims;
 using LinaSys.BusinessIncubator.Application.Public.Commands;
-using LinaSys.BusinessIncubator.Application.Public.Queries;
-using LinaSys.Shared.Application;
-using LinaSys.Web.Extensions;
 using LinaSys.Web.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -34,6 +31,7 @@ public class ProjectsController : Controller
     /// <summary>
     /// Observer dashboard showing interested projects and nearby projects.
     /// </summary>
+    /// <returns></returns>
     [HttpGet]
     public IActionResult Dashboard()
     {
@@ -44,6 +42,7 @@ public class ProjectsController : Controller
     /// <summary>
     /// Records authenticated user's interest in a project.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpPost]
     public async Task<IActionResult> RecordInterest([FromBody] RecordProjectInterestRequest request)
     {
@@ -90,6 +89,7 @@ public class ProjectsController : Controller
     /// <summary>
     /// Removes user's interest in a project.
     /// </summary>
+    /// <returns></returns>
     [HttpPost]
     public IActionResult RemoveInterest([FromBody] RemoveInterestRequest request)
     {
@@ -113,6 +113,7 @@ public class ProjectsController : Controller
     /// <summary>
     /// Gets user's interested projects.
     /// </summary>
+    /// <returns></returns>
     [HttpGet]
     public IActionResult GetMyInterests()
     {

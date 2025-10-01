@@ -1,5 +1,4 @@
 using FluentValidation;
-using LinaSys.Auth.Domain.AggregatesModel.User;
 using LinaSys.Auth.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;

@@ -78,7 +78,7 @@ public sealed class ProjectFormQuestionDto
     public string? HelpText { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the question is required.
+    /// Gets or sets a value indicating whether gets or sets whether the question is required.
     /// </summary>
     public bool IsRequired { get; set; }
 
@@ -118,12 +118,12 @@ public sealed class ProjectFormQuestionDto
     public List<ProjectFormAnswerOptionDto> AnswerOptions { get; set; } = [];
 
     /// <summary>
-    /// Gets or sets whether this question is used for diagnosis.
+    /// Gets or sets a value indicating whether gets or sets whether this question is used for diagnosis.
     /// </summary>
     public bool IsUsedForDiagnosis { get; set; }
 
     /// <summary>
-    /// Gets or sets whether this question is used for mentoring plan.
+    /// Gets or sets a value indicating whether gets or sets whether this question is used for mentoring plan.
     /// </summary>
     public bool IsUsedForMentoringPlan { get; set; }
 
@@ -159,7 +159,7 @@ public sealed class ProjectFormAnswerOptionDto
     public int Order { get; set; }
 
     /// <summary>
-    /// Gets or sets whether this option requires follow-up.
+    /// Gets or sets a value indicating whether gets or sets whether this option requires follow-up.
     /// </summary>
     public bool RequiresFollowUp { get; set; }
 

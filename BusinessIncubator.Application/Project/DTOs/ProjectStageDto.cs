@@ -38,12 +38,12 @@ public class ProjectStageDto
     public long Id { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the stage is active.
+    /// Gets or sets a value indicating whether gets or sets whether the stage is active.
     /// </summary>
     public bool IsActive { get; set; }
 
     /// <summary>
-    /// Gets or sets whether this is the current stage.
+    /// Gets or sets a value indicating whether gets or sets whether this is the current stage.
     /// </summary>
     public bool IsCurrent { get; set; }
 

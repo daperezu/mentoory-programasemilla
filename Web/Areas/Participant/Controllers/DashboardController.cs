@@ -1,6 +1,5 @@
 ﻿using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Commands.GetOrCreateFormSubmission;
 using LinaSys.BusinessIncubator.Application.Queries;
-using LinaSys.Core.Application.Activities.Queries;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.Services;
 using LinaSys.Shared.Domain.Constants;

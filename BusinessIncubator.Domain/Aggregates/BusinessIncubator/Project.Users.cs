@@ -1,5 +1,4 @@
-﻿using LinaSys.BusinessIncubator.Domain.Enums;
-using LinaSys.Shared.Domain.SeedWork;
+﻿using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator;
 

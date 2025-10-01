@@ -1,5 +1,4 @@
-﻿using LinaSys.BusinessIncubator.Domain.Aggregates.Starter;
-using LinaSys.BusinessIncubator.Domain.Repositories;
+﻿using LinaSys.BusinessIncubator.Domain.Repositories;
 using Microsoft.Extensions.Logging;
 
 namespace LinaSys.BusinessIncubator.Application.Starter.Services;

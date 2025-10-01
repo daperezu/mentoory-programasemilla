@@ -1,4 +1,3 @@
-using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 
 namespace LinaSys.Auth.Application.Queries.GetUsersByIds;
@@ -35,7 +34,7 @@ public class UserBasicInfoDto
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the full name.
+    /// Gets the full name.
     /// </summary>
     public string FullName => $"{FirstName} {LastName}".Trim();
 }

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetProjectFormStructure;
+﻿namespace LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetProjectFormStructure;
 
 /// <summary>
 /// DTO representing the structure of a project form.
@@ -90,7 +88,7 @@ public sealed class FormQuestionDto
     public int AnswerType { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the question is required.
+    /// Gets or sets a value indicating whether gets or sets whether the question is required.
     /// </summary>
     public bool IsRequired { get; set; } = true;
 

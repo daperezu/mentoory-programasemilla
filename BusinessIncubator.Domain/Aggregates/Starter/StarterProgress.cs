@@ -77,102 +77,102 @@ public class StarterProgress() : ValueObject
     }
 
     /// <summary>
-    /// Current phase
+    /// Gets current phase
     /// </summary>
     public string CurrentPhase { get; private set; } = "diagnosis";
 
     /// <summary>
-    /// Phase start date
+    /// Gets phase start date
     /// </summary>
     public DateTime PhaseStartDate { get; private set; }
 
     /// <summary>
-    /// Phase expected end date
+    /// Gets phase expected end date
     /// </summary>
     public DateTime? PhaseExpectedEndDate { get; private set; }
 
     /// <summary>
-    /// Overall progress percentage
+    /// Gets overall progress percentage
     /// </summary>
     public decimal OverallProgress { get; private set; } = 0;
 
     /// <summary>
-    /// Phase progress percentage
+    /// Gets phase progress percentage
     /// </summary>
     public decimal PhaseProgress { get; private set; } = 0;
 
     /// <summary>
-    /// Tasks completed
+    /// Gets tasks completed
     /// </summary>
     public int TasksCompleted { get; private set; } = 0;
 
     /// <summary>
-    /// Total tasks
+    /// Gets total tasks
     /// </summary>
     public int TasksTotal { get; private set; } = 0;
 
     /// <summary>
-    /// Tasks overdue
+    /// Gets tasks overdue
     /// </summary>
     public int TasksOverdue { get; private set; } = 0;
 
     /// <summary>
-    /// Forms completed
+    /// Gets forms completed
     /// </summary>
     public int FormsCompleted { get; private set; } = 0;
 
     /// <summary>
-    /// Total forms
+    /// Gets total forms
     /// </summary>
     public int FormsTotal { get; private set; } = 0;
 
     /// <summary>
-    /// Forms rejected
+    /// Gets forms rejected
     /// </summary>
     public int FormsRejected { get; private set; } = 0;
 
     /// <summary>
-    /// Milestones achieved
+    /// Gets milestones achieved
     /// </summary>
     public int MilestonesAchieved { get; private set; } = 0;
 
     /// <summary>
-    /// Total milestones
+    /// Gets total milestones
     /// </summary>
     public int MilestonesTotal { get; private set; } = 0;
 
     /// <summary>
-    /// Last activity date
+    /// Gets last activity date
     /// </summary>
     public DateTime? LastActivityDate { get; private set; }
 
     /// <summary>
-    /// Next milestone date
+    /// Gets next milestone date
     /// </summary>
     public DateTime? NextMilestoneDate { get; private set; }
 
     /// <summary>
-    /// Next milestone name
+    /// Gets next milestone name
     /// </summary>
     public string? NextMilestoneName { get; private set; }
 
     /// <summary>
-    /// Engagement score
+    /// Gets engagement score
     /// </summary>
     public decimal? EngagementScore { get; private set; }
 
     /// <summary>
-    /// Performance score
+    /// Gets performance score
     /// </summary>
     public decimal? PerformanceScore { get; private set; }
 
     /// <summary>
-    /// Start date - used for initial startup tracking
+    /// Gets start date - used for initial startup tracking
     /// </summary>
     public DateTime StartDate => PhaseStartDate;
 
     /// <summary>
-    /// Milestones completed (alias for MilestonesAchieved)
+    /// Gets milestones completed (alias for MilestonesAchieved)
     /// </summary>
     public int MilestonesCompleted => MilestonesAchieved;
 
@@ -180,6 +180,7 @@ public class StarterProgress() : ValueObject
     /// Days since start
     /// </summary>
     /// <param name="currentDate">The current date to calculate from.</param>
+    /// <returns></returns>
     public int GetDaysSinceStart(DateTime currentDate) => (currentDate - PhaseStartDate).Days;
 
     /// <summary>
@@ -189,6 +190,7 @@ public class StarterProgress() : ValueObject
     /// <param name="total">Total number of tasks.</param>
     /// <param name="overallProgress">Overall progress percentage.</param>
     /// <param name="activityDate">The activity date.</param>
+    /// <returns></returns>
     public StarterProgress WithTaskProgress(int completed, int total, decimal overallProgress, DateTime activityDate)
     {
         return new StarterProgress(
@@ -219,6 +221,7 @@ public class StarterProgress() : ValueObject
     /// <param name="total">Total number of forms.</param>
     /// <param name="rejected">Number of rejected forms.</param>
     /// <param name="activityDate">The activity date.</param>
+    /// <returns></returns>
     public StarterProgress WithFormProgress(int completed, int total, int rejected, DateTime activityDate)
     {
         return new StarterProgress(
@@ -249,6 +252,7 @@ public class StarterProgress() : ValueObject
     /// <param name="phaseProgress">The phase progress percentage.</param>
     /// <param name="phaseStartDate">The phase start date.</param>
     /// <param name="activityDate">The activity date.</param>
+    /// <returns></returns>
     public StarterProgress WithPhase(string phase, decimal phaseProgress, DateTime phaseStartDate, DateTime activityDate)
     {
         return new StarterProgress(

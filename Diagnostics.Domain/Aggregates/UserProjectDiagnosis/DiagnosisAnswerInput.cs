@@ -128,7 +128,7 @@ public class DiagnosisAnswerInput
     public string? CoordinatorUserId { get; set; }
 
     /// <summary>
-    /// Gets or sets whether this answer is preferred for diagnosis.
+    /// Gets or sets a value indicating whether gets or sets whether this answer is preferred for diagnosis.
     /// </summary>
     public bool PreferredForDiagnosis { get; set; }
 }

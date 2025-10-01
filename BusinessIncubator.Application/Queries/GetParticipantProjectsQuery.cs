@@ -1,7 +1,6 @@
 ﻿using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using LinaSys.Shared.Domain.Constants;
 
 namespace LinaSys.BusinessIncubator.Application.Queries;
 

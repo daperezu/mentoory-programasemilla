@@ -187,7 +187,7 @@ public class DiagnosisAnswer : Entity
     public string? CoordinatorUserId { get; private set; }
 
     /// <summary>
-    /// Gets whether this answer is preferred for diagnosis.
+    /// Gets a value indicating whether gets whether this answer is preferred for diagnosis.
     /// </summary>
     public bool PreferredForDiagnosis { get; private set; }
 

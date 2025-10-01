@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using LinaSys.BusinessIncubator.Domain.Enums;
 
 namespace LinaSys.Web.Areas.BusinessIncubators.Models.ProjectKnowledgeStructure;
 

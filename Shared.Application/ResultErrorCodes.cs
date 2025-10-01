@@ -77,7 +77,7 @@ public enum ResultErrorCodes
     Project_NotFound = 300_050,
 
     /// <summary>
-    /// Indicates that the project has already a knowledge structure assigned
+    /// Indicates that the project has already a knowledge structure assigned.
     /// </summary>
     Project_AlreadyAssigned = 300_055,
 

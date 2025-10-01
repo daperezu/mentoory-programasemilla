@@ -1,6 +1,4 @@
-﻿using System.Data;
-using System.Text.Json;
-using LinaSys.BusinessIncubator.Domain.Aggregates.Starter;
+﻿using LinaSys.BusinessIncubator.Domain.Aggregates.Starter;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.BusinessIncubator.Infrastructure.Persistence.Entities;
 using LinaSys.Shared.Infrastructure.Persistence.Repositories;

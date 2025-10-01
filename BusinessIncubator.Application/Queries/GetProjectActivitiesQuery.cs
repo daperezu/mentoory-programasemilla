@@ -1,8 +1,6 @@
-using LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace LinaSys.BusinessIncubator.Application.Queries;
 

@@ -6,7 +6,6 @@ using LinaSys.BusinessIncubator.Application.Reviews.Commands.ReopenFeedback;
 using LinaSys.BusinessIncubator.Application.Reviews.Commands.ReplyToFeedback;
 using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetPendingReviews;
 using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetSubmissionForReview;
-using LinaSys.BusinessIncubator.Application.Reviews.Queries.GetAllSubmissionsForReview;
 using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetSubmissionById;
 using LinaSys.BusinessIncubator.Domain.Enums;
@@ -15,7 +14,6 @@ using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Services;
 using LinaSys.Shared.Application.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Areas.Coordination.Controllers;
@@ -219,6 +217,7 @@ public class FormReviewController(
     /// <summary>
     /// Gets all submissions for review (regardless of status).
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpPost]
     [Route("GetAllSubmissions")]
     public async Task<IActionResult> GetAllSubmissions(CancellationToken cancellationToken)
@@ -304,6 +303,7 @@ public class FormReviewController(
     /// <summary>
     /// Saves coordinator's answers during form review.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpPost]
     [Route("SaveCoordinatorAnswers")]
     public async Task<IActionResult> SaveCoordinatorAnswers([FromBody] SaveCoordinatorAnswersRequest request, CancellationToken cancellationToken)
@@ -336,6 +336,7 @@ public class FormReviewController(
     /// <summary>
     /// Gets existing coordinator answers for a submission.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpGet]
     [Route("GetCoordinatorAnswers/{submissionId:long}")]
     public async Task<IActionResult> GetCoordinatorAnswers(long submissionId, CancellationToken cancellationToken)

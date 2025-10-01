@@ -7,7 +7,6 @@ using LinaSys.Shared.Domain.SeedWork;
 using LinaSys.Shared.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace LinaSys.Core.Infrastructure.Persistence;
 

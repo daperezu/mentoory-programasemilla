@@ -2,7 +2,6 @@ using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.Constants;
-using Microsoft.EntityFrameworkCore;
 
 namespace LinaSys.BusinessIncubator.Application.Project.Queries.GetProjectWithParticipants;
 
@@ -73,7 +72,7 @@ public class ProjectUserDto
     public string Role { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the user is active.
+    /// Gets or sets a value indicating whether gets or sets whether the user is active.
     /// </summary>
     public bool IsActive { get; set; }
 

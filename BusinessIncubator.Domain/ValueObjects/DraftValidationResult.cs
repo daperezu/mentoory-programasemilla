@@ -7,7 +7,7 @@ public class DraftValidationResult(bool isValid)
 {
 
     /// <summary>
-    /// Gets whether the draft is valid against the current schema.
+    /// Gets a value indicating whether gets whether the draft is valid against the current schema.
     /// </summary>
     public bool IsValid { get; } = isValid;
 
@@ -34,11 +34,13 @@ public class DraftValidationResult(bool isValid)
     /// <summary>
     /// Creates a valid result.
     /// </summary>
+    /// <returns></returns>
     public static DraftValidationResult Valid() => new(true);
 
     /// <summary>
     /// Creates an invalid result with details.
     /// </summary>
+    /// <returns></returns>
     public static DraftValidationResult Invalid(
         List<long>? missingRequired = null,
         List<long>? removed = null,
