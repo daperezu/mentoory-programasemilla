@@ -1,5 +1,4 @@
-﻿using LinaSys.BusinessIncubator.Domain.Enums;
-using LinaSys.BusinessIncubator.Domain.Repositories;
+﻿using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using Microsoft.AspNetCore.Identity;

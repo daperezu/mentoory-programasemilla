@@ -13,7 +13,7 @@ public interface IDraftDataAdapter
     /// This method handles:
     /// - Injecting default values for newly introduced fields
     /// - Ignoring fields that no longer exist in the current form version
-    /// - Handling structural changes (grouping, nesting, data types)
+    /// - Handling structural changes (grouping, nesting, data types).
     /// </summary>
     /// <param name="draft">The draft data to adapt.</param>
     /// <param name="draftVersion">The version of the draft data.</param>
@@ -75,7 +75,7 @@ public class AdaptationSummary
     public List<string> Warnings { get; set; } = [];
 
     /// <summary>
-    /// Gets whether any draft data will be ignored during adaptation.
+    /// Gets a value indicating whether gets whether any draft data will be ignored during adaptation.
     /// </summary>
     public bool HasDataToIgnore => RemovedQuestions.Any() || ModifiedQuestions.Any(q => q.RequiresConversion);
 }
@@ -101,7 +101,7 @@ public class QuestionChange
     public string ChangeReason { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the change requires data conversion.
+    /// Gets or sets a value indicating whether gets or sets whether the change requires data conversion.
     /// </summary>
     public bool RequiresConversion { get; set; }
 

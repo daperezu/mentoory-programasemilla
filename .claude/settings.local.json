@@ -8,7 +8,8 @@
       "Bash(ren:*)",
       "Bash(msbuild:*)",
       "Bash(dir:*)",
-      "Bash(cmd /c:*)"
+      "Bash(cmd /c:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

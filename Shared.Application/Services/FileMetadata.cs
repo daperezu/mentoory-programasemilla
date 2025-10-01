@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace LinaSys.Shared.Application.Services;
 
 /// <summary>
@@ -58,7 +56,7 @@ public class FileMetadata
     public string EntityId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether this file contains PII.
+    /// Gets or sets a value indicating whether gets or sets whether this file contains PII.
     /// </summary>
     public bool ContainsPII { get; set; }
 
@@ -119,12 +117,12 @@ public class FileUploadOptions
     public string? ProjectId { get; set; }
 
     /// <summary>
-    /// Gets or sets whether this file contains PII.
+    /// Gets or sets a value indicating whether gets or sets whether this file contains PII.
     /// </summary>
     public bool ContainsPII { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to overwrite if file exists.
+    /// Gets or sets a value indicating whether gets or sets whether to overwrite if file exists.
     /// </summary>
     public bool OverwriteIfExists { get; set; }
 

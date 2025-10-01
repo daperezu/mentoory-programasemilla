@@ -1,5 +1,3 @@
-using System.Net.Http.Headers;
-using System.Text;
 using LinaSys.Notification.Domain.Email;
 using LinaSys.Notification.Infrastructure.Email;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +9,7 @@ namespace LinaSys.Sandbox;
 
 /// <summary>
 /// Simple test class to verify Mailgun email sending functionality.
-/// Run this with: dotnet run --project Sandbox -- mailgun
+/// Run this with: dotnet run --project Sandbox -- mailgun.
 /// </summary>
 public static class TestMailgun
 {

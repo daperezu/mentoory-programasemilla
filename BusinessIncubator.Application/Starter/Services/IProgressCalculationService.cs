@@ -1,6 +1,4 @@
-﻿using LinaSys.BusinessIncubator.Domain.Aggregates.Starter;
-
-namespace LinaSys.BusinessIncubator.Application.Starter.Services;
+﻿namespace LinaSys.BusinessIncubator.Application.Starter.Services;
 
 public interface IProgressCalculationService
 {

@@ -1,4 +1,3 @@
-using LinaSys.Auth.Domain.AggregatesModel.User;
 using LinaSys.Auth.Domain.IntegrationEvents;
 using LinaSys.Auth.Domain.Repositories;
 using LinaSys.Shared.Application;

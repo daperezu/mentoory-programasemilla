@@ -1,7 +1,7 @@
 namespace LinaSys.BusinessIncubator.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// Persistence entity for StarterProgress
+/// Persistence entity for StarterProgress.
 /// </summary>
 public class StarterProgressEntity
 {

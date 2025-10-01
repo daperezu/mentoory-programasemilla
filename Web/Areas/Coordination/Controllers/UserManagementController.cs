@@ -862,6 +862,7 @@ public class UserManagementController(
     /// <summary>
     /// Gets all active incubators for the dropdown.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpGet]
     public async Task<IActionResult> GetAllIncubators()
     {
@@ -896,6 +897,7 @@ public class UserManagementController(
     /// <summary>
     /// Gets projects for a specific incubator.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpGet]
     public async Task<IActionResult> GetProjectsByIncubator(long incubatorId)
     {

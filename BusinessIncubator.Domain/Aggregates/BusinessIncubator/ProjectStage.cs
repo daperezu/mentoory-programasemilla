@@ -20,7 +20,7 @@ public class ProjectStage : AuditableEntity
     public DateTime EndDate { get; private set; }
 
     /// <summary>
-    /// Gets whether this stage is currently active.
+    /// Gets a value indicating whether gets whether this stage is currently active.
     /// </summary>
     public bool IsActive { get; private set; }
 
@@ -45,7 +45,7 @@ public class ProjectStage : AuditableEntity
     public ProjectStageType Type { get; private set; }
 
     /// <summary>
-    /// Navigation property for EF Core.
+    /// Gets navigation property for EF Core.
     /// </summary>
     internal virtual Project Project { get; private set; }
 
@@ -53,6 +53,7 @@ public class ProjectStage : AuditableEntity
     /// Initializes a new instance of the <see cref="ProjectStage"/> class.
     /// Factory method for creating new stages.
     /// </summary>
+    /// <returns></returns>
     public static ProjectStage Create(
         long projectId,
         ProjectStageType type,

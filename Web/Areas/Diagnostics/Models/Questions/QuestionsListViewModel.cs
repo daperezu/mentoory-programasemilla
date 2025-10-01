@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Primitives;
-
-namespace LinaSys.Web.Areas.Diagnostics.Models.Questions;
+﻿namespace LinaSys.Web.Areas.Diagnostics.Models.Questions;
 
 public sealed record QuestionsListViewModel
 {

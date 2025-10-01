@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using LinaSys.Auth.Domain.AggregatesModel.Access;
+﻿using LinaSys.Auth.Domain.AggregatesModel.Access;
 using LinaSys.Auth.Domain.AggregatesModel.User;
 using LinaSys.Auth.Domain.Repositories;
 using LinaSys.Auth.Infrastructure.Persistence;

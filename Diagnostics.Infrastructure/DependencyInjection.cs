@@ -1,5 +1,4 @@
 ﻿using LinaSys.Diagnostics.Domain.Repositories;
-using LinaSys.Diagnostics.Domain.Services;
 using LinaSys.Diagnostics.Infrastructure.Persistence;
 using LinaSys.Diagnostics.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;

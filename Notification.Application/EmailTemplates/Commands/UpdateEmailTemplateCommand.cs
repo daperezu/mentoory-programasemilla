@@ -1,6 +1,5 @@
 ﻿using LinaSys.Notification.Domain.EmailTemplates;
 using LinaSys.Shared.Application;
-using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.SeedWork;
 using MediatR;
 

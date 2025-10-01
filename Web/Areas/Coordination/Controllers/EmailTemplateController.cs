@@ -1,6 +1,5 @@
 ﻿using LinaSys.Notification.Application.EmailTemplates.Commands;
 using LinaSys.Notification.Application.EmailTemplates.Queries;
-using LinaSys.Shared.Application;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Services;

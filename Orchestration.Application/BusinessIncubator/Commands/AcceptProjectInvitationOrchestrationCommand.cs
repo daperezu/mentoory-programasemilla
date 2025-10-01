@@ -6,7 +6,6 @@ using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using IBaseRequest = LinaSys.Shared.Application.MediatR.IBaseRequest;
 
 namespace LinaSys.Orchestration.Application.BusinessIncubator.Commands;
 

@@ -2,8 +2,6 @@
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using LinaSys.Shared.Domain.SeedWork;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace LinaSys.BusinessIncubator.Application.Reports.Queries.GetReportTemplates;
@@ -70,7 +68,7 @@ public class ReportTemplateDto
     public string TypeDescription { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether it's global.
+    /// Gets or sets a value indicating whether gets or sets whether it's global.
     /// </summary>
     public bool IsGlobal { get; set; }
 
@@ -100,12 +98,12 @@ public class ReportTemplateDto
     public DateTime? UpdatedAt { get; set; }
 
     /// <summary>
-    /// Gets or sets whether user can edit this template.
+    /// Gets or sets a value indicating whether gets or sets whether user can edit this template.
     /// </summary>
     public bool CanEdit { get; set; }
 
     /// <summary>
-    /// Gets or sets whether user can delete this template.
+    /// Gets or sets a value indicating whether gets or sets whether user can delete this template.
     /// </summary>
     public bool CanDelete { get; set; }
 

@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Application;
-using LinaSys.Shared.Domain.SeedWork;
+
 namespace LinaSys.BusinessIncubator.Application.ProjectKnowledgeStructure.Commands.DeleteProjectModule;
 
 /// <summary>

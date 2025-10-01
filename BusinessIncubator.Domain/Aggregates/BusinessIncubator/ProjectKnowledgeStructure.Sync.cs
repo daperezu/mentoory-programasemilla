@@ -8,7 +8,7 @@ namespace LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator;
 public partial class ProjectKnowledgeStructure
 {
     /// <summary>
-    /// Gets or sets the last time this structure was synchronized.
+    /// Gets the last time this structure was synchronized.
     /// </summary>
     public DateTime? LastSyncedAt { get; private set; }
 

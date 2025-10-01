@@ -1,6 +1,5 @@
 ﻿using LinaSys.Shared.Infrastructure.Persistence;
 using LinaSys.UserManagement.Domain.AggregatesModel.UserProfileAggregate;
-using LinaSys.UserManagement.Domain.ValueObjects;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

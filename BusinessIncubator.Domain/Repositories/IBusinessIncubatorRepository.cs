@@ -20,6 +20,7 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// </summary>
     /// <param name="project">The project to add.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     Task AddProjectAsync(Aggregates.BusinessIncubator.Project project, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -27,6 +28,7 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// </summary>
     /// <param name="review">The review to add.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     Task AddReviewAsync(Aggregates.BusinessIncubator.ProjectFormReview review, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -523,6 +525,7 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// </summary>
     /// <param name="submission">The form submission to update.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     Task UpdateFormSubmissionAsync(
         Aggregates.BusinessIncubator.ProjectFormSubmission submission,
         CancellationToken cancellationToken = default);
@@ -612,6 +615,7 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// </summary>
     /// <param name="project">The project to update.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     Task UpdateAsync(Aggregates.BusinessIncubator.Project project, CancellationToken cancellationToken = default);
 
     // Sync-specific methods
@@ -620,6 +624,7 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// </summary>
     /// <param name="projects">The projects to update.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     Task UpdateProjectsAsync(List<Aggregates.BusinessIncubator.Project> projects, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -627,6 +632,7 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// </summary>
     /// <param name="review">The review to update.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     Task UpdateReviewAsync(Aggregates.BusinessIncubator.ProjectFormReview review, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -634,6 +640,7 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// </summary>
     /// <param name="submission">The submission to update.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     Task UpdateSubmissionAsync(Aggregates.BusinessIncubator.ProjectFormSubmission submission, CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -772,6 +779,7 @@ public interface IBusinessIncubatorRepository : IRepository<Aggregates.BusinessI
     /// <param name="referrerUrl">Referrer URL (optional).</param>
     /// <param name="createdAt">Creation timestamp.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     Task RecordProjectInterestAsync(
         long projectId,
         string? userId,

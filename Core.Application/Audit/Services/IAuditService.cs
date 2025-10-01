@@ -1,5 +1,3 @@
-using LinaSys.Core.Domain.AggregatesModel.AuditAggregate;
-
 namespace LinaSys.Core.Application.Audit.Services;
 
 /// <summary>
@@ -10,6 +8,7 @@ public interface IAuditService
     /// <summary>
     /// Logs an entity creation.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task LogCreateAsync<TEntity>(
         TEntity entity,
         string userId,
@@ -21,6 +20,7 @@ public interface IAuditService
     /// <summary>
     /// Logs an entity update.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task LogUpdateAsync<TEntity>(
         TEntity oldEntity,
         TEntity newEntity,
@@ -33,6 +33,7 @@ public interface IAuditService
     /// <summary>
     /// Logs an entity deletion.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task LogDeleteAsync<TEntity>(
         TEntity entity,
         string userId,
@@ -44,6 +45,7 @@ public interface IAuditService
     /// <summary>
     /// Logs a custom action.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task LogActionAsync(
         string entityType,
         string entityId,
@@ -59,6 +61,7 @@ public interface IAuditService
     /// <summary>
     /// Logs a user authentication event.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task LogAuthenticationAsync(
         string userId,
         string userName,

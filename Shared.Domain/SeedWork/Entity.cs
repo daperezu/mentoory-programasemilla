@@ -17,7 +17,7 @@ public abstract class Entity
     public IReadOnlyCollection<INotification>? DomainEvents => _domainEvents.AsReadOnly();
 
     /// <summary>
-    /// Gets the unique identifier for the entity.
+    /// Gets or sets the unique identifier for the entity.
     /// </summary>
     public virtual long Id { get; protected set; }
 

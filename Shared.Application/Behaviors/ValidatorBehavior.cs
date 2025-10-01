@@ -35,7 +35,7 @@ public partial class ValidatorBehavior<TRequest, TResponse>(IEnumerable<IValidat
     /// 5. Collects all validation failures into a list.
     /// 6. If there are no validation failures, proceeds to the next delegate in the pipeline.
     /// 7. If there are validation failures, constructs an array of error messages.
-    /// 8. Checks if the response type is a generic type of Result<> and creates a failure result with the error messages.
+    /// 8. Checks if the response type is a generic type of Result.<> and creates a failure result with the error messages.
     /// 9. If the response type is Result (non-generic), creates a failure result with the error messages directly.
     /// 10. Throws an InvalidOperationException if the response type is neither Result<> nor Result.
     /// </summary>

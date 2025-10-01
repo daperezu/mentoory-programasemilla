@@ -47,7 +47,7 @@ public class BlockResponseDto
     public string BlockName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether this block is completed.
+    /// Gets or sets a value indicating whether gets or sets whether this block is completed.
     /// </summary>
     public bool IsCompleted { get; set; }
 
@@ -90,7 +90,7 @@ public class QuestionResponseDto
     public string? FollowUpAnswer { get; set; }
 
     /// <summary>
-    /// Gets or sets whether this question has been answered.
+    /// Gets or sets a value indicating whether gets or sets whether this question has been answered.
     /// </summary>
     public bool IsAnswered { get; set; }
 

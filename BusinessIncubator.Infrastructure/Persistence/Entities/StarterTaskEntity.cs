@@ -1,7 +1,7 @@
 ﻿namespace LinaSys.BusinessIncubator.Infrastructure.Persistence.Entities;
 
 /// <summary>
-/// Persistence entity for StarterTask
+/// Persistence entity for StarterTask.
 /// </summary>
 public class StarterTaskEntity
 {

@@ -1,5 +1,4 @@
-﻿using LinaSys.Shared.Domain.Constants;
-using OfficeOpenXml;
+﻿using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
 namespace LinaSys.BusinessIncubator.Application.Participants.Services;
@@ -148,7 +147,7 @@ public class ParticipantExportData
     public string Role { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the participant is active.
+    /// Gets or sets a value indicating whether gets or sets whether the participant is active.
     /// </summary>
     public bool IsActive { get; set; }
 
