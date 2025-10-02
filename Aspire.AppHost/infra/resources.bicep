@@ -72,6 +72,23 @@ resource containerAppEnvironment 'Microsoft.App/managedEnvironments@2024-02-02-p
 
 }
 
+resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
+  name: 'appi-${resourceToken}'
+  location: location
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspace.id
+    IngestionMode: 'LogAnalytics'
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+    RetentionInDays: 30  // Minimum retention to reduce costs
+    // Sampling is controlled via SDK configuration, not server-side
+    DisableIpMasking: false  // Privacy protection
+  }
+  tags: tags
+}
+
 output MANAGED_IDENTITY_CLIENT_ID string = managedIdentity.properties.clientId
 output MANAGED_IDENTITY_NAME string = managedIdentity.name
 output MANAGED_IDENTITY_PRINCIPAL_ID string = managedIdentity.properties.principalId
@@ -83,3 +100,4 @@ output AZURE_CONTAINER_REGISTRY_NAME string = containerRegistry.name
 output AZURE_CONTAINER_APPS_ENVIRONMENT_NAME string = containerAppEnvironment.name
 output AZURE_CONTAINER_APPS_ENVIRONMENT_ID string = containerAppEnvironment.id
 output AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN string = containerAppEnvironment.properties.defaultDomain
+output AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING string = applicationInsights.properties.ConnectionString

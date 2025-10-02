@@ -12,6 +12,7 @@ param location string
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
+param applicationinsights_samplingpercentage string
 param googleanalytics_enabled string
 @secure()
 param googleanalytics_measurementid string
@@ -86,5 +87,6 @@ output AZURE_CONTAINER_REGISTRY_NAME string = resources.outputs.AZURE_CONTAINER_
 output AZURE_CONTAINER_APPS_ENVIRONMENT_NAME string = resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_NAME
 output AZURE_CONTAINER_APPS_ENVIRONMENT_ID string = resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_ID
 output AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN string = resources.outputs.AZURE_CONTAINER_APPS_ENVIRONMENT_DEFAULT_DOMAIN
+output AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING string = resources.outputs.AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING
 output LINA_DBSERVER_SQLSERVERFQDN string = lina_dbserver.outputs.sqlServerFqdn
 output LINA_STORAGE_BLOBENDPOINT string = lina_storage.outputs.blobEndpoint
