@@ -1,77 +1,26 @@
 @model LinaSys.Web.Areas.Coordination.Models.UserManagement.BulkImportProgressViewModel
 @{
-    ViewData["Title"] = "Progreso de Importación";
+    ViewData["Title"] = "Importación Masiva";
 }
 
 <h1 class="h3 mb-4">
-    <i class="fas fa-spinner fa-spin"></i> @ViewData["Title"]
+    <i class="fas fa-file-import"></i> @ViewData["Title"]
 </h1>
 
 <div class="row">
     <div class="col-lg-8 mx-auto">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Procesando Importación Masiva</h5>
+                <h5 class="mb-0">Procesando Importación</h5>
             </div>
             <div class="card-body">
-                <div class="text-center mb-4">
-                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                    <h6>Importando <span id="totalItems">@Model.TotalItems</span> usuarios</h6>
-                </div>
-
-                <div class="progress mb-3" style="height: 25px;">
-                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
-                         role="progressbar" style="width: 0%;" 
-                         aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-                        0%
+                <div class="text-center">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Procesando...</span>
                     </div>
-                </div>
-
-                <div class="row text-center mb-3">
-                    <div class="col-md-4">
-                        <div class="p-3 border rounded">
-                            <i class="fas fa-clock text-primary"></i>
-                            <div class="small text-muted">Procesados</div>
-                            <div class="h5 mb-0"><span id="processedCount">0</span> / @Model.TotalItems</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="p-3 border rounded">
-                            <i class="fas fa-check-circle text-success"></i>
-                            <div class="small text-muted">Exitosos</div>
-                            <div class="h5 mb-0 text-success" id="successCount">0</div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="p-3 border rounded">
-                            <i class="fas fa-exclamation-circle text-danger"></i>
-                            <div class="small text-muted">Errores</div>
-                            <div class="h5 mb-0 text-danger" id="failureCount">0</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="alert alert-info" id="statusMessage">
-                    <i class="fas fa-info-circle"></i> <span id="currentMessage">Iniciando importación...</span>
-                </div>
-
-                <div id="completionMessage" class="alert alert-success d-none">
-                    <i class="fas fa-check-circle"></i> <span id="finalMessage"></span>
-                </div>
-
-                <div id="errorList" class="mt-3 d-none">
-                    <h6>Errores encontrados:</h6>
-                    <div class="list-group" id="errorListContent" style="max-height: 300px; overflow-y: auto;">
-                    </div>
-                </div>
-
-                <div class="d-flex gap-2 justify-content-center mt-4">
-                    <button type="button" class="btn btn-danger" id="cancelButton" onclick="cancelImport()">
-                        <i class="fas fa-stop"></i> Cancelar Importación
-                    </button>
-                    <a href="@Url.Action("Index")" class="btn btn-primary d-none" id="returnButton">
-                        <i class="fas fa-arrow-left"></i> Volver al Listado
-                    </a>
+                    <h6>Importando usuarios...</h6>
+                    <p class="text-muted">Por favor espere mientras se procesan los @Model.TotalItems usuarios.</p>
+                    <p class="text-muted small">Esta operación puede tardar varios minutos. No cierre esta ventana.</p>
                 </div>
             </div>
         </div>
@@ -79,187 +28,30 @@
 </div>
 
 @section Scripts {
-    <script src="~/lib/microsoft-signalr/signalr.min.js"></script>
     <script>
-        const operationId = '@Model.OperationId';
-        let connection;
-        let pollInterval;
+        // Auto-submit the form to process the import
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create and submit form to process the import
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("ProcessBulkImport")';
 
-        // Initialize SignalR connection
-        async function initializeSignalR() {
-            connection = new signalR.HubConnectionBuilder()
-                .withUrl("/hubs/user-management")
-                .withAutomaticReconnect()
-                .build();
+            const operationInput = document.createElement('input');
+            operationInput.type = 'hidden';
+            operationInput.name = 'operationId';
+            operationInput.value = '@Model.OperationId';
 
-            connection.on("BulkOperationProgress", function (data) {
-                if (data.batchId === operationId) {
-                    updateProgress(data);
-                }
-            });
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '__RequestVerificationToken';
+            tokenInput.value = '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)[1];
 
-            try {
-                await connection.start();
-                console.log("SignalR connected for bulk import progress");
-            } catch (err) {
-                console.error("SignalR connection error:", err);
-                // Fall back to polling
-                startPolling();
-            }
-        }
+            form.appendChild(operationInput);
+            form.appendChild(tokenInput);
+            document.body.appendChild(form);
 
-        // Update progress display
-        function updateProgress(data) {
-            const progressBar = document.getElementById('progressBar');
-            const percentage = data.progress || 0;
-            
-            progressBar.style.width = percentage + '%';
-            progressBar.textContent = percentage + '%';
-            progressBar.setAttribute('aria-valuenow', percentage);
-
-            document.getElementById('processedCount').textContent = data.currentItem || 0;
-            document.getElementById('successCount').textContent = data.successCount || 0;
-            document.getElementById('failureCount').textContent = data.failureCount || 0;
-            document.getElementById('currentMessage').textContent = data.message || 'Procesando...';
-
-            if (data.isCompleted) {
-                onImportComplete(data);
-            }
-        }
-
-        // Handle import completion
-        function onImportComplete(data) {
-            const progressBar = document.getElementById('progressBar');
-            progressBar.classList.remove('progress-bar-animated');
-            
-            document.getElementById('statusMessage').classList.add('d-none');
-            document.getElementById('cancelButton').classList.add('d-none');
-            document.getElementById('returnButton').classList.remove('d-none');
-
-            const completionMessage = document.getElementById('completionMessage');
-            completionMessage.classList.remove('d-none');
-            
-            if (data.isCancelled) {
-                completionMessage.classList.replace('alert-success', 'alert-warning');
-                document.getElementById('finalMessage').textContent = 'Importación cancelada por el usuario';
-            } else if (data.failureCount > 0) {
-                completionMessage.classList.replace('alert-success', 'alert-warning');
-                document.getElementById('finalMessage').textContent = 
-                    `Importación completada con errores: ${data.successCount} exitosos, ${data.failureCount} errores`;
-            } else {
-                document.getElementById('finalMessage').textContent = 
-                    `¡Importación completada exitosamente! ${data.successCount} usuarios importados`;
-            }
-
-            // Stop polling if active
-            if (pollInterval) {
-                clearInterval(pollInterval);
-            }
-
-            // Fetch and display errors if any
-            if (data.failureCount > 0) {
-                fetchErrors();
-            }
-        }
-
-        // Fallback polling mechanism
-        function startPolling() {
-            pollInterval = setInterval(async () => {
-                try {
-                    const response = await fetch(`@Url.Action("GetBulkImportStatus")?operationId=${operationId}`);
-                    const data = await response.json();
-                    
-                    if (!data.error) {
-                        updateProgress({
-                            batchId: operationId,
-                            progress: data.progressPercentage,
-                            message: data.currentMessage,
-                            currentItem: data.processedItems,
-                            totalItems: data.totalItems,
-                            successCount: data.successCount,
-                            failureCount: data.failureCount,
-                            isCompleted: data.isCompleted,
-                            isCancelled: data.isCancelled
-                        });
-                    }
-                } catch (err) {
-                    console.error("Polling error:", err);
-                }
-            }, 1000);
-        }
-
-        // Fetch errors
-        async function fetchErrors() {
-            try {
-                const response = await fetch(`@Url.Action("GetBulkImportStatus")?operationId=${operationId}`);
-                const data = await response.json();
-                
-                if (data.errors && data.errors.length > 0) {
-                    const errorList = document.getElementById('errorList');
-                    const errorListContent = document.getElementById('errorListContent');
-                    
-                    errorList.classList.remove('d-none');
-                    errorListContent.innerHTML = data.errors.map(error => 
-                        `<div class="list-group-item list-group-item-danger">
-                            <i class="fas fa-exclamation-triangle"></i> ${error}
-                        </div>`
-                    ).join('');
-                }
-            } catch (err) {
-                console.error("Error fetching errors:", err);
-            }
-        }
-
-        // Cancel import
-        async function cancelImport() {
-            if (!confirm('¿Está seguro de que desea cancelar la importación?')) {
-                return;
-            }
-
-            try {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '@Url.Action("CancelBulkImport")';
-                
-                const operationInput = document.createElement('input');
-                operationInput.type = 'hidden';
-                operationInput.name = 'operationId';
-                operationInput.value = operationId;
-                
-                const tokenInput = document.createElement('input');
-                tokenInput.type = 'hidden';
-                tokenInput.name = '__RequestVerificationToken';
-                tokenInput.value = document.querySelector('input[name="__RequestVerificationToken"]')?.value || 
-                                  '@Html.AntiForgeryToken()'.match(/value="([^"]+)"/)[1];
-                
-                form.appendChild(operationInput);
-                form.appendChild(tokenInput);
-                document.body.appendChild(form);
-                form.submit();
-            } catch (err) {
-                console.error("Error cancelling import:", err);
-                alert('Error al cancelar la importación');
-            }
-        }
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', async () => {
-            await initializeSignalR();
-            
-            // Also start polling as backup
-            if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
-                startPolling();
-            }
-        });
-
-        // Cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            if (connection) {
-                connection.stop();
-            }
-            if (pollInterval) {
-                clearInterval(pollInterval);
-            }
+            // Submit the form - the server will process and redirect when complete
+            form.submit();
         });
     </script>
 }

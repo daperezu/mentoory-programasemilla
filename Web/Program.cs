@@ -29,7 +29,6 @@ using LinaSys.Subscription.Infrastructure;
 using LinaSys.UserManagement.Application;
 using LinaSys.UserManagement.Infrastructure;
 using LinaSys.Web.Auth;
-using LinaSys.Web.Hubs;
 using LinaSys.Web.Infrastructure.Persistence;
 using LinaSys.Web.Infrastructure.Services;
 using LinaSys.Web.Filters;
@@ -55,7 +54,6 @@ builder.Services.AddMediatR(cfg =>
 
     cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
 
-    cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
     cfg.AddOpenBehavior(typeof(ValidatorBehavior<,>));
     cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
 });
@@ -77,9 +75,6 @@ builder.Services.AddScoped<IAuthScopeProvider, AuthScopeProvider>();
 builder.Services.AddScoped<MediatorExecutor>();
 
 builder.Services.AddSingleton<IVersionProvider, VersionProvider>();
-
-// Progress tracking service for bulk operations
-builder.Services.AddSingleton<IProgressTrackingService, ProgressTrackingService>();
 
 // Register IActionContextAccessor for ApplicationUrlService
 builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
@@ -155,15 +150,6 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add<RequirePasswordChangeFilter>();
 });
 
-//// [SignalR hub] SignalR for real-time notifications
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
-});
-
-//// [SignalR hub] Register notification service
-builder.Services.AddScoped<IReviewNotificationService, ReviewNotificationService>();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -200,10 +186,6 @@ app.MapControllerRoute(
 
 app.MapRazorPages()
    .WithStaticAssets();
-
-//// [SignalR hub] Map SignalR hubs
-app.MapHub<ReviewNotificationHub>("/hubs/review-notifications");
-app.MapHub<UserManagementHub>("/hubs/user-management");
 
 app.MapDefaultEndpoints();
 
