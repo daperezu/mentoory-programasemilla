@@ -10,6 +10,7 @@ PRINT '[000.SeedRolesAndUsers.sql] Starting';
 :r ./000.SeedRolesAndUsers.sql
 PRINT '[000.SeedRolesAndUsers.sql] Finished';
 
+-- NOTE: 001.SeedWebFeatures.sql removed - auth domain now handles all authorization via ASP.NET Core Identity
 
 PRINT '[002.SeedPackagesLimits.sql] Starting';
 :r ./002.SeedPackagesLimits.sql

@@ -2166,3 +2166,129 @@ case BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Draft:
 @using LinaSys.BusinessIncubator.Domain.Enums
 case ProjectFormSubmissionStatus.Draft:
 ```
+
+## Tuple Access Pattern Errors
+
+### CS0023: Operator Cannot Be Applied to Tuple
+**Error**: `CS0023: Operator '?' cannot be applied to operand of type '(string Context, string Message)'`
+**Cause**: ErrorMessages returns `List<(string, string)>`, trying to use null-conditional operator on tuple element
+**Solution**: Access tuple element directly without `?.` operator
+
+```csharp
+// ❌ WRONG - Null-conditional on tuple causes CS0023
+var errorMessage = result.ErrorMessages?.FirstOrDefault()?.Message ?? "Error...";
+
+// ✅ CORRECT - Direct tuple element access
+var errorMessage = result.ErrorMessages?.FirstOrDefault().Message ?? "Error...";
+
+// Explanation:
+// - FirstOrDefault() returns (string, string) tuple
+// - Tuple elements accessed with .Message (not ?.Message)
+// - Null-conditional (?) only on the collection, not on tuple element
+```
+
+**Pattern Used in LinaSys**:
+```csharp
+// Result pattern with ErrorMessages property
+public class Result
+{
+    public List<(string Context, string Message)>? ErrorMessages { get; }
+}
+
+// Correct access pattern in controllers:
+if (!result.IsSuccess)
+{
+    var errorMessage = result.ErrorMessages?.FirstOrDefault().Message
+        ?? "Error desconocido";
+    return Json(new { success = false, message = errorMessage });
+}
+```
+
+## Cross-Domain Query Patterns
+
+### Orchestration Layer for Cross-Domain Joins
+**Pattern**: When query needs data from multiple bounded contexts, place in Orchestration.Application
+**Example**: GetUserProjectAssignmentsOrchestrationQuery joining Auth + BusinessIncubator
+
+```csharp
+// ❌ WRONG - Cross-domain query in Auth.Application
+// Auth.Application/Queries/GetUserProjectAssignmentsQuery.cs
+// Problem: Would need to reference BusinessIncubator.Application
+
+// ✅ CORRECT - Cross-domain query in Orchestration.Application
+// Orchestration.Application/UserManagement/Queries/GetUserProjectAssignmentsOrchestrationQuery.cs
+public class Handler(
+    IAuthRepository authRepository,
+    IMediator mediator)  // Use mediator for cross-domain
+{
+    // Step 1: Get from Auth domain
+    var projectAccesses = await authRepository.GetUserProjectAccessesAsync(userId);
+
+    // Step 2: Get from BusinessIncubator domain via mediator
+    var projectIds = projectAccesses.Select(a => a.ProjectId).Distinct().ToList();
+    var projectsQuery = new GetProjectsByIdsQuery(projectIds);
+    var projectsResult = await mediator.Send(projectsQuery);
+
+    // Step 3: Get incubators via mediator
+    var incubatorIds = projectAccesses.Select(a => a.IncubatorId).Distinct().ToList();
+    var incubatorsQuery = new GetIncubatorsByIdsQuery(incubatorIds);
+    var incubatorsResult = await mediator.Send(incubatorsQuery);
+
+    // Step 4: Join data from both domains
+    // ...
+}
+```
+
+## Database PostDeployment Script Failures
+
+### Obsolete SeedWebFeatures Script (RESOLVED)
+**Error**: `Invalid object name 'systemfeatures.WebFeatures'` during database publish
+**Cause**: The `001.SeedWebFeatures.sql` script referenced tables that no longer exist (`systemfeatures.WebFeatures` and `permissions.ProtectedResources`)
+**Solution**: The script has been removed - authorization is now handled by ASP.NET Core Identity in the auth domain
+
+The post-deployment script (`PostDeployment/Script.PostDeployment.sql`) now skips script 001 with a note:
+```sql
+-- NOTE: 001.SeedWebFeatures.sql removed - auth domain now handles all authorization via ASP.NET Core Identity
+```
+
+**Authorization is now managed through**:
+1. `[Authorize(Roles = "...")]` attributes on controllers
+2. Method-level permission checks using `CurrentUserRoles`
+3. ASP.NET Core Identity role system in the auth domain
+4. No custom WebFeatures or ProtectedResources tables needed
+
+## LinaSys Security Patterns
+
+### ASP.NET Core Authorization (Not WebFeatures Table)
+**Important**: LinaSys uses built-in ASP.NET Core authorization, NOT custom WebFeatures table
+
+```csharp
+// ✅ CORRECT - Controller-level authorization
+[Area("Coordination")]
+[Authorize(Roles = $"{Roles.Coordinator},{Roles.Administrator},{Roles.GlobalAdministrator}")]
+public class UserManagementController : BaseController
+{
+    // ✅ Method-level permission checks
+    private bool CanManageProjectAssignments()
+    {
+        return CurrentUserIsGlobalAdministrator ||
+               CurrentUserRoles.Contains(Roles.Administrator) ||
+               CurrentUserRoles.Contains(Roles.Coordinator);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddToProject([FromBody] AddToProjectViewModel model)
+    {
+        if (!CanManageProjectAssignments())
+        {
+            return Json(new { success = false, message = "No tiene permisos..." });
+        }
+        // ...
+    }
+}
+```
+
+**No WebFeatures SQL needed** - security enforced via:
+1. `[Authorize(Roles = "...")]` attributes
+2. Method-level permission checks
+3. ASP.NET Core Identity role system

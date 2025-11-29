@@ -79,13 +79,6 @@ public class ProjectAccessService(
     /// <inheritdoc/>
     public async Task<bool> ValidateProjectAccessAsync(string userId, long projectId, long incubatorId, CancellationToken cancellationToken = default)
     {
-        // Check cache first
-        var cacheKey = $"project-access:{userId}:{projectId}";
-        if (cache.TryGetValue<bool>(cacheKey, out var cachedAccess))
-        {
-            return cachedAccess;
-        }
-
         // Get the specific project access record
         var projectAccess = await repository.GetUserProjectAccessAsync(userId, projectId, cancellationToken);
 
@@ -97,11 +90,6 @@ public class ProjectAccessService(
         {
             hasAccess = projectAccess!.IncubatorId == incubatorId;
         }
-
-        // Cache the result for 5 minutes
-        var cacheOptions = new MemoryCacheEntryOptions()
-            .SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
-        cache.Set(cacheKey, hasAccess, cacheOptions);
 
         logger.LogDebug("User {UserId} access to project {ProjectId}: {HasAccess}",
             userId, projectId, hasAccess);
