@@ -32,6 +32,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution 
 		README.md = README.md
 		Prompts Claude.txt = Prompts Claude.txt
 		sqlserver2022-docker-recreate.md = sqlserver2022-docker-recreate.md
+		Db\publish-linadb.sh = Db\publish-linadb.sh
+		Db\LinaDb.publish.xml = Db\LinaDb.publish.xml
+		Db\LinaDb.Development.publish.xml = Db\LinaDb.Development.publish.xml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinaSys.Web", "Web\LinaSys.Web.csproj", "{3EA870AF-BB79-4AF9-922C-0C8A95CE8021}"

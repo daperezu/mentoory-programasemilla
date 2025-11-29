@@ -1,0 +1,159 @@
+@model LinaSys.Web.Areas.Coordination.Models.UserManagement.ManageProjectsViewModel
+@{
+    ViewData["Title"] = $"Gestionar Proyectos - {Model.UserFullName}";
+}
+
+<page-header title="@ViewData["Title"]" icon-class="fas fa-project-diagram">
+    <breadcrumb>
+        <li class="breadcrumb-item"><a asp-action="Index">Usuarios</a></li>
+        <li class="breadcrumb-item"><a asp-action="Details" asp-route-id="@Model.UserId">@Model.UserFullName</a></li>
+        <li class="breadcrumb-item active">Gestionar Proyectos</li>
+    </breadcrumb>
+</page-header>
+
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list me-2"></i>
+                Proyectos Asignados
+            </h5>
+            @if (Model.CanAddToProjects)
+            {
+                <button type="button" class="btn btn-primary" id="btnAddToProject">
+                    <i class="fas fa-plus me-2"></i> Agregar a Proyecto
+                </button>
+            }
+        </div>
+        <div class="card-body">
+            <table id="projectsTable" class="table table-striped table-hover" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Proyecto</th>
+                        <th>Incubadora</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Fecha Asignación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add to Project Modal -->
+<div class="modal fade" id="addToProjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i> Agregar a Proyecto
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addToProjectForm">
+                    <input type="hidden" id="add_userId" value="@Model.UserId" />
+
+                    <div class="mb-3">
+                        <label for="add_incubatorId" class="form-label">Incubadora <span class="text-danger">*</span></label>
+                        <select id="add_incubatorId" class="form-select" required>
+                            <option value="">-- Seleccione una incubadora --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="add_projectId" class="form-label">Proyecto <span class="text-danger">*</span></label>
+                        <select id="add_projectId" class="form-select" required disabled>
+                            <option value="">-- Primero seleccione una incubadora --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="add_role" class="form-label">Rol <span class="text-danger">*</span></label>
+                        <select id="add_role" class="form-select" required>
+                            <option value="">-- Seleccione un rol --</option>
+                            <option value="Starter">Emprendedor</option>
+                            <option value="Mentor">Mentor</option>
+                            <option value="Guide">Guía</option>
+                            <option value="Facilitator">Facilitador</option>
+                            <option value="Coordinator">Coordinador</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmAdd">
+                    <i class="fas fa-check me-2"></i> Agregar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Role Modal -->
+<div class="modal fade" id="changeRoleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exchange-alt me-2"></i> Cambiar Rol
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changeRoleForm">
+                    <input type="hidden" id="change_userId" value="@Model.UserId" />
+                    <input type="hidden" id="change_projectId" />
+
+                    <div class="alert alert-info">
+                        <strong>Proyecto:</strong> <span id="change_projectName"></span><br />
+                        <strong>Rol Actual:</strong> <span id="change_currentRole"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="change_newRole" class="form-label">Nuevo Rol <span class="text-danger">*</span></label>
+                        <select id="change_newRole" class="form-select" required>
+                            <option value="">-- Seleccione un rol --</option>
+                            <option value="Starter">Emprendedor</option>
+                            <option value="Mentor">Mentor</option>
+                            <option value="Guide">Guía</option>
+                            <option value="Facilitator">Facilitador</option>
+                            <option value="Coordinator">Coordinador</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnConfirmChangeRole">
+                    <i class="fas fa-check me-2"></i> Cambiar Rol
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.manageProjectsConfig = {
+            userId: '@Model.UserId',
+            userFullName: '@Model.UserFullName',
+            canAddToProjects: @Model.CanAddToProjects.ToString().ToLower(),
+            canRemoveFromProjects: @Model.CanRemoveFromProjects.ToString().ToLower(),
+            canChangeRoles: @Model.CanChangeRoles.ToString().ToLower(),
+            urls: {
+                listUserProjects: '@Url.Action("ListUserProjects", "UserManagement")',
+                addToProject: '@Url.Action("AddToProject", "UserManagement")',
+                removeFromProject: '@Url.Action("RemoveFromProject", "UserManagement")',
+                changeProjectRole: '@Url.Action("ChangeProjectRole", "UserManagement")',
+                getAllIncubators: '@Url.Action("GetAllIncubators", "UserManagement")',
+                getProjectsByIncubator: '@Url.Action("GetProjectsByIncubator", "UserManagement")'
+            }
+        };
+    </script>
+    <script src="~/js/coordination/user-manage-projects.js"></script>
+}

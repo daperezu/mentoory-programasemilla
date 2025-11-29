@@ -68,12 +68,15 @@ public class ApplicationUrlService(
     }
 
     /// <inheritdoc/>
-    public string GetPasswordResetUrl(string resetToken)
+    public string GetPasswordResetUrl(string userId, string resetToken)
     {
+        // Encode the token for URL safety using ASP.NET Core standard encoding
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(resetToken));
+
         var urlHelper = GetUrlHelper();
         var relativeUrl = urlHelper.Page(
             "/Account/ResetPassword",
-            values: new { area = "Identity", code = resetToken });
+            values: new { area = "Identity", userId = userId, code = encodedToken });
 
         return GetAbsoluteUrl(relativeUrl);
     }
