@@ -1,4 +1,4 @@
-﻿CREATE TABLE [diagnostics].FormQuestions (
+CREATE TABLE [diagnostics].FormQuestions (
     FormId BIGINT NOT NULL,
     QuestionId BIGINT NOT NULL,
     TopicId BIGINT NULL,

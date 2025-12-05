@@ -310,6 +310,7 @@ public interface IAuthRepository
     /// </summary>
     /// <param name="userProjectAccess">The user project access to add.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task AddUserProjectAccessAsync(UserProjectAccess userProjectAccess, CancellationToken cancellationToken);
 
     /// <summary>
@@ -317,6 +318,7 @@ public interface IAuthRepository
     /// </summary>
     /// <param name="userProjectAccess">The user project access to update.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task UpdateUserProjectAccessAsync(UserProjectAccess userProjectAccess, CancellationToken cancellationToken);
 
     /// <summary>
@@ -333,6 +335,7 @@ public interface IAuthRepository
     /// </summary>
     /// <param name="userIncubatorAccess">The user incubator access to add.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task AddUserIncubatorAccessAsync(UserIncubatorAccess userIncubatorAccess, CancellationToken cancellationToken);
 
     /// <summary>
@@ -340,6 +343,7 @@ public interface IAuthRepository
     /// </summary>
     /// <param name="userIncubatorAccess">The user incubator access to update.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task UpdateUserIncubatorAccessAsync(UserIncubatorAccess userIncubatorAccess, CancellationToken cancellationToken);
 
     /// <summary>
@@ -366,6 +370,7 @@ public interface IAuthRepository
     /// </summary>
     /// <param name="userMentorshipAccess">The user mentorship access to add.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task AddUserMentorshipAccessAsync(UserMentorshipAccess userMentorshipAccess, CancellationToken cancellationToken);
 
     /// <summary>
@@ -373,6 +378,7 @@ public interface IAuthRepository
     /// </summary>
     /// <param name="userMentorshipAccess">The user mentorship access to update.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     Task UpdateUserMentorshipAccessAsync(UserMentorshipAccess userMentorshipAccess, CancellationToken cancellationToken);
 
     /// <summary>

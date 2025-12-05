@@ -5,13 +5,14 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace LinaSys.Web.Extensions;
 
 /// <summary>
-/// Generic image rendering extensions for any type of image with automatic fallbacks
+/// Generic image rendering extensions for any type of image with automatic fallbacks.
 /// </summary>
 public static class ImageRenderingExtensions
 {
     /// <summary>
     /// Renders an image with automatic fallback to placeholder if blob doesn't exist
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public static async Task<IHtmlContent> RenderImageAsync(
         this IHtmlHelper htmlHelper,
         IFileStorageService? fileStorageService,
@@ -39,6 +40,7 @@ public static class ImageRenderingExtensions
     /// <summary>
     /// Gets an image URL with automatic fallback handling
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public static async Task<string> GetImageUrlWithFallbackAsync(
         this IFileStorageService? fileStorageService,
         string? blobId,
@@ -81,6 +83,7 @@ public static class ImageRenderingExtensions
     /// <summary>
     /// Generates a placeholder image URL with specified text and dimensions
     /// </summary>
+    /// <returns></returns>
     public static string GeneratePlaceholder(string text, int width = 800, int height = 400, string? bgColor = null, string? textColor = null)
     {
         // Clean up text for URL
@@ -94,6 +97,7 @@ public static class ImageRenderingExtensions
     /// <summary>
     /// Generates a category-based placeholder with automatic color selection
     /// </summary>
+    /// <returns></returns>
     public static string GenerateCategoryPlaceholder(string category, string? text = null, int width = 800, int height = 400)
     {
         var colors = GetCategoryColors(category);
@@ -104,6 +108,7 @@ public static class ImageRenderingExtensions
     /// <summary>
     /// Creates a responsive picture element with multiple sources
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public static async Task<IHtmlContent> RenderResponsiveImageAsync(
         this IHtmlHelper htmlHelper,
         IFileStorageService? fileStorageService,
@@ -144,6 +149,7 @@ public static class ImageRenderingExtensions
     /// <summary>
     /// Renders an avatar image with fallback to initials
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public static async Task<IHtmlContent> RenderAvatarAsync(
         this IHtmlHelper htmlHelper,
         IFileStorageService? fileStorageService,

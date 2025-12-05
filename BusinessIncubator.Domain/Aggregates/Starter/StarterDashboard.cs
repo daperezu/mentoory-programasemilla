@@ -23,22 +23,22 @@ public class StarterDashboard : BaseDashboard
     }
 
     /// <summary>
-    /// Project ID associated with this starter.
+    /// Gets project ID associated with this starter.
     /// </summary>
     public long ProjectId { get; private set; }
 
     /// <summary>
-    /// Starter progress information.
+    /// Gets starter progress information.
     /// </summary>
     public StarterProgress Progress { get; private set; }
 
     /// <summary>
-    /// Active tasks.
+    /// Gets active tasks.
     /// </summary>
     public IReadOnlyList<StarterTask> Tasks => _tasks.AsReadOnly();
 
     /// <summary>
-    /// Mentor information.
+    /// Gets mentor information.
     /// </summary>
     public MentorInfo? MentorInfo { get; private set; }
 
@@ -46,6 +46,7 @@ public class StarterDashboard : BaseDashboard
     /// Get dashboard metrics.
     /// </summary>
     /// <param name="currentTime">The current time for calculations.</param>
+    /// <returns></returns>
     public DashboardMetrics GetMetrics(DateTime currentTime)
     {
         return new StarterMetrics(
@@ -65,6 +66,7 @@ public class StarterDashboard : BaseDashboard
     /// <summary>
     /// Get dashboard metrics.
     /// </summary>
+    /// <returns></returns>
     public override DashboardMetrics GetMetrics()
     {
         throw new NotSupportedException("Use GetMetrics(DateTime) instead.");
@@ -153,6 +155,7 @@ public class StarterDashboard : BaseDashboard
     /// <summary>
     /// Get active tasks
     /// </summary>
+    /// <returns></returns>
     public IEnumerable<StarterTask> GetActiveTasks()
     {
         return _tasks.Where(t => t.Status == TaskStatus.Pending || t.Status == TaskStatus.InProgress)
@@ -163,6 +166,7 @@ public class StarterDashboard : BaseDashboard
     /// <summary>
     /// Get overdue tasks
     /// </summary>
+    /// <returns></returns>
     public IEnumerable<StarterTask> GetOverdueTasks(DateTime currentTime)
     {
         return _tasks.Where(t => t.IsOverdue(currentTime))
@@ -172,6 +176,7 @@ public class StarterDashboard : BaseDashboard
     /// <summary>
     /// Get upcoming tasks
     /// </summary>
+    /// <returns></returns>
     public IEnumerable<StarterTask> GetUpcomingTasks(int days, DateTime currentTime)
     {
         var endDate = currentTime.AddDays(days);

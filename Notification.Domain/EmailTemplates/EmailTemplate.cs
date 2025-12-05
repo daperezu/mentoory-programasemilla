@@ -60,7 +60,7 @@ public class EmailTemplate(
     public string? Category { get; set; } = category;
 
     /// <summary>
-    /// Gets or sets whether the template is active.
+    /// Gets or sets a value indicating whether gets or sets whether the template is active.
     /// </summary>
     public bool IsActive { get; set; } = true;
 

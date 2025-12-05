@@ -1,4 +1,4 @@
-﻿CREATE TABLE [businessincubators].[ProjectBlocks]
+CREATE TABLE [businessincubators].[ProjectBlocks]
 (
     [Id] BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
     [SourceBlockId] BIGINT NULL,

@@ -64,7 +64,7 @@ public class SyncResult
     public int OrphanedCount => _changes.Count(c => c.ChangeType == SyncChangeType.Orphaned);
 
     /// <summary>
-    /// Indicates whether any changes were made.
+    /// Gets a value indicating whether indicates whether any changes were made.
     /// </summary>
     public bool HasChanges => _changes.Any();
 

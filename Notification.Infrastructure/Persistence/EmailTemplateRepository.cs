@@ -1,5 +1,4 @@
 ﻿using LinaSys.Notification.Domain.EmailTemplates;
-using LinaSys.Shared.Domain.SeedWork;
 using LinaSys.Shared.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 

@@ -2,7 +2,6 @@ using FluentValidation;
 using LinaSys.KnowledgeStructure.Application.KnowledgeStructure.Commands;
 using LinaSys.KnowledgeStructure.Application.KnowledgeStructure.Queries;
 using LinaSys.KnowledgeStructure.Application.Module.Commands;
-using LinaSys.KnowledgeStructure.Application.Module.Queries;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using MediatR;

@@ -3,7 +3,6 @@ using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.Constants;
 using LinaSys.Shared.Domain.SeedWork;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace LinaSys.BusinessIncubator.Application.Reviews.Queries.GetPendingReviews;
@@ -115,7 +114,7 @@ public class PendingReviewDto
     public string Priority { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether this is a resubmission.
+    /// Gets or sets a value indicating whether gets or sets whether this is a resubmission.
     /// </summary>
     public bool IsResubmission { get; set; }
 

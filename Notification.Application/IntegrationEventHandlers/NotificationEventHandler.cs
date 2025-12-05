@@ -57,10 +57,12 @@ public abstract class NotificationEventHandler<TEvent>(
     /// <summary>
     /// Extract the user ID and preference key from the event.
     /// </summary>
+    /// <returns></returns>
     protected abstract (string UserId, string PreferenceKey) GetUserAndPreferenceKey(TEvent notification);
 
     /// <summary>
     /// Process the notification after preference check passes.
     /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     protected abstract Task ProcessNotificationAsync(TEvent notification, CancellationToken cancellationToken);
 }

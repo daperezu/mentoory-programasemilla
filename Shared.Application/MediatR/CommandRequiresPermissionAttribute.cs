@@ -23,12 +23,12 @@ public class CommandRequiresPermissionAttribute(PermissionType permissionType) :
     public string[]? RequiredRoles { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to check project-level access (optional).
+    /// Gets or sets a value indicating whether gets or sets whether to check project-level access (optional).
     /// </summary>
     public bool RequiresProjectAccess { get; set; }
 
     /// <summary>
-    /// Gets or sets whether to check business incubator-level access (optional).
+    /// Gets or sets a value indicating whether gets or sets whether to check business incubator-level access (optional).
     /// </summary>
     public bool RequiresBusinessIncubatorAccess { get; set; }
 

@@ -6,8 +6,8 @@ GO
 
 CREATE NONCLUSTERED INDEX [IX_ProjectFormSubmissions_ProjectId_SubmittedAt]
     ON [businessincubators].[ProjectFormSubmissions] ([ProjectId], [SubmittedAt])
-    WHERE [SubmittedAt] IS NOT NULL
-    INCLUDE ([ParticipantUserId], [Status], [StartedAt]);
+    INCLUDE ([ParticipantUserId], [Status], [StartedAt])
+    WHERE [SubmittedAt] IS NOT NULL;
 GO
 
 CREATE NONCLUSTERED INDEX [IX_ProjectFormSubmissions_Dashboard]

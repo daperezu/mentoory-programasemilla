@@ -14,7 +14,7 @@ public class SyncProjectKnowledgeStructureCommand : IBaseRequest<SyncResult>
     public long ProjectId { get; set; }
 
     /// <summary>
-    /// Gets or sets whether this is a preview only (don't apply changes).
+    /// Gets or sets a value indicating whether gets or sets whether this is a preview only (don't apply changes).
     /// </summary>
     public bool Preview { get; set; }
 }

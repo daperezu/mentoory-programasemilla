@@ -26,7 +26,7 @@ public class ProjectUser
     public string Role { get; set; } = default!;
 
     /// <summary>
-    /// Gets or sets whether the user is currently active in the project.
+    /// Gets or sets a value indicating whether gets or sets whether the user is currently active in the project.
     /// </summary>
     public bool IsActive { get; set; }
 
@@ -66,7 +66,7 @@ public class ProjectUser
     public string? UpdatedBy { get; set; }
 
     /// <summary>
-    /// Navigation property to the project.
+    /// Gets or sets navigation property to the project.
     /// </summary>
     public virtual Project Project { get; set; } = default!;
 }

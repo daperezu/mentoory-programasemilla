@@ -1,5 +1,4 @@
-﻿using LinaSys.Auth.Domain.AggregatesModel.User;
-using LinaSys.Auth.Domain.Repositories;
+﻿using LinaSys.Auth.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.Constants;

@@ -11,12 +11,12 @@ public class StorageSettings
     public string EnvironmentPrefix { get; set; } = "dev";
 
     /// <summary>
-    /// Gets or sets whether to enable blob versioning for documents.
+    /// Gets or sets a value indicating whether gets or sets whether to enable blob versioning for documents.
     /// </summary>
     public bool EnableDocumentVersioning { get; set; } = true;
 
     /// <summary>
-    /// Gets or sets whether to enable soft delete for documents.
+    /// Gets or sets a value indicating whether gets or sets whether to enable soft delete for documents.
     /// </summary>
     public bool EnableDocumentSoftDelete { get; set; } = true;
 
@@ -36,7 +36,7 @@ public class StorageSettings
     public int TemporaryFileRetentionDays { get; set; } = 7;
 
     /// <summary>
-    /// Gets or sets whether to calculate and verify MD5 checksums.
+    /// Gets or sets a value indicating whether gets or sets whether to calculate and verify MD5 checksums.
     /// </summary>
     public bool EnableMD5Validation { get; set; } = true;
 

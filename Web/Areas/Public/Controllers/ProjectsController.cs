@@ -1,6 +1,4 @@
-using LinaSys.BusinessIncubator.Application.Public.Commands;
 using LinaSys.BusinessIncubator.Application.Public.Queries;
-using LinaSys.Shared.Application;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Services;
 using MediatR;
@@ -34,6 +32,7 @@ public class ProjectsController : Controller
     /// Displays the public homepage with project discovery features.
     /// Now loads projects by default without requiring location.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpGet]
     public async Task<IActionResult> Index()
     {
@@ -71,6 +70,7 @@ public class ProjectsController : Controller
     /// Gets the latest projects sorted by start date (no location required).
     /// Used for the default homepage view.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpGet]
     public async Task<IActionResult> GetLatestProjects(int? maxResults)
     {
@@ -104,6 +104,7 @@ public class ProjectsController : Controller
     /// <summary>
     /// Gets nearby projects based on user location.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpPost]
     public async Task<IActionResult> GetNearbyProjects([FromBody] GetNearbyProjectsRequest request)
     {
@@ -145,6 +146,7 @@ public class ProjectsController : Controller
     /// <summary>
     /// Gets project details for public viewing.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpGet]
     public async Task<IActionResult> Details(Guid id)
     {

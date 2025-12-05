@@ -1,6 +1,5 @@
 ﻿using LinaSys.Core.Domain.AggregatesModel.AuditAggregate;
 using LinaSys.Shared.Application;
-using LinaSys.Shared.Application.MediatR;
 using MediatR;
 
 namespace LinaSys.Core.Application.Audit.Queries;

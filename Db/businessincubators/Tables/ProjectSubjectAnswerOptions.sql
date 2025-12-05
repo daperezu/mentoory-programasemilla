@@ -1,4 +1,4 @@
-﻿CREATE TABLE [businessincubators].[ProjectSubjectAnswerOptions]
+CREATE TABLE [businessincubators].[ProjectSubjectAnswerOptions]
 (
     [ProjectSubjectId] BIGINT NOT NULL,
     [ProjectAnswerOptionId] BIGINT NOT NULL,

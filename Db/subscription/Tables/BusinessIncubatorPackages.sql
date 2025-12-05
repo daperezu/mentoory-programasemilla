@@ -1,4 +1,4 @@
-﻿CREATE TABLE [subscription].[BusinessIncubatorPackages]
+CREATE TABLE [subscription].[BusinessIncubatorPackages]
 (
     [Id] BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
     [BusinessIncubatorId] BIGINT NOT NULL, -- FK to BusinessIncubator.Id

@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using LinaSys.Auth.Application.Commands.Context;
 using LinaSys.Auth.Application.Queries.Context;
-using LinaSys.Shared.Application.Services;
 using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Auth;
 using LinaSys.Web.Controllers;
@@ -386,17 +385,17 @@ public class UserContextAuthorizationFilter(
     public class UserContextAuthorizationAttribute : Attribute, IFilterFactory
     {
         /// <summary>
-        /// Gets or sets whether to require a valid user context (default: true).
+        /// Gets or sets a value indicating whether gets or sets whether to require a valid user context (default: true).
         /// </summary>
         public bool RequireContext { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets whether to require an incubator in the context.
+        /// Gets or sets a value indicating whether gets or sets whether to require an incubator in the context.
         /// </summary>
         public bool RequireIncubator { get; set; } = false;
 
         /// <summary>
-        /// Gets or sets whether to require a project in the context.
+        /// Gets or sets a value indicating whether gets or sets whether to require a project in the context.
         /// </summary>
         public bool RequireProject { get; set; } = false;
 

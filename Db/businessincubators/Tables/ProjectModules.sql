@@ -1,4 +1,4 @@
-﻿CREATE TABLE [businessincubators].[ProjectModules]
+CREATE TABLE [businessincubators].[ProjectModules]
 (
     [Id] BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
     [ProjectKnowledgeStructureId] BIGINT NOT NULL,

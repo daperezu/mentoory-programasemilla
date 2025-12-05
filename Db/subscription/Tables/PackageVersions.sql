@@ -1,4 +1,4 @@
-﻿CREATE TABLE [subscription].[PackageVersions]
+CREATE TABLE [subscription].[PackageVersions]
 (
     [Id] BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
     [PackageId] BIGINT NOT NULL,

@@ -57,16 +57,7 @@ class DiagnosisChartsManager {
 
         // Configure chart options
         const option = {
-            title: {
-                text: data.blockName,
-                left: 'center',
-                top: 10,
-                textStyle: {
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    color: '#333'
-                }
-            },
+            // Title removed - displayed in HTML container instead
             tooltip: {
                 trigger: 'item',
                 formatter: function(params) {
@@ -101,8 +92,8 @@ class DiagnosisChartsManager {
                 indicator: indicators,
                 shape: 'circle',
                 splitNumber: 5,
-                radius: '70%',
-                center: ['50%', '55%'],
+                radius: '75%',
+                center: ['50%', '50%'],
                 axisName: {
                     color: '#666',
                     fontSize: 12,

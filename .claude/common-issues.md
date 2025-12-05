@@ -1,5 +1,78 @@
 # LinaSys Common Issues & Solutions
 
+## Database Build Issues
+
+### SQL Syntax Error: "Incorrect syntax near 'INCLUDE'"
+**Error**: `error SQL46010: Incorrect syntax near 'INCLUDE'` during `dotnet build` of SQL project
+**Root Cause**: Wrong syntax order in filtered indexes - WHERE clause before INCLUDE clause
+**Solution**: INCLUDE must come BEFORE WHERE in SQL Server index definitions
+```sql
+-- ❌ WRONG - Causes syntax error
+CREATE NONCLUSTERED INDEX [IX_Name]
+ON [schema].[Table] ([Column])
+WHERE [FilterColumn] IS NOT NULL
+INCLUDE ([IncludedColumns]);
+
+-- ✅ CORRECT
+CREATE NONCLUSTERED INDEX [IX_Name]
+ON [schema].[Table] ([Column])
+INCLUDE ([IncludedColumns])
+WHERE [FilterColumn] IS NOT NULL;
+```
+
+### Filtered Index on Computed Column Error
+**Error**: `Filtered index cannot be created because the column in the filter expression is a computed column`
+**Root Cause**: Trying to use non-persisted computed column in WHERE clause
+**Solution**:
+- Use PERSISTED computed columns - they CAN be filtered
+- Or filter on the base column instead
+```sql
+-- Column definition
+[GeohashPrefix5] AS LEFT([Geohash], 5) PERSISTED
+
+-- ✅ CORRECT - Can filter on persisted computed column
+WHERE [GeohashPrefix5] IS NOT NULL
+
+-- ✅ ALSO CORRECT - Filter on base column
+WHERE LEN([Geohash]) >= 5
+```
+
+### UTF-8 BOM Characters Causing Parse Errors ⚠️ CRITICAL
+**Error**: `error SQL46010: Incorrect syntax near 'INCLUDE'` (or other cryptic errors) on valid SQL files
+**Root Cause**: UTF-8 Byte Order Mark (BOM - bytes 0xEF 0xBB 0xBF) at start of files confuses MSBuild.Sdk.SqlProj parser
+**Detection**:
+```bash
+hexdump -C file.sql | head -1  # Shows "ef bb bf" at start
+file file.sql  # Shows "UTF-8 (with BOM)"
+```
+**Solution**: Strip BOMs from all SQL files
+```bash
+# Remove BOM from all SQL files
+find Db -name "*.sql" -type f -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
+find PostDeployment -name "*.sql" -type f -exec sed -i '1s/^\xEF\xBB\xBF//' {} \;
+```
+**Prevention**: Configure editor to save SQL files as "UTF-8 without BOM"
+
+### Missing Line Terminators
+**Error**: `error SQL46010: Incorrect syntax near 'INCLUDE'` or parser failures
+**Root Cause**: SQL files missing final newline
+**Detection**: `file file.sql` shows "with no line terminators"
+**Solution**: Add newline to end of file
+```bash
+echo "" >> file.sql
+```
+
+### MSBuild.Sdk.SqlProj File Ordering
+**Issue**: Need schemas before tables, tables before indexes
+**Wrong Approach**: Explicit ordering in sqlproj - MSBuild sorts alphabetically
+**Solution**: Use wildcards - DacFx handles dependencies automatically
+```xml
+<!-- ✅ Simple and works -->
+<ItemGroup>
+  <Content Include="**/*.sql" Exclude="obj/**;bin/**" />
+</ItemGroup>
+```
+
 ## Dependency Injection & Service Issues
 
 ### ITimeProvider Not Found
@@ -2093,3 +2166,129 @@ case BusinessIncubator.Domain.Enums.ProjectFormSubmissionStatus.Draft:
 @using LinaSys.BusinessIncubator.Domain.Enums
 case ProjectFormSubmissionStatus.Draft:
 ```
+
+## Tuple Access Pattern Errors
+
+### CS0023: Operator Cannot Be Applied to Tuple
+**Error**: `CS0023: Operator '?' cannot be applied to operand of type '(string Context, string Message)'`
+**Cause**: ErrorMessages returns `List<(string, string)>`, trying to use null-conditional operator on tuple element
+**Solution**: Access tuple element directly without `?.` operator
+
+```csharp
+// ❌ WRONG - Null-conditional on tuple causes CS0023
+var errorMessage = result.ErrorMessages?.FirstOrDefault()?.Message ?? "Error...";
+
+// ✅ CORRECT - Direct tuple element access
+var errorMessage = result.ErrorMessages?.FirstOrDefault().Message ?? "Error...";
+
+// Explanation:
+// - FirstOrDefault() returns (string, string) tuple
+// - Tuple elements accessed with .Message (not ?.Message)
+// - Null-conditional (?) only on the collection, not on tuple element
+```
+
+**Pattern Used in LinaSys**:
+```csharp
+// Result pattern with ErrorMessages property
+public class Result
+{
+    public List<(string Context, string Message)>? ErrorMessages { get; }
+}
+
+// Correct access pattern in controllers:
+if (!result.IsSuccess)
+{
+    var errorMessage = result.ErrorMessages?.FirstOrDefault().Message
+        ?? "Error desconocido";
+    return Json(new { success = false, message = errorMessage });
+}
+```
+
+## Cross-Domain Query Patterns
+
+### Orchestration Layer for Cross-Domain Joins
+**Pattern**: When query needs data from multiple bounded contexts, place in Orchestration.Application
+**Example**: GetUserProjectAssignmentsOrchestrationQuery joining Auth + BusinessIncubator
+
+```csharp
+// ❌ WRONG - Cross-domain query in Auth.Application
+// Auth.Application/Queries/GetUserProjectAssignmentsQuery.cs
+// Problem: Would need to reference BusinessIncubator.Application
+
+// ✅ CORRECT - Cross-domain query in Orchestration.Application
+// Orchestration.Application/UserManagement/Queries/GetUserProjectAssignmentsOrchestrationQuery.cs
+public class Handler(
+    IAuthRepository authRepository,
+    IMediator mediator)  // Use mediator for cross-domain
+{
+    // Step 1: Get from Auth domain
+    var projectAccesses = await authRepository.GetUserProjectAccessesAsync(userId);
+
+    // Step 2: Get from BusinessIncubator domain via mediator
+    var projectIds = projectAccesses.Select(a => a.ProjectId).Distinct().ToList();
+    var projectsQuery = new GetProjectsByIdsQuery(projectIds);
+    var projectsResult = await mediator.Send(projectsQuery);
+
+    // Step 3: Get incubators via mediator
+    var incubatorIds = projectAccesses.Select(a => a.IncubatorId).Distinct().ToList();
+    var incubatorsQuery = new GetIncubatorsByIdsQuery(incubatorIds);
+    var incubatorsResult = await mediator.Send(incubatorsQuery);
+
+    // Step 4: Join data from both domains
+    // ...
+}
+```
+
+## Database PostDeployment Script Failures
+
+### Obsolete SeedWebFeatures Script (RESOLVED)
+**Error**: `Invalid object name 'systemfeatures.WebFeatures'` during database publish
+**Cause**: The `001.SeedWebFeatures.sql` script referenced tables that no longer exist (`systemfeatures.WebFeatures` and `permissions.ProtectedResources`)
+**Solution**: The script has been removed - authorization is now handled by ASP.NET Core Identity in the auth domain
+
+The post-deployment script (`PostDeployment/Script.PostDeployment.sql`) now skips script 001 with a note:
+```sql
+-- NOTE: 001.SeedWebFeatures.sql removed - auth domain now handles all authorization via ASP.NET Core Identity
+```
+
+**Authorization is now managed through**:
+1. `[Authorize(Roles = "...")]` attributes on controllers
+2. Method-level permission checks using `CurrentUserRoles`
+3. ASP.NET Core Identity role system in the auth domain
+4. No custom WebFeatures or ProtectedResources tables needed
+
+## LinaSys Security Patterns
+
+### ASP.NET Core Authorization (Not WebFeatures Table)
+**Important**: LinaSys uses built-in ASP.NET Core authorization, NOT custom WebFeatures table
+
+```csharp
+// ✅ CORRECT - Controller-level authorization
+[Area("Coordination")]
+[Authorize(Roles = $"{Roles.Coordinator},{Roles.Administrator},{Roles.GlobalAdministrator}")]
+public class UserManagementController : BaseController
+{
+    // ✅ Method-level permission checks
+    private bool CanManageProjectAssignments()
+    {
+        return CurrentUserIsGlobalAdministrator ||
+               CurrentUserRoles.Contains(Roles.Administrator) ||
+               CurrentUserRoles.Contains(Roles.Coordinator);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddToProject([FromBody] AddToProjectViewModel model)
+    {
+        if (!CanManageProjectAssignments())
+        {
+            return Json(new { success = false, message = "No tiene permisos..." });
+        }
+        // ...
+    }
+}
+```
+
+**No WebFeatures SQL needed** - security enforced via:
+1. `[Authorize(Roles = "...")]` attributes
+2. Method-level permission checks
+3. ASP.NET Core Identity role system

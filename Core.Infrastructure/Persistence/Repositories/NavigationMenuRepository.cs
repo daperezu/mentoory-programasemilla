@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using LinaSys.Core.Domain.Aggregates.Navigation;
+﻿using LinaSys.Core.Domain.Aggregates.Navigation;
 using LinaSys.Shared.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 

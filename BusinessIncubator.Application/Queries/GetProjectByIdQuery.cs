@@ -1,7 +1,6 @@
 ﻿using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.BusinessIncubator.Domain.Repositories;
-using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.BusinessIncubator.Application.Queries;
 
@@ -36,7 +35,7 @@ public class ProjectDto
     public string Key { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the project is deleted.
+    /// Gets or sets a value indicating whether gets or sets whether the project is deleted.
     /// </summary>
     public bool IsDeleted { get; set; }
 }

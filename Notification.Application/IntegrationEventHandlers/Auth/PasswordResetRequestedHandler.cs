@@ -27,11 +27,10 @@ public class PasswordResetRequestedHandler(
         CancellationToken cancellationToken)
     {
         // Generate password reset email content
-        // Encode token for URL
-        var encodedToken = System.Net.WebUtility.UrlEncode(notification.ResetToken);
-        var resetLink = applicationUrlService.GetPasswordResetUrl(encodedToken);
+        // ApplicationUrlService will handle proper Base64Url encoding
+        var resetLink = applicationUrlService.GetPasswordResetUrl(notification.UserId, notification.ResetToken);
         var requestDateTime = notification.OccurredOn.ToString("dd/MM/yyyy HH:mm");
-        var requestLocation = "Sistema LinaSys"; // TODO: Get IP from context if needed
+        var requestLocation = "Mentoory"; // TODO: Get IP from context if needed
 
         var emailBody = emailTemplateService.GeneratePasswordResetEmail(
             notification.Email, // Use email as name for now

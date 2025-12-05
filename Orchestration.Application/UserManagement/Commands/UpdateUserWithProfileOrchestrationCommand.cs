@@ -1,5 +1,4 @@
 using FluentValidation;
-using LinaSys.Auth.Application.Commands;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.UserManagement.Application.Commands.UpdateUserProfile;

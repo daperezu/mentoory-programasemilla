@@ -1,4 +1,4 @@
-﻿CREATE TABLE [mentoring].[Tasks]
+CREATE TABLE [mentoring].[Tasks]
 (
     [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [QuestionId] BIGINT NOT NULL,

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [diagnostics].Blocks (
+CREATE TABLE [diagnostics].Blocks (
     [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     Name NVARCHAR(200) NOT NULL
 );

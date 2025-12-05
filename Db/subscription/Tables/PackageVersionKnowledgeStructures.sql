@@ -1,4 +1,4 @@
-﻿CREATE TABLE [subscription].[PackageVersionKnowledgeStructures]
+CREATE TABLE [subscription].[PackageVersionKnowledgeStructures]
 (
     [PackageVersionId] BIGINT NOT NULL,
     [KnowledgeStructureId] BIGINT NOT NULL,

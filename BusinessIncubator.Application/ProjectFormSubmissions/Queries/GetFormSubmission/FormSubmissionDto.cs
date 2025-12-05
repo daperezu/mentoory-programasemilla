@@ -64,12 +64,12 @@ public class FormSubmissionDto
     public DraftDataDto? DraftData { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the user can edit the form.
+    /// Gets or sets a value indicating whether gets or sets whether the user can edit the form.
     /// </summary>
     public bool CanEdit { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the user can submit the form.
+    /// Gets or sets a value indicating whether gets or sets whether the user can submit the form.
     /// </summary>
     public bool CanSubmit { get; set; }
 

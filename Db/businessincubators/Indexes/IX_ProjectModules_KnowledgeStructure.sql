@@ -1,2 +1,2 @@
-﻿CREATE INDEX IX_ProjectModules_KnowledgeStructure
+CREATE INDEX IX_ProjectModules_KnowledgeStructure
     ON [businessincubators].[ProjectModules] ([ProjectKnowledgeStructureId]);

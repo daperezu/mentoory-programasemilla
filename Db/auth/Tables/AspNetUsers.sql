@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[AspNetUsers] (
+CREATE TABLE [dbo].[AspNetUsers] (
     [Id]                   NVARCHAR (450)     NOT NULL,
     [UserName]             NVARCHAR (256)     NULL,
     [NormalizedUserName]   NVARCHAR (256)     NULL,

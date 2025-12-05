@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using LinaSys.BusinessIncubator.Application.Project.Queries.GetProjectWithParticipants;
 using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.BusinessIncubator.Application.Reports.Commands.CreateReportTemplate;
 using LinaSys.BusinessIncubator.Application.Reports.Commands.GenerateReport;

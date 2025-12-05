@@ -1,5 +1,4 @@
 using FluentValidation;
-using LinaSys.BusinessIncubator.Application.Project.Commands;
 using LinaSys.BusinessIncubator.Application.Project.Queries;
 using LinaSys.BusinessIncubator.Domain.Aggregates.BusinessIncubator;
 using LinaSys.BusinessIncubator.Domain.Repositories;

@@ -1,7 +1,6 @@
 ﻿using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetSubmissionById;
 

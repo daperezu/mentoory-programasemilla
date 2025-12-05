@@ -21,6 +21,7 @@ public static class GeohashHelper
     /// <summary>
     /// Encodes latitude and longitude into a geohash string.
     /// </summary>
+    /// <returns></returns>
     public static string Encode(double latitude, double longitude, int precision = 12)
     {
         if (precision < 1 || precision > 12)
@@ -86,6 +87,7 @@ public static class GeohashHelper
     /// <summary>
     /// Decodes a geohash string into latitude and longitude bounds.
     /// </summary>
+    /// <returns></returns>
     public static (double MinLat, double MaxLat, double MinLon, double MaxLon) DecodeBounds(string geohash)
     {
         double[] latRange = { -90.0, 90.0 };
@@ -138,6 +140,7 @@ public static class GeohashHelper
     /// <summary>
     /// Gets the center point of a geohash.
     /// </summary>
+    /// <returns></returns>
     public static (double Latitude, double Longitude) DecodeCenter(string geohash)
     {
         var bounds = DecodeBounds(geohash);
@@ -147,6 +150,7 @@ public static class GeohashHelper
     /// <summary>
     /// Gets all 8 neighboring geohashes for a given geohash.
     /// </summary>
+    /// <returns></returns>
     public static string[] GetNeighbors(string geohash)
     {
         if (string.IsNullOrEmpty(geohash))
@@ -174,6 +178,7 @@ public static class GeohashHelper
     /// <summary>
     /// Gets geohashes covering a bounding box at a specific precision.
     /// </summary>
+    /// <returns></returns>
     public static HashSet<string> GetGeohashesInBoundingBox(
         double minLat, double maxLat, double minLon, double maxLon, int precision)
     {
@@ -211,6 +216,7 @@ public static class GeohashHelper
     /// <summary>
     /// Calculates a bounding box for a given center point and radius.
     /// </summary>
+    /// <returns></returns>
     public static (double MinLat, double MaxLat, double MinLon, double MaxLon) GetBoundingBox(
         double latitude, double longitude, double radiusKm)
     {

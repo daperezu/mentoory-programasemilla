@@ -39,6 +39,7 @@ public class ImagesController : Controller
     /// <summary>
     /// Streams an image by its blob ID with automatic fallback.
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     [HttpGet("{*encodedBlobId}")]
     [ResponseCache(Duration = 86400, Location = ResponseCacheLocation.Any, VaryByHeader = "Accept")]
     public async Task<IActionResult> Get(

@@ -84,7 +84,7 @@ public class ProjectInvitation : SoftDeletableEntity
     public DateTime? AcceptedAt { get; private set; }
 
     /// <summary>
-    /// Navigation property for EF Core.
+    /// Gets navigation property for EF Core.
     /// </summary>
     internal virtual Project Project { get; private set; } = null!;
 

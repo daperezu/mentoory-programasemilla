@@ -1,6 +1,5 @@
 ﻿using LinaSys.Core.Application.Dashboard.Services;
 using LinaSys.Core.Domain.Aggregates.Activity;
-using LinaSys.Core.Domain.Aggregates.Dashboard;
 using LinaSys.Core.Domain.Repositories;
 using LinaSys.Core.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;

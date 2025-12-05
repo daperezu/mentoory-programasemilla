@@ -1,1 +1,1 @@
-﻿CREATE SCHEMA [mentoring]
+CREATE SCHEMA [mentoring]

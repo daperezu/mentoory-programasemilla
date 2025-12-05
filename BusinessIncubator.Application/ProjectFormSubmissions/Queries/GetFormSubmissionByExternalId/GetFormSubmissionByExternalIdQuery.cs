@@ -4,7 +4,6 @@ using LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetFo
 using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using MediatR;
 
 namespace LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetFormSubmissionByExternalId;
 

@@ -13,7 +13,6 @@ using LinaSys.Web.Extensions;
 using LinaSys.Web.Models;
 using LinaSys.Web.Services;
 using LinaSys.Shared.Application.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LinaSys.Web.Areas.KnowledgeStructure.Controllers;

@@ -2,7 +2,6 @@
 using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -14,7 +13,7 @@ namespace LinaSys.Web.Services;
 /// </summary>
 public class ApplicationUrlService(
     IUrlHelperFactory urlHelperFactory,
-    IActionContextAccessor actionContextAccessor,
+    IHttpContextAccessor httpContextAccessor,
     IConfiguration configuration) : IApplicationUrlService
 {
 
@@ -68,12 +67,15 @@ public class ApplicationUrlService(
     }
 
     /// <inheritdoc/>
-    public string GetPasswordResetUrl(string resetToken)
+    public string GetPasswordResetUrl(string userId, string resetToken)
     {
+        // Encode the token for URL safety using ASP.NET Core standard encoding
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(resetToken));
+
         var urlHelper = GetUrlHelper();
         var relativeUrl = urlHelper.Page(
             "/Account/ResetPassword",
-            values: new { area = "Identity", code = resetToken });
+            values: new { area = "Identity", userId = userId, code = encodedToken });
 
         return GetAbsoluteUrl(relativeUrl);
     }
@@ -168,11 +170,11 @@ public class ApplicationUrlService(
 
     private IUrlHelper GetUrlHelper()
     {
-        var actionContext = actionContextAccessor.ActionContext;
-        if (actionContext is null)
+        var httpContext = httpContextAccessor.HttpContext;
+        if (httpContext is null)
         {
             // Fallback for when called outside of HTTP context (e.g., background jobs)
-            var httpContext = new DefaultHttpContext
+            httpContext = new DefaultHttpContext
             {
                 Request =
                 {
@@ -180,9 +182,9 @@ public class ApplicationUrlService(
                     Host = new HostString(GetBaseUrl().Replace("https://", string.Empty).Replace("http://", string.Empty))
                 }
             };
-            actionContext = new ActionContext(httpContext, new RouteData(), new ActionDescriptor());
         }
 
+        var actionContext = new ActionContext(httpContext, httpContext.GetRouteData(), new ActionDescriptor());
         return urlHelperFactory.GetUrlHelper(actionContext);
     }
 

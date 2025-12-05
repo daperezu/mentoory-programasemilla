@@ -85,22 +85,22 @@ public class UserInvitationResult
     public string FullName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets whether the operation was successful.
+    /// Gets or sets a value indicating whether gets or sets whether the operation was successful.
     /// </summary>
     public bool Success { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the user already existed.
+    /// Gets or sets a value indicating whether gets or sets whether the user already existed.
     /// </summary>
     public bool UserAlreadyExisted { get; set; }
 
     /// <summary>
-    /// Gets or sets whether an invitation was created.
+    /// Gets or sets a value indicating whether gets or sets whether an invitation was created.
     /// </summary>
     public bool InvitationCreated { get; set; }
 
     /// <summary>
-    /// Gets or sets whether an email was sent.
+    /// Gets or sets a value indicating whether gets or sets whether an email was sent.
     /// </summary>
     public bool EmailSent { get; set; }
 

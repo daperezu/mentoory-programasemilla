@@ -1,5 +1,3 @@
-using System;
-
 namespace LinaSys.BusinessIncubator.Application.ProjectFormSubmissions.Queries.GetParticipantSubmissions;
 
 /// <summary>
@@ -43,12 +41,12 @@ public sealed class ParticipantSubmissionDto
     public string? RejectionReason { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the participant can edit this submission.
+    /// Gets or sets a value indicating whether gets or sets whether the participant can edit this submission.
     /// </summary>
     public bool CanEdit { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the participant can view this submission.
+    /// Gets or sets a value indicating whether gets or sets whether the participant can view this submission.
     /// </summary>
     public bool CanView { get; set; }
 }

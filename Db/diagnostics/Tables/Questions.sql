@@ -1,4 +1,4 @@
-﻿CREATE TABLE [diagnostics].Questions (
+CREATE TABLE [diagnostics].Questions (
     [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [Text] NVARCHAR(MAX) NOT NULL,
     AnswerType INT NOT NULL,

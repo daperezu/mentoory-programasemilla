@@ -1,7 +1,6 @@
 ﻿using LinaSys.Auth.Application.Queries;
 using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.Web.Services;
-using Microsoft.Extensions.Logging;
 
 namespace LinaSys.Web.Auth;
 

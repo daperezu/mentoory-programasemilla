@@ -1,10 +1,10 @@
-using System.Text;
 using LinaSys.Auth.Application.Commands;
 using LinaSys.Auth.Application.Queries;
 using LinaSys.Notification.Application.Commands;
 using LinaSys.Notification.Application.Templates;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
+using LinaSys.Shared.Application.Services;
 using LinaSys.Shared.Application.TimeProvider;
 using LinaSys.UserManagement.Application.Queries.GetUserProfileByUserId;
 using MediatR;
@@ -15,12 +15,12 @@ namespace LinaSys.Orchestration.Application.UserManagement.Commands;
 
 public record SendPasswordResetEmailOrchestrationCommand(
     string UserId,
-    string BaseUrl,
     string? RequestLocation = null) : LinaSys.Shared.Application.MediatR.IBaseRequest;
 
 public class SendPasswordResetEmailOrchestrationCommandHandler(
     IMediator mediator,
     IEmailTemplateService emailTemplateService,
+    IApplicationUrlService applicationUrlService,
     IConfiguration configuration,
     ITimeProvider timeProvider,
     ILogger<SendPasswordResetEmailOrchestrationCommandHandler> logger)
@@ -60,14 +60,8 @@ public class SendPasswordResetEmailOrchestrationCommandHandler(
                     ("GenerateToken", "Error al generar el token de restablecimiento de contraseña."));
             }
 
-            // Encode the token for URL
-            var encodedCode = Convert.ToBase64String(Encoding.UTF8.GetBytes(tokenResult.Value))
-                .Replace('+', '-')
-                .Replace('/', '_')
-                .Replace("=", string.Empty);
-
-            // Build reset URL
-            var resetUrl = $"{request.BaseUrl}/Account/ResetPassword?userId={request.UserId}&code={encodedCode}";
+            // Build reset URL using ApplicationUrlService for proper encoding
+            var resetUrl = applicationUrlService.GetPasswordResetUrl(request.UserId, tokenResult.Value);
 
             // Get request details
             var requestDateTime = timeProvider.Now.ToString("dd/MM/yyyy HH:mm:ss");

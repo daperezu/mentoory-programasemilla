@@ -4,7 +4,7 @@ using LinaSys.Shared.Application.Services;
 namespace LinaSys.Web.Services;
 
 /// <summary>
-/// Service for rendering images with automatic fallback handling
+/// Service for rendering images with automatic fallback handling.
 /// </summary>
 public class ImageRenderingService
 {
@@ -28,6 +28,7 @@ public class ImageRenderingService
     /// <summary>
     /// Gets an image URL with automatic fallback handling
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public async Task<string> GetImageUrlAsync(
         string? blobId,
         ImageFallbackOptions? options = null)
@@ -128,6 +129,7 @@ public class ImageRenderingService
     /// <summary>
     /// Batch get multiple image URLs efficiently
     /// </summary>
+    /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
     public async Task<Dictionary<string, string>> GetImageUrlsAsync(
         IEnumerable<string?> blobIds,
         ImageFallbackOptions? options = null)
@@ -208,7 +210,7 @@ public class ImageRenderingService
 }
 
 /// <summary>
-/// Options for image fallback behavior
+/// Options for image fallback behavior.
 /// </summary>
 public class ImageFallbackOptions
 {

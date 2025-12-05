@@ -1,4 +1,4 @@
-﻿CREATE TABLE [mentoring].[Programs]
+CREATE TABLE [mentoring].[Programs]
 (
     [Id] BIGINT IDENTITY(1,1) NOT NULL PRIMARY KEY,
     [UserId] BIGINT NOT NULL,

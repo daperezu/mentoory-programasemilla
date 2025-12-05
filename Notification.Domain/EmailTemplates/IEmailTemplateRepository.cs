@@ -31,6 +31,7 @@ public interface IEmailTemplateRepository : IRepository<EmailTemplate>
     /// Adds a new email template.
     /// </summary>
     /// <param name="template">The template to add.</param>
+    /// <returns></returns>
     EmailTemplate Add(EmailTemplate template);
 
     /// <summary>

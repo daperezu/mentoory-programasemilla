@@ -1,4 +1,4 @@
-﻿CREATE TABLE [mentoring].[SessionTopics]
+CREATE TABLE [mentoring].[SessionTopics]
 (
     [SessionId] BIGINT NOT NULL,
     [TopicId] BIGINT NOT NULL,

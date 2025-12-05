@@ -10,12 +10,12 @@ public partial class ProjectQuestion
     private readonly List<ProjectAnswerOption> _projectAnswerOptions = [];
 
     /// <summary>
-    /// Gets or sets the last time this question was synchronized.
+    /// Gets the last time this question was synchronized.
     /// </summary>
     public DateTime? LastSyncedAt { get; private set; }
 
     /// <summary>
-    /// Gets or sets whether help text is customized.
+    /// Gets a value indicating whether gets or sets whether help text is customized.
     /// </summary>
     public bool IsHelpTextCustomized { get; private set; }
 
@@ -25,23 +25,24 @@ public partial class ProjectQuestion
     public string? HelpText { get; private set; }
 
     /// <summary>
-    /// Gets or sets whether required status is customized.
+    /// Gets a value indicating whether gets or sets whether required status is customized.
     /// </summary>
     public bool IsRequiredCustomized { get; private set; }
 
     /// <summary>
-    /// Gets or sets whether the question is required.
+    /// Gets a value indicating whether gets or sets whether the question is required.
     /// </summary>
     public bool IsRequired { get; private set; }
 
     /// <summary>
-    /// Gets or sets whether answer options are customized.
+    /// Gets a value indicating whether gets or sets whether answer options are customized.
     /// </summary>
     public bool IsAnswerOptionsCustomized { get; private set; }
 
     /// <summary>
     /// Synchronizes this question from its source.
     /// </summary>
+    /// <returns></returns>
     public SyncResult SyncFromSource(Dictionary<long, Question>? sourceQuestions)
     {
         var result = new SyncResult();

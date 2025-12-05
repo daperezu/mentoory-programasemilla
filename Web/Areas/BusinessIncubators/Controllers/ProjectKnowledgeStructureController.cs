@@ -29,11 +29,8 @@ using LinaSys.BusinessIncubator.Application.ProjectKnowledgeStructure.Queries.Ge
 using LinaSys.Diagnostics.Application.Form.Queries;
 using LinaSys.Orchestration.Application.BusinessIncubator.Commands;
 using LinaSys.Shared.Domain.Constants;
-using LinaSys.Shared.Infrastructure.Extensions;
 using LinaSys.Web.Areas.BusinessIncubators.Models.ProjectKnowledgeStructure;
 using LinaSys.Web.Controllers;
-using LinaSys.Web.Extensions;
-using LinaSys.Web.Filters;
 using LinaSys.Web.Services;
 using LinaSys.Shared.Application.Services;
 using MediatR;

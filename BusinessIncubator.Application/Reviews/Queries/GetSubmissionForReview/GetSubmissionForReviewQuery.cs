@@ -1,7 +1,6 @@
 ﻿using LinaSys.BusinessIncubator.Domain.Repositories;
 using LinaSys.Shared.Application;
 using LinaSys.Shared.Application.MediatR;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace LinaSys.BusinessIncubator.Application.Reviews.Queries.GetSubmissionForReview;
@@ -157,7 +156,7 @@ public class QuestionReviewDto
     public int AnswerType { get; set; }
 
     /// <summary>
-    /// Gets or sets whether the question is required.
+    /// Gets or sets a value indicating whether gets or sets whether the question is required.
     /// </summary>
     public bool IsRequired { get; set; }
 

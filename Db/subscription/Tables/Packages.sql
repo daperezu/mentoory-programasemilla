@@ -1,4 +1,4 @@
-﻿CREATE TABLE [subscription].[Packages]
+CREATE TABLE [subscription].[Packages]
 (
     [Id] BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
     [Name] NVARCHAR(100) NOT NULL,

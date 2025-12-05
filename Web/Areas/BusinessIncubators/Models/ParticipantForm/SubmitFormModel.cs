@@ -16,7 +16,7 @@ public class SubmitFormModel
     public long SubmissionId { get; set; }
 
     /// <summary>
-    /// Gets or sets whether this submission is being done on behalf of another user.
+    /// Gets or sets a value indicating whether gets or sets whether this submission is being done on behalf of another user.
     /// </summary>
     public bool IsOnBehalf { get; set; }
 
