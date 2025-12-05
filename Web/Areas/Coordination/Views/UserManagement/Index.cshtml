@@ -139,12 +139,6 @@
 @await Html.PartialAsync("_ExportModal")
 
 @section Scripts {
-    @* SignalR library *@
-    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
-    
-    @* User Management SignalR client *@
-    <script src="~/js/user-management-signalr.js"></script>
-    
     <script>
         // User column rendering with avatar and verification badge
         window.renderUserColumn = function(data, type, row) {

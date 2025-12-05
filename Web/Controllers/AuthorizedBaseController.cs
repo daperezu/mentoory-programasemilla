@@ -4,6 +4,7 @@ using System.Text.Json;
 using LinaSys.Auth.Application.Queries.Context;
 using LinaSys.Orchestration.Application.UserContext.Commands;
 using LinaSys.Shared.Application;
+using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Attributes;
 using LinaSys.Web.Extensions;
 using LinaSys.Web.Filters;
@@ -83,26 +84,8 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
     }
 
     protected MediatorExecutor MediatorExecutor { get; } = mediatorExecutor;
+
     protected IApplicationUrlService ApplicationUrlService { get; } = applicationUrlService;
-
-    protected void HandleInvalidCurrentUserContext()
-    {
-        if (!IsAuthenticated)
-        {
-            Response.Redirect(ApplicationUrlService.GetLoginUrl());
-            return;
-        }
-
-        Response.Redirect(ContextSelectionController.IndexUrl);
-    }
-
-    protected void HandleUserNotAuthenticated()
-    {
-        if (!IsAuthenticated)
-        {
-            Response.Redirect(ApplicationUrlService.GetLoginUrl());
-        }
-    }
 
     protected void MapErrorsToModelStateAndSetErrorToast<T>(Result result)
     {
@@ -132,11 +115,7 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
     protected bool TryGetCurrentUserContext([NotNullWhen(true)] out EnrichedUserContextDto? userContext)
     {
         userContext = CurrentUserContext;
-        // Check if context is complete (has role and either is global admin or has incubator/project)
-        return userContext != null &&
-               !string.IsNullOrEmpty(userContext.Role) &&
-               (userContext.IsGlobalAdministrator ||
-                userContext is { IncubatorId: not null, ProjectId: not null });
+        return IsContextValidForRole(userContext);
     }
 
     /// <summary>
@@ -164,15 +143,15 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
 
         var context = CurrentUserContext;
 
-        // Check if context exists and has role
-        if (context == null || string.IsNullOrEmpty(context.Role))
+        // Check if context has minimum requirements for the role
+        if (!IsContextValidForRole(context))
         {
-            this.SetErrorToast(errorMessage ?? "Debe seleccionar un contexto para continuar.");
+            this.SetErrorToast(errorMessage ?? "Debe seleccionar un contexto válido para su rol.");
             Response.Redirect(ContextSelectionController.IndexUrl);
-            throw new InvalidOperationException("User context is required but not available.");
+            throw new InvalidOperationException("User context is incomplete for the assigned role.");
         }
 
-        // If project is required, incubator is implicitly required
+        // Additional specific requirements beyond role defaults
         if (requireProject)
         {
             if (context!.ProjectId == null || context.IncubatorId == null)
@@ -182,8 +161,6 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
                 throw new InvalidOperationException("Project is required but not selected.");
             }
         }
-
-        // Only check incubator if explicitly required (without project)
         else if (requireIncubator && context!.IncubatorId == null)
         {
             this.SetErrorToast(errorMessage ?? "Debe seleccionar una incubadora para acceder a esta funcionalidad.");
@@ -191,7 +168,7 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
             throw new InvalidOperationException("Incubator is required but not selected.");
         }
 
-        return context;
+        return context!;
     }
 
     /// <summary>
@@ -203,6 +180,35 @@ public abstract class AuthorizedBaseController(ILogger logger, MediatorExecutor 
     {
         userId = CurrentUserId;
         return !string.IsNullOrEmpty(userId);
+    }
+
+    /// <summary>
+    /// Validates if the user context is complete based on role requirements.
+    /// </summary>
+    /// <param name="userContext">The user context to validate.</param>
+    /// <returns>True if the context is valid for the user's role; otherwise, false.</returns>
+    private static bool IsContextValidForRole(EnrichedUserContextDto? userContext)
+    {
+        // Check if context exists and has a role
+        if (userContext == null || string.IsNullOrEmpty(userContext.Role))
+        {
+            return false;
+        }
+
+        // Global Admin can work without specific incubator/project
+        if (userContext.IsGlobalAdministrator)
+        {
+            return true;
+        }
+
+        // Administrator only needs incubator (no project required)
+        if (userContext.Role == Roles.Administrator)
+        {
+            return userContext.IncubatorId != null;
+        }
+
+        // Other roles need both incubator and project
+        return userContext.IncubatorId != null && userContext.ProjectId != null;
     }
 
     private void EnsureUserRoles()
