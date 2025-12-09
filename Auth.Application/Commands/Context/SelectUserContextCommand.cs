@@ -116,11 +116,10 @@ public class SelectUserContextCommandHandler(
         else if (isAdmin && request.IncubatorId.HasValue)
         {
             // For Administrator with only incubator
-            context = UserContext.CreateForUser(
+            context = UserContext.CreateForAdministrator(
                 request.UserId,
                 request.Role,
-                request.IncubatorId.Value,
-                0);
+                request.IncubatorId.Value);
         }
         else if (request is { IncubatorId: not null, ProjectId: not null })
         {

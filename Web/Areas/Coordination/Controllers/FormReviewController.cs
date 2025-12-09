@@ -96,7 +96,6 @@ public class SaveCoordinatorAnswersRequest
 /// <param name="dashboardBuilder">The dashboard builder service.</param>
 /// <param name="logger">The logger.</param>
 /// <param name="mediatorExecutor">The mediator executor.</param>
-/// <param name="notificationService">The notification service.</param>
 [Area("Coordination")]
 [Route("[area]/[controller]")]
 public class FormReviewController(
@@ -104,8 +103,7 @@ public class FormReviewController(
     IDashboardBuilderService dashboardBuilder,
     ILogger<FormReviewController> logger,
     MediatorExecutor mediatorExecutor,
-    IApplicationUrlService applicationUrlService,
-    IReviewNotificationService notificationService) : DashboardBaseController(logger, mediator, applicationUrlService, dashboardBuilder)
+    IApplicationUrlService applicationUrlService) : DashboardBaseController(logger, mediator, applicationUrlService, dashboardBuilder)
 {
     [HttpPost]
     [Route("AddFeedback")]
@@ -138,12 +136,8 @@ public class FormReviewController(
         var projectId = contextResult!.ProjectId!.Value;
         var userName = User.Identity?.Name ?? "Coordinador";
         // Use submission ID directly from request
-        await notificationService.NotifyNewFeedbackAsync(
-            projectId,
-            request.SubmissionId,
-            userName,
-            request.FeedbackType.ToString());
-
+        // SignalR notification service removed
+        // await notificationService.NotifyNewFeedbackAsync(...);
         return Ok(new { success = true, data = result.Value });
     }
 
@@ -179,13 +173,8 @@ public class FormReviewController(
         var submissionResult = await mediatorExecutor.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
         var participantName = submissionResult.Value?.ParticipantUserId ?? "Participante";
 
-        await notificationService.NotifyReviewStatusChangeAsync(
-            projectId,
-            request.SubmissionId,
-            "Approved",
-            participantName,
-            request.Comments);
-
+        // SignalR notification service removed
+        // await notificationService.NotifyReviewStatusChangeAsync(...);
         return Ok(new
         {
             success = true,
@@ -422,21 +411,14 @@ public class FormReviewController(
         var submissionResult = await mediatorExecutor.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
         var participantName = submissionResult.Value?.ParticipantUserId ?? "Participante";
 
-        await notificationService.NotifyReviewStatusChangeAsync(
-            projectId,
-            request.SubmissionId,
-            "ChangesRequested",
-            participantName,
-            request.Comments);
+        // SignalR notification service removed
+        // await notificationService.NotifyReviewStatusChangeAsync(...);
 
         // Also send deadline warning if approaching
         if (request.NewDeadline.Subtract(DateTime.UtcNow).TotalDays <= 7)
         {
-            await notificationService.NotifyDeadlineApproachingAsync(
-                projectId,
-                request.SubmissionId,
-                participantName,
-                request.NewDeadline);
+            // SignalR notification service removed
+            // await notificationService.NotifyDeadlineApproachingAsync(...);
         }
 
         return Ok(new

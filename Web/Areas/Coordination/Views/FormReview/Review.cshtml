@@ -807,8 +807,6 @@
 </div>
 
 @section Scripts {
-    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
-    <script src="~/js/coordination/review-notifications.js"></script>
     <!-- Shared form constants module -->
     <script src="~/js/shared/form-constants.js"></script>
     <!-- Dual answer review script -->
@@ -826,22 +824,6 @@
             // Initialize form review
             FormReview.init(window.submissionId);
             
-            // Initialize SignalR notifications
-            var projectId = @(ViewData["ProjectExternalId"] != null ? Html.Raw($"'{ViewData["ProjectExternalId"]}'") : "null");
-            if (projectId) {
-                // Get internal project ID from external ID
-                try {
-                    const response = await fetch(`/api/project/getid/${projectId}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        await ReviewNotifications.init(data.id);
-                    }
-                } catch (error) {
-                    console.error('Failed to initialize notifications:', error);
-                    // Fall back to using external ID
-                    await ReviewNotifications.init(projectId);
-                }
-            }
         });
     </script>
 }

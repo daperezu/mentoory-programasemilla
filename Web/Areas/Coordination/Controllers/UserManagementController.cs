@@ -30,7 +30,6 @@ public class UserManagementController(
     ILogger<UserManagementController> logger,
     MediatorExecutor mediator,
     IApplicationUrlService applicationUrlService,
-    IProgressTrackingService progressTrackingService,
     IPasswordGeneratorService passwordGeneratorService) : AuthorizedBaseController(logger, mediator, applicationUrlService)
 {
     [HttpGet]
@@ -628,10 +627,6 @@ public class UserManagementController(
             return View(model);
         }
 
-        // Generate operation ID
-        var operationId = Guid.NewGuid().ToString();
-        var userId = CurrentUserContext?.UserId ?? string.Empty;
-
         try
         {
             // Parse file to get users
@@ -642,69 +637,31 @@ public class UserManagementController(
                 return View(model);
             }
 
-            // Start progress tracking
-            var tracker = progressTrackingService.StartOperation(
-                operationId,
-                usersToImport.Count,
-                userId,
-                $"Importación masiva de {usersToImport.Count} usuarios");
+            // Process users synchronously
+            var results = await ProcessBulkImportAsync(usersToImport, model);
 
-            // Start background task to process users
-            _ = Task.Run(async () =>
+            // Show results
+            if (results.SuccessCount > 0 && results.FailureCount == 0)
             {
-                try
-                {
-                    await ProcessBulkImportAsync(usersToImport, model, tracker);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Error processing bulk import {OperationId}", operationId);
-                    await tracker.CompleteAsync($"Error en la importación: {ex.Message}");
-                }
-            });
+                this.SetSuccessToast($"Se importaron {results.SuccessCount} usuarios exitosamente");
+            }
+            else if (results.SuccessCount > 0 && results.FailureCount > 0)
+            {
+                this.SetInfoToast($"Se importaron {results.SuccessCount} usuarios. {results.FailureCount} usuarios fallaron");
+            }
+            else
+            {
+                this.SetErrorToast($"No se pudieron importar los usuarios. {results.FailureCount} errores");
+            }
 
-            // Return success view with operation ID for tracking
-            return View("BulkImportProgress", new BulkImportProgressViewModel
-            {
-                OperationId = operationId,
-                TotalItems = usersToImport.Count
-            });
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error initiating bulk import");
+            logger.LogError(ex, "Error during bulk import");
             this.SetErrorToast($"Error al procesar el archivo: {ex.Message}");
             return View(model);
         }
-    }
-
-    /// <summary>
-    /// Gets the current status of a bulk import operation.
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet]
-    public IActionResult GetBulkImportStatus(string operationId)
-    {
-        var progress = progressTrackingService.GetProgress(operationId);
-
-        if (progress == null)
-        {
-            return Json(new { error = "Operación no encontrada" });
-        }
-
-        return Json(new
-        {
-            operationId = progress.OperationId,
-            totalItems = progress.TotalItems,
-            processedItems = progress.ProcessedItems,
-            successCount = progress.SuccessCount,
-            failureCount = progress.FailureCount,
-            progressPercentage = progress.ProgressPercentage,
-            currentMessage = progress.CurrentMessage,
-            isCompleted = progress.IsCompleted,
-            isCancelled = progress.IsCancelled,
-            errors = progress.Errors
-        });
     }
 
     /// <summary>
@@ -836,28 +793,6 @@ public class UserManagementController(
             logger.LogError(ex, "Error in batch role assignment");
             return Json(new { success = false, message = "Error al procesar la asignación masiva de roles" });
         }
-    }
-
-    /// <summary>
-    /// Cancels a bulk import operation.
-    /// </summary>
-    /// <returns></returns>
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult CancelBulkImport(string operationId)
-    {
-        var cancelled = progressTrackingService.CancelOperation(operationId);
-
-        if (cancelled)
-        {
-            this.SetSuccessToast("Operación cancelada exitosamente");
-        }
-        else
-        {
-            this.SetErrorToast("No se pudo cancelar la operación");
-        }
-
-        return RedirectToAction(nameof(Index));
     }
 
     /// <summary>
@@ -1320,23 +1255,16 @@ public class UserManagementController(
         return string.Empty;
     }
 
-    private async Task ProcessBulkImportAsync(
+    private async Task<BulkImportResult> ProcessBulkImportAsync(
         List<ImportUserDto> users,
-        BulkImportViewModel importModel,
-        IProgressTracker tracker)
+        BulkImportViewModel importModel)
     {
+        var result = new BulkImportResult();
+
         foreach (var user in users)
         {
-            if (tracker.CancellationToken.IsCancellationRequested)
-            {
-                await tracker.CompleteAsync("Importación cancelada por el usuario");
-                return;
-            }
-
             try
             {
-                await tracker.ReportProgressAsync($"Procesando: {user.Email}");
-
                 // Generate a temporary password using the service
                 var temporaryPassword = passwordGeneratorService.GenerateTemporaryPassword();
 
@@ -1356,11 +1284,12 @@ public class UserManagementController(
                     EmailConfirmed: false, // Require email confirmation for bulk imports
                     IsTemporaryPassword: true); // Always temporary for bulk imports
 
-                var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+                var cmdResult = await MediatorExecutor.SendAndLogIfFailureAsync(command);
 
-                if (result.IsSuccess)
+                if (cmdResult.IsSuccess)
                 {
-                    await tracker.ReportSuccessAsync($"{user.FirstName} {user.LastName} ({user.Email})");
+                    result.SuccessCount++;
+                    logger.LogInformation("Successfully imported user {Email}", user.Email);
 
                     // TODO: Send welcome email if requested when SendWelcomeEmailCommand is implemented
                     // if (importModel.SendWelcomeEmails)
@@ -1370,18 +1299,19 @@ public class UserManagementController(
                 }
                 else
                 {
-                    var errorMessage = result.ErrorMessages?.FirstOrDefault().Message ?? "Error desconocido";
-                    await tracker.ReportFailureAsync($"{user.Email}", errorMessage);
+                    result.FailureCount++;
+                    var errorMessage = cmdResult.ErrorMessages?.FirstOrDefault().Message ?? "Error desconocido";
+                    logger.LogWarning("Failed to import user {Email}: {Error}", user.Email, errorMessage);
                 }
             }
             catch (Exception ex)
             {
+                result.FailureCount++;
                 logger.LogError(ex, "Error importing user {Email}", user.Email);
-                await tracker.ReportFailureAsync($"{user.Email}", ex.Message);
             }
         }
 
-        await tracker.CompleteAsync($"Importación completada: {tracker.OperationId}");
+        return result;
     }
 
     /// <summary>
