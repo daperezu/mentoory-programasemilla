@@ -3,22 +3,22 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.Azure.Sql" Version="13.0.1" />
-    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="13.0.1" />
-    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.0.1" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Sql" Version="13.0.2" />
+    <PackageVersion Include="Aspire.Hosting.Azure.Storage" Version="13.0.2" />
+    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="13.0.2" />
     <PackageVersion Include="Aspire.Hosting.Testing" Version="9.4.1" />
     <PackageVersion Include="Aspire.Microsoft.Data.SqlClient" Version="9.3.1" />
-    <PackageVersion Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="13.0.1" />
-    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="13.0.1" />
+    <PackageVersion Include="Aspire.Microsoft.EntityFrameworkCore.SqlServer" Version="13.0.2" />
+    <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="13.0.2" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.26.0" />
     <PackageVersion Include="coverlet.collector" Version="6.0.4" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
     <PackageVersion Include="EPPlus" Version="8.3.1" />
     <PackageVersion Include="FluentAssertions" Version="8.6.0" />
-    <PackageVersion Include="FluentValidation" Version="12.1.0" />
+    <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageVersion Include="MailKit" Version="4.14.1" />
-    <PackageVersion Include="MediatR" Version="13.1.0" />
+    <PackageVersion Include="MediatR" Version="14.0.0" />
     <PackageVersion Include="MediatR.Contracts" Version="2.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="10.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.0" />

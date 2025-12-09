@@ -1,27 +1,25 @@
-<Project Sdk="Microsoft.Build.Sql/0.2.3-preview">
+<Project Sdk="Microsoft.Build.Sql/2.0.0">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <DSP>Microsoft.Data.Tools.Schema.Sql.SqlAzureV12DatabaseSchemaProvider</DSP>
     <OutputType>Database</OutputType>
     <IncludeCompositeObjects>true</IncludeCompositeObjects>
+    <ProjectGuid>{00000000-0000-0000-0000-000000000000}</ProjectGuid>
   </PropertyGroup>
-
   <ItemGroup>
     <Content Include="**/*.sql" Exclude="bin/**;obj/**;../PostDeployment/**;LinaDb_*.sql" />
   </ItemGroup>
-
   <ItemGroup>
     <PostDeploy Include="../PostDeployment/Script.PostDeployment.sql" />
   </ItemGroup>
-
   <ItemGroup>
     <None Include="..\PostDeployment\000.SeedRolesAndUsers.sql">
       <Link>PostDeploymentReferences\000.SeedRolesAndUsers.sql</Link>
     </None>
-      <None Include="..\PostDeployment\001.SeedWebFeatures.sql">
-          <Link>PostDeploymentReferences\001.SeedWebFeatures.sql</Link>
-      </None>
+    <None Include="..\PostDeployment\001.SeedWebFeatures.sql">
+      <Link>PostDeploymentReferences\001.SeedWebFeatures.sql</Link>
+    </None>
     <None Include="..\PostDeployment\002.SeedPackagesLimits.sql">
       <Link>PostDeploymentReferences\002.SeedPackagesLimits.sql</Link>
     </None>

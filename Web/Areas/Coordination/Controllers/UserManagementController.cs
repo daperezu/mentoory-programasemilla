@@ -1638,4 +1638,14 @@ public class UserManagementController(
         var fileName = $"usuarios_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx";
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
+
+    /// <summary>
+    /// Determines if the current user can manage project assignments.
+    /// </summary>
+    private bool CanManageProjectAssignments()
+    {
+        return CurrentUserIsGlobalAdministrator ||
+               CurrentUserRoles.Contains(Roles.Administrator) ||
+               CurrentUserRoles.Contains(Roles.Coordinator);
+    }
 }
