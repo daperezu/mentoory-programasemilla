@@ -390,12 +390,6 @@ public class FormReviewController(
             return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al solicitar cambios."] });
         }
 
-        // Send notification about requested changes
-        TryGetCurrentUserContext(out var contextResult);
-        var projectId = contextResult!.ProjectId!.Value;
-        // SignalR notification service removed
-            // SignalR notification service removed
-
         return Ok(new
         {
             success = true,
