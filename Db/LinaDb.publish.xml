@@ -5,7 +5,7 @@
         <TargetDatabaseName>LinaDb</TargetDatabaseName>
         <DeployScriptFileName>LinaDb.sql</DeployScriptFileName>
         <!-- AAD auth, strong TLS -->
-        <TargetConnectionString>Server=tcp:linadbserver-htejpd7l3itk6.database.windows.net,1433;Initial Catalog=LinaDb;Persist Security Info=False;User ID=CloudSAdca9c0c1;Password=0lZu4cA1;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;</TargetConnectionString>
+        <TargetConnectionString>_</TargetConnectionString>
         <ProfileVersionNumber>1</ProfileVersionNumber>
         <!-- Azure SQL Database specific settings -->
         <TargetDatabaseEdition>Standard</TargetDatabaseEdition>

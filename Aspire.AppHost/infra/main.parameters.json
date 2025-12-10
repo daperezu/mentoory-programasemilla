@@ -5,6 +5,9 @@
       "principalId": {
         "value": "${AZURE_PRINCIPAL_ID}"
       },
+      "applicationinsights_samplingpercentage": {
+        "value": "${AZURE_APPLICATIONINSIGHTS_SAMPLINGPERCENTAGE}"
+      },
       "googleanalytics_enabled": {
         "value": "${AZURE_GOOGLEANALYTICS_ENABLED}"
       },

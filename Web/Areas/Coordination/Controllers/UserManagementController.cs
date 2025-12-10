@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -16,8 +16,8 @@ using LinaSys.Web.Areas.Coordination.Models.UserManagement;
 using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.Web.Controllers;
 using LinaSys.Web.Extensions;
-using LinaSys.Web.Models;
 using LinaSys.Web.Services;
+using LinaSys.Web.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;

@@ -53,7 +53,6 @@ builder.Services.AddMediatR(cfg =>
 
     cfg.RegisterServicesFromAssemblies(Assembly.GetExecutingAssembly());
 
-    cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
     cfg.AddOpenBehavior(typeof(ValidatorBehavior<,>));
     cfg.AddOpenBehavior(typeof(TransactionBehavior<,>));
 });

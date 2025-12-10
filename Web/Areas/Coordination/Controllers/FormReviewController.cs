@@ -12,6 +12,7 @@ using LinaSys.BusinessIncubator.Domain.Enums;
 using LinaSys.Core.Application.Dashboard.Services;
 using LinaSys.Shared.Domain.Constants;
 using LinaSys.Web.Controllers;
+using LinaSys.Web.Extensions;
 using LinaSys.Web.Services;
 using LinaSys.Shared.Application.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -95,14 +96,12 @@ public class SaveCoordinatorAnswersRequest
 /// <param name="mediator">The mediator.</param>
 /// <param name="dashboardBuilder">The dashboard builder service.</param>
 /// <param name="logger">The logger.</param>
-/// <param name="mediatorExecutor">The mediator executor.</param>
 [Area("Coordination")]
 [Route("[area]/[controller]")]
 public class FormReviewController(
     MediatorExecutor mediator,
     IDashboardBuilderService dashboardBuilder,
     ILogger<FormReviewController> logger,
-    MediatorExecutor mediatorExecutor,
     IApplicationUrlService applicationUrlService) : DashboardBaseController(logger, mediator, applicationUrlService, dashboardBuilder)
 {
     [HttpPost]
@@ -122,7 +121,7 @@ public class FormReviewController(
             request.FeedbackType,
             CurrentUserId);
 
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command, cancellationToken);
+        var result = await Mediator.SendAndLogIfFailureAsync(command, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -131,13 +130,7 @@ public class FormReviewController(
 
         // Send notification about new feedback
         TryGetCurrentUserContext(out var contextResult);
-
-        // Use project ID directly from context
-        var projectId = contextResult!.ProjectId!.Value;
-        var userName = User.Identity?.Name ?? "Coordinador";
-        // Use submission ID directly from request
         // SignalR notification service removed
-        // await notificationService.NotifyNewFeedbackAsync(...);
         return Ok(new { success = true, data = result.Value });
     }
 
@@ -161,7 +154,7 @@ public class FormReviewController(
             CurrentUserId,
             request.Comments);
 
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command, cancellationToken);
+        var result = await Mediator.SendAndLogIfFailureAsync(command, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -169,12 +162,7 @@ public class FormReviewController(
         }
 
         // Get submission details for notification
-        var submissionQuery = new GetSubmissionByIdQuery(request.SubmissionId);
-        var submissionResult = await mediatorExecutor.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
-        var participantName = submissionResult.Value?.ParticipantUserId ?? "Participante";
-
         // SignalR notification service removed
-        // await notificationService.NotifyReviewStatusChangeAsync(...);
         return Ok(new
         {
             success = true,
@@ -193,7 +181,7 @@ public class FormReviewController(
             CurrentUserId,
             contextResult!.ProjectId);
 
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(query, cancellationToken);
+        var result = await Mediator.SendAndLogIfFailureAsync(query, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -225,7 +213,7 @@ public class FormReviewController(
             User.IsInRole(Roles.GlobalAdministrator),
             User.IsInRole(Roles.Administrator));
 
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(query, cancellationToken);
+        var result = await Mediator.SendAndLogIfFailureAsync(query, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -243,7 +231,7 @@ public class FormReviewController(
 
         // Get the project to obtain its ExternalId
         var projectQuery = new GetProjectByIdQuery(contextResult!.ProjectId!.Value);
-        var projectResult = await mediatorExecutor.SendAndLogIfFailureAsync(projectQuery, cancellationToken);
+        var projectResult = await Mediator.SendAndLogIfFailureAsync(projectQuery, cancellationToken);
         if (projectResult.IsFailure || projectResult.Value is null)
         {
             return BadRequest(new { errors = new[] { "Proyecto no encontrado." } });
@@ -252,7 +240,7 @@ public class FormReviewController(
         var project = projectResult.Value;
 
         var query = new GetSubmissionForReviewQuery(submissionId, project.ExternalId);
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(query, cancellationToken);
+        var result = await Mediator.SendAndLogIfFailureAsync(query, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -263,7 +251,7 @@ public class FormReviewController(
         var feedbackQuery = new LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.GetFeedbackForSubmissionQuery(
             submissionId,
             CurrentUserId);
-        var feedbackResult = await mediatorExecutor.SendAndLogIfFailureAsync(feedbackQuery, cancellationToken);
+        var feedbackResult = await Mediator.SendAndLogIfFailureAsync(feedbackQuery, cancellationToken);
 
         // Add feedback conversations to the response
         var response = new
@@ -308,7 +296,7 @@ public class FormReviewController(
             request.CoordinatorData,
             request.PreferenceSelections ?? new Dictionary<long, bool>());
 
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command, cancellationToken);
+        var result = await Mediator.SendAndLogIfFailureAsync(command, cancellationToken);
 
         if (result.IsFailure)
         {
@@ -332,7 +320,7 @@ public class FormReviewController(
     {
         // Get submission with coordinator data
         var submissionQuery = new GetSubmissionByIdQuery(submissionId);
-        var submissionResult = await mediatorExecutor.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
+        var submissionResult = await Mediator.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
 
         if (submissionResult.IsFailure || submissionResult.Value is null)
         {
@@ -395,30 +383,11 @@ public class FormReviewController(
             request.NewDeadline,
             CurrentUserId);
 
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command, cancellationToken);
+        var result = await Mediator.SendAndLogIfFailureAsync(command, cancellationToken);
 
         if (result.IsFailure)
         {
             return BadRequest(new { errors = result.ErrorMessages?.Select(e => e.Message) ?? ["Error al solicitar cambios."] });
-        }
-
-        // Send notification about requested changes
-        TryGetCurrentUserContext(out var contextResult);
-        var projectId = contextResult!.ProjectId!.Value;
-
-        // Get submission details for participant name
-        var submissionQuery = new GetSubmissionByIdQuery(request.SubmissionId);
-        var submissionResult = await mediatorExecutor.SendAndLogIfFailureAsync(submissionQuery, cancellationToken);
-        var participantName = submissionResult.Value?.ParticipantUserId ?? "Participante";
-
-        // SignalR notification service removed
-        // await notificationService.NotifyReviewStatusChangeAsync(...);
-
-        // Also send deadline warning if approaching
-        if (request.NewDeadline.Subtract(DateTime.UtcNow).TotalDays <= 7)
-        {
-            // SignalR notification service removed
-            // await notificationService.NotifyDeadlineApproachingAsync(...);
         }
 
         return Ok(new
@@ -445,7 +414,7 @@ public class FormReviewController(
         var feedbackQuery = new LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.GetFeedbackForSubmissionQuery(
             submissionId,
             CurrentUserId);
-        var feedbackResult = await mediatorExecutor.SendAndLogIfFailureAsync(feedbackQuery);
+        var feedbackResult = await Mediator.SendAndLogIfFailureAsync(feedbackQuery);
         ViewData["FeedbackConversations"] = feedbackResult.IsSuccess ? feedbackResult.Value : new List<LinaSys.BusinessIncubator.Application.Reviews.Queries.GetFeedbackForSubmission.FeedbackConversationDto>();
 
         return View();
@@ -467,7 +436,7 @@ public class FormReviewController(
             CurrentUserId,
             isParticipant);
 
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command);
+        var result = await Mediator.SendAndLogIfFailureAsync(command);
 
         if (result.IsSuccess)
         {
@@ -482,7 +451,7 @@ public class FormReviewController(
     public async Task<IActionResult> CloseFeedback(long feedbackId)
     {
         var command = new CloseFeedbackCommand(feedbackId, CurrentUserId);
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command);
+        var result = await Mediator.SendAndLogIfFailureAsync(command);
 
         if (result.IsSuccess)
         {
@@ -497,7 +466,7 @@ public class FormReviewController(
     public async Task<IActionResult> ReopenFeedback(long feedbackId)
     {
         var command = new ReopenFeedbackCommand(feedbackId, CurrentUserId);
-        var result = await mediatorExecutor.SendAndLogIfFailureAsync(command);
+        var result = await Mediator.SendAndLogIfFailureAsync(command);
 
         if (result.IsSuccess)
         {

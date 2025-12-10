@@ -114,10 +114,7 @@ public class DatatableTagHelper : TagHelper
 
                     {tableSetupFilterInputs}
                     {tableSetupHoverActions}
-                    
-                    // Expose table instance globally for SignalR updates
-                    window.userDataTable = table;
-                    
+
                     console.log('DataTable initialized successfully for #{TableId}');
                 }});
             </script>");
