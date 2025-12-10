@@ -1,16 +1,66 @@
-<Project Sdk="MSBuild.Sdk.SqlProj/3.2.0">
+<Project Sdk="Microsoft.Build.Sql/2.0.0">
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <SqlServerVersion>Sql160</SqlServerVersion>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.SqlAzureV12DatabaseSchemaProvider</DSP>
     <OutputType>Database</OutputType>
     <IncludeCompositeObjects>true</IncludeCompositeObjects>
+    <ProjectGuid>{00000000-0000-0000-0000-000000000000}</ProjectGuid>
   </PropertyGroup>
-
   <ItemGroup>
-    <Content Include="**/*.sql" Exclude="bin/**;obj/**;../PostDeployment/**" />
+    <Content Include="**/*.sql" Exclude="bin/**;obj/**;../PostDeployment/**;LinaDb_*.sql" />
   </ItemGroup>
-
   <ItemGroup>
     <PostDeploy Include="../PostDeployment/Script.PostDeployment.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\PostDeployment\000.SeedRolesAndUsers.sql">
+      <Link>PostDeploymentReferences\000.SeedRolesAndUsers.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\001.SeedWebFeatures.sql">
+      <Link>PostDeploymentReferences\001.SeedWebFeatures.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\002.SeedPackagesLimits.sql">
+      <Link>PostDeploymentReferences\002.SeedPackagesLimits.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\003.SeedKnowledgeStructures.sql">
+      <Link>PostDeploymentReferences\003.SeedKnowledgeStructures.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\004.SeedKnowledgeStructuresBlocks.sql">
+      <Link>PostDeploymentReferences\004.SeedKnowledgeStructuresBlocks.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\005.SeedDashboardData.sql">
+      <Link>PostDeploymentReferences\005.SeedDashboardData.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\006.SeedStarterData.sql">
+      <Link>PostDeploymentReferences\006.SeedStarterData.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\007.SeedAuthAccessTables.sql">
+      <Link>PostDeploymentReferences\007.SeedAuthAccessTables.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\008.SeedNavigationMenuItems.sql">
+      <Link>PostDeploymentReferences\008.SeedNavigationMenuItems.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\009.SeedProjectStages.sql">
+      <Link>PostDeploymentReferences\009.SeedProjectStages.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\010.SeedEmailTemplates.sql">
+      <Link>PostDeploymentReferences\010.SeedEmailTemplates.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\011.SeedProjectKnowledgeStructure.sql">
+      <Link>PostDeploymentReferences\011.SeedProjectKnowledgeStructure.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\011.SeedPublicProjects.sql">
+      <Link>PostDeploymentReferences\011.SeedPublicProjects.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\012.SeedProjectFormSubmissions.sql">
+      <Link>PostDeploymentReferences\012.SeedProjectFormSubmissions.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\013.SeedDemoProjectsWithGeolocation.sql">
+      <Link>PostDeploymentReferences\013.SeedDemoProjectsWithGeolocation.sql</Link>
+    </None>
+    <None Include="..\PostDeployment\014.SeedProjectHeroImages.sql">
+      <Link>PostDeploymentReferences\014.SeedProjectHeroImages.sql</Link>
+    </None>
   </ItemGroup>
 </Project>

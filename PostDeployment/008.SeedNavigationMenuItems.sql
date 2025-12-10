@@ -102,10 +102,10 @@ WHEN NOT MATCHED THEN
 
 -- Coordinación Section (Coordinator/Administrator/Global Administrator)
 MERGE [core].[NavigationMenuItems] AS target
-USING (SELECT 
-    200 AS Id, 'COORDINATION' AS Code, 'Coordinación' AS DisplayText, NULL AS ParentId, 20 AS SortOrder, 
-    'users' AS Icon, '#' AS Url, 1 AS IsSection, 1 AS IsActive, 
-    1 AS RequiresAuthentication, 1 AS RequiresIncubator, 1 AS RequiresProject, 'Coordinator,Administrator,Global Administrator' AS AllowedRoles
+USING (SELECT
+    200 AS Id, 'COORDINATION' AS Code, 'Coordinación' AS DisplayText, NULL AS ParentId, 20 AS SortOrder,
+    'users' AS Icon, '#' AS Url, 1 AS IsSection, 1 AS IsActive,
+    1 AS RequiresAuthentication, 1 AS RequiresIncubator, 0 AS RequiresProject, 'Coordinator,Administrator,Global Administrator' AS AllowedRoles
     UNION ALL
     SELECT 203, 'PARTICIPANTS', 'Participantes', 200, 2, NULL, '/Coordination/Participant', 0, 1, 1, 1, 1, 'Coordinator,Administrator,Global Administrator'
     UNION ALL

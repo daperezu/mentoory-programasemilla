@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using System.Text;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -11,6 +11,7 @@ using LinaSys.UserManagement.Application.Commands.UpdateUserAvatar;
 using LinaSys.UserManagement.Application.Queries.GetUserProfileByUserId;
 using LinaSys.UserManagement.Application.Queries.ListUserProfiles;
 using LinaSys.Auth.Application.Queries;
+using LinaSys.Auth.Application.Commands;
 using LinaSys.Web.Areas.Coordination.Models.UserManagement;
 using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.Web.Controllers;
@@ -117,7 +118,7 @@ public class UserManagementController(
 
         // Map email preferences from view model to dictionary
         var emailPreferences = new Dictionary<string, string>();
-        if (model.EmailPreferences != null)
+        if (model.EmailPreferences is not null)
         {
             emailPreferences["email.system.welcome"] = model.EmailPreferences.SystemWelcome.ToString().ToLower();
             emailPreferences["email.project.welcome"] = model.EmailPreferences.ProjectWelcome.ToString().ToLower();
@@ -626,10 +627,6 @@ public class UserManagementController(
             return View(model);
         }
 
-        // Generate operation ID
-        var operationId = Guid.NewGuid().ToString();
-        var userId = CurrentUserContext?.UserId ?? string.Empty;
-
         try
         {
             // Parse file to get users
@@ -640,64 +637,31 @@ public class UserManagementController(
                 return View(model);
             }
 
-            // Show progress page that will auto-submit to ProcessBulkImport
-            return View("BulkImportProgress", new BulkImportProgressViewModel
+            // Process users synchronously
+            var results = await ProcessBulkImportAsync(usersToImport, model);
+
+            // Show results
+            if (results.SuccessCount > 0 && results.FailureCount == 0)
             {
-                OperationId = operationId,
-                TotalItems = usersToImport.Count
-            });
+                this.SetSuccessToast($"Se importaron {results.SuccessCount} usuarios exitosamente");
+            }
+            else if (results.SuccessCount > 0 && results.FailureCount > 0)
+            {
+                this.SetInfoToast($"Se importaron {results.SuccessCount} usuarios. {results.FailureCount} usuarios fallaron");
+            }
+            else
+            {
+                this.SetErrorToast($"No se pudieron importar los usuarios. {results.FailureCount} errores");
+            }
+
+            return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error initiating bulk import");
+            logger.LogError(ex, "Error during bulk import");
             this.SetErrorToast($"Error al procesar el archivo: {ex.Message}");
             return View(model);
         }
-    }
-
-    /// <summary>
-    /// Process the bulk import synchronously.
-    /// </summary>
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult ProcessBulkImport(string operationId)
-    {
-        try
-        {
-            // Get the cached import data (you'll need to implement this)
-            // For now, just redirect back with a message
-            this.SetSuccessToast("Importación procesada exitosamente");
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error processing bulk import");
-            this.SetErrorToast($"Error al procesar la importación: {ex.Message}");
-            return RedirectToAction(nameof(Index));
-        }
-    }
-
-    /// <summary>
-    /// Gets the current status of a bulk import operation.
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet]
-    public IActionResult GetBulkImportStatus(string operationId)
-    {
-        // No longer tracking progress, just return empty
-        return Json(new
-        {
-            operationId = operationId,
-            totalItems = 0,
-            processedItems = 0,
-            successCount = 0,
-            failureCount = 0,
-            progressPercentage = 100,
-            currentMessage = "Completado",
-            isCompleted = true,
-            isCancelled = false,
-            errors = new List<string>()
-        });
     }
 
     /// <summary>
@@ -832,19 +796,6 @@ public class UserManagementController(
     }
 
     /// <summary>
-    /// Cancels a bulk import operation.
-    /// </summary>
-    /// <returns></returns>
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult CancelBulkImport(string operationId)
-    {
-        // No longer supporting cancellation in simplified version
-        this.SetInfoToast("La importación se está procesando");
-        return RedirectToAction(nameof(Index));
-    }
-
-    /// <summary>
     /// Gets all active incubators for the dropdown.
     /// </summary>
     /// <returns><placeholder>A <see cref="Task"/> representing the asynchronous operation.</placeholder></returns>
@@ -914,6 +865,307 @@ public class UserManagementController(
             return Json(new { success = false, projects = new List<object>() });
         }
     }
+
+    #region Project Assignment Management
+
+    /// <summary>
+    /// Shows the project assignment management page for a user.
+    /// </summary>
+    /// <param name="userId">The user identifier.</param>
+    /// <returns>The manage projects view.</returns>
+    [HttpGet]
+    public async Task<IActionResult> ManageProjects(string userId)
+    {
+        // Get user profile to display name
+        var profileQuery = new GetUserProfileByUserIdQuery(userId);
+        var profileResult = await MediatorExecutor.SendAndLogIfFailureAsync(profileQuery);
+
+        if (!profileResult.IsSuccess || profileResult.Value == null)
+        {
+            this.SetErrorToast("Usuario no encontrado");
+            return RedirectToAction(nameof(Index));
+        }
+
+        var profile = profileResult.Value;
+        var fullName = $"{profile.FirstName} {profile.LastName}".Trim();
+
+        // Determine permissions based on current user role
+        var (currentIncubatorId, currentProjectId) = GetUserDataScope();
+
+        var viewModel = new ManageProjectsViewModel
+        {
+            UserId = userId,
+            UserFullName = fullName,
+            CanAddToProjects = CanManageProjectAssignments(),
+            CanRemoveFromProjects = CanManageProjectAssignments(),
+            CanChangeRoles = CanManageProjectAssignments(),
+            CurrentUserRole = CurrentUserRoles.FirstOrDefault() ?? string.Empty,
+            CurrentUserIncubatorId = currentIncubatorId,
+            CurrentUserProjectId = currentProjectId
+        };
+
+        return View(viewModel);
+    }
+
+    /// <summary>
+    /// Gets the list of project assignments for a user (DataTable AJAX).
+    /// </summary>
+    /// <param name="userId">The user identifier.</param>
+    /// <returns>JSON result for DataTable.</returns>
+    [HttpPost]
+    public async Task<IActionResult> ListUserProjects(string userId)
+    {
+        var query = new Orchestration.Application.UserManagement.Queries.GetUserProjectAssignmentsOrchestrationQuery(userId);
+        var result = await MediatorExecutor.SendAndLogIfFailureAsync(query);
+
+        if (!result.IsSuccess || result.Value == null)
+        {
+            return Json(new
+            {
+                data = new List<UserProjectAssignmentListItemViewModel>()
+            });
+        }
+
+        var assignments = result.Value.Select(a => new UserProjectAssignmentListItemViewModel
+        {
+            ProjectId = a.ProjectId,
+            ProjectName = a.ProjectName,
+            ProjectKey = a.ProjectKey,
+            IncubatorId = a.IncubatorId,
+            IncubatorName = a.IncubatorName,
+            IncubatorKey = a.IncubatorKey,
+            Role = a.Role,
+            RoleDisplayName = GetRoleDisplayName(a.Role),
+            IsActive = a.IsActive,
+            StatusDisplay = a.IsActive ? "Activo" : "Inactivo",
+            CreatedAt = a.CreatedAt,
+            CreatedAtDisplay = a.CreatedAt.ToString("dd/MM/yyyy"),
+            LastSyncedAt = a.LastSyncedAt
+        }).ToList();
+
+        return Json(new { data = assignments });
+    }
+
+    /// <summary>
+    /// Adds a user to a project with a specified role.
+    /// </summary>
+    /// <param name="model">The add to project view model.</param>
+    /// <returns>JSON result with success status.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddToProject([FromBody] AddToProjectViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new
+            {
+                success = false,
+                message = "Datos inválidos. Verifique que haya seleccionado incubadora, proyecto y rol."
+            });
+        }
+
+        if (!CanManageProjectAssignments())
+        {
+            return Json(new
+            {
+                success = false,
+                message = "No tiene permisos para realizar esta acción."
+            });
+        }
+
+        try
+        {
+            // Get project to get external ID
+            var projectQuery = new GetProjectByIdQuery(model.ProjectId);
+            var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
+
+            if (!projectResult.IsSuccess || projectResult.Value == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Proyecto no encontrado."
+                });
+            }
+
+            // Assign user to project using orchestration command
+            var command = new AssignUserToProjectOrchestrationCommand(
+                model.UserId,
+                projectResult.Value.ExternalId,
+                model.Role);
+
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+
+            if (!result.IsSuccess)
+            {
+                var errorMessage = result.ErrorMessages?.FirstOrDefault().Message ?? "Error al asignar usuario al proyecto.";
+                return Json(new
+                {
+                    success = false,
+                    message = errorMessage
+                });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Usuario asignado exitosamente al proyecto con el rol {GetRoleDisplayName(model.Role)}."
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error adding user {UserId} to project {ProjectId}", model.UserId, model.ProjectId);
+            return Json(new
+            {
+                success = false,
+                message = "Error interno al procesar la solicitud."
+            });
+        }
+    }
+
+    /// <summary>
+    /// Removes a user from a project (deactivates access).
+    /// </summary>
+    /// <param name="userId">The user identifier.</param>
+    /// <param name="projectId">The project identifier.</param>
+    /// <returns>JSON result with success status.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RemoveFromProject(string userId, long projectId)
+    {
+        if (!CanManageProjectAssignments())
+        {
+            return Json(new
+            {
+                success = false,
+                message = "No tiene permisos para realizar esta acción."
+            });
+        }
+
+        try
+        {
+            // Get project details
+            var projectQuery = new GetProjectByIdQuery(projectId);
+            var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
+
+            if (!projectResult.IsSuccess || projectResult.Value == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Proyecto no encontrado."
+                });
+            }
+
+            // Use DeactivateProjectAccessCommand
+            var command = new DeactivateProjectAccessCommand(userId, projectId);
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+
+            if (!result.IsSuccess)
+            {
+                var errorMessage = result.ErrorMessages?.FirstOrDefault().Message ?? "Error al remover usuario del proyecto.";
+                return Json(new
+                {
+                    success = false,
+                    message = errorMessage
+                });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Usuario removido exitosamente del proyecto {projectResult.Value.Name}."
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error removing user {UserId} from project {ProjectId}", userId, projectId);
+            return Json(new
+            {
+                success = false,
+                message = "Error interno al procesar la solicitud."
+            });
+        }
+    }
+
+    /// <summary>
+    /// Changes a user's role in a project.
+    /// </summary>
+    /// <param name="model">The change role view model.</param>
+    /// <returns>JSON result with success status.</returns>
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeProjectRole([FromBody] ChangeProjectRoleViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return Json(new
+            {
+                success = false,
+                message = "Datos inválidos."
+            });
+        }
+
+        if (!CanManageProjectAssignments())
+        {
+            return Json(new
+            {
+                success = false,
+                message = "No tiene permisos para realizar esta acción."
+            });
+        }
+
+        try
+        {
+            // Get project to get external ID
+            var projectQuery = new GetProjectByIdQuery(model.ProjectId);
+            var projectResult = await MediatorExecutor.SendAndLogIfFailureAsync(projectQuery);
+
+            if (!projectResult.IsSuccess || projectResult.Value == null)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Proyecto no encontrado."
+                });
+            }
+
+            // Reassign with new role (AssignUserToProjectOrchestrationCommand handles updates)
+            var command = new AssignUserToProjectOrchestrationCommand(
+                model.UserId,
+                projectResult.Value.ExternalId,
+                model.NewRole);
+
+            var result = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+
+            if (!result.IsSuccess)
+            {
+                var errorMessage = result.ErrorMessages?.FirstOrDefault().Message ?? "Error al cambiar el rol del usuario.";
+                return Json(new
+                {
+                    success = false,
+                    message = errorMessage
+                });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = $"Rol actualizado exitosamente a {GetRoleDisplayName(model.NewRole)}."
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error changing role for user {UserId} in project {ProjectId}", model.UserId, model.ProjectId);
+            return Json(new
+            {
+                success = false,
+                message = "Error interno al procesar la solicitud."
+            });
+        }
+    }
+
+    #endregion
 
     private Task<List<ImportUserDto>> ParseImportFileAsync(IFormFile file)
     {
@@ -1001,6 +1253,65 @@ public class UserManagementController(
         }
 
         return string.Empty;
+    }
+
+    private async Task<BulkImportResult> ProcessBulkImportAsync(
+        List<ImportUserDto> users,
+        BulkImportViewModel importModel)
+    {
+        var result = new BulkImportResult();
+
+        foreach (var user in users)
+        {
+            try
+            {
+                // Generate a temporary password using the service
+                var temporaryPassword = passwordGeneratorService.GenerateTemporaryPassword();
+
+                // Create user command
+                var command = new CreateUserWithProfileOrchestrationCommand(
+                    Email: user.Email,
+                    FirstName: user.FirstName,
+                    LastName: user.LastName,
+                    Identification: user.Identification ?? string.Empty,
+                    Password: temporaryPassword,
+                    Country: "Costa Rica", // Default values
+                    Province: string.Empty,
+                    Canton: string.Empty,
+                    District: string.Empty,
+                    FullAddress: string.Empty,
+                    EmailPreferences: new Dictionary<string, string>(),
+                    EmailConfirmed: false, // Require email confirmation for bulk imports
+                    IsTemporaryPassword: true); // Always temporary for bulk imports
+
+                var cmdResult = await MediatorExecutor.SendAndLogIfFailureAsync(command);
+
+                if (cmdResult.IsSuccess)
+                {
+                    result.SuccessCount++;
+                    logger.LogInformation("Successfully imported user {Email}", user.Email);
+
+                    // TODO: Send welcome email if requested when SendWelcomeEmailCommand is implemented
+                    // if (importModel.SendWelcomeEmails)
+                    // {
+                    //     Send welcome email with temporary password
+                    // }
+                }
+                else
+                {
+                    result.FailureCount++;
+                    var errorMessage = cmdResult.ErrorMessages?.FirstOrDefault().Message ?? "Error desconocido";
+                    logger.LogWarning("Failed to import user {Email}: {Error}", user.Email, errorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.FailureCount++;
+                logger.LogError(ex, "Error importing user {Email}", user.Email);
+            }
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -1326,5 +1637,15 @@ public class UserManagementController(
         var bytes = package.GetAsByteArray();
         var fileName = $"usuarios_{DateTime.UtcNow:yyyyMMdd_HHmmss}.xlsx";
         return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    /// <summary>
+    /// Determines if the current user can manage project assignments.
+    /// </summary>
+    private bool CanManageProjectAssignments()
+    {
+        return CurrentUserIsGlobalAdministrator ||
+               CurrentUserRoles.Contains(Roles.Administrator) ||
+               CurrentUserRoles.Contains(Roles.Coordinator);
     }
 }

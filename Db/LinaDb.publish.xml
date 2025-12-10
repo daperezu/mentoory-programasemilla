@@ -1,53 +1,44 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <IncludeCompositeObjects>True</IncludeCompositeObjects>
-    <TargetDatabaseName>LinaDb</TargetDatabaseName>
-    <DeployScriptFileName>LinaDb.sql</DeployScriptFileName>
-    <!-- AAD auth, strong TLS -->
-    <TargetConnectionString>_</TargetConnectionString>
-    <ProfileVersionNumber>1</ProfileVersionNumber>
-    <BlockOnPossibleDataLoss>True</BlockOnPossibleDataLoss>
-    <!-- Never drop just because it's not in dacpac -->
-    <DropObjectsNotInSource>False</DropObjectsNotInSource>
-    <CreateNewDatabase>False</CreateNewDatabase>
-    <AllowTableRecreation>False</AllowTableRecreation>
-    <!-- Keep security intact -->
-    <DoNotDropApplicationRoles>True</DoNotDropApplicationRoles>
-    <DoNotDropCertificates>True</DoNotDropCertificates>
-    <DoNotDropCredentials>True</DoNotDropCredentials>
-    <DoNotDropDatabaseRoles>True</DoNotDropDatabaseRoles>
-    <DoNotDropDatabaseScopedCredentials>True</DoNotDropDatabaseScopedCredentials>
-    <DoNotDropPermissions>True</DoNotDropPermissions>
-    <DoNotDropRoleMembership>True</DoNotDropRoleMembership>
-    <DoNotDropServerRoles>True</DoNotDropServerRoles>
-    <DoNotDropLogins>True</DoNotDropLogins>
-    <DoNotDropUsers>True</DoNotDropUsers>
-    <DoNotDropServerRoleMembership>True</DoNotDropServerRoleMembership>
-    <DoNotDropSecurityPolicies>True</DoNotDropSecurityPolicies>
-    <!-- Extra guards -->
-    <DoNotAlterUsers>True</DoNotAlterUsers>
-    <IgnorePermissions>True</IgnorePermissions>
-    <IgnoreRoleMembership>True</IgnoreRoleMembership>
-    <IgnoreUserSettingsObjects>True</IgnoreUserSettingsObjects>
-    <!-- Avoid changing DB options/SKU on publish -->
-    <ScriptDatabaseOptions>False</ScriptDatabaseOptions>
-    <ExcludeUsers>True</ExcludeUsers>
-    <ExcludeServerRoles>True</ExcludeServerRoles>
-    <ExcludeSecurityPolicies>True</ExcludeSecurityPolicies>
-    <ExcludeDatabaseRoles>True</ExcludeDatabaseRoles>
-  </PropertyGroup>
-  <PropertyGroup>
-    <DatabaseEdition>Basic</DatabaseEdition>
-    <DatabaseServiceObjective>Basic</DatabaseServiceObjective>
-    <DatabaseMaximumSize>2</DatabaseMaximumSize>
-  </PropertyGroup>
-  <ItemGroup>
-    <SqlCmdVariable Include="RunPostDeploymentRolesUsersSeed">
-      <Value>True</Value>
-    </SqlCmdVariable>
-    <SqlCmdVariable Include="RunPostDeploymentRolesWebFeatures">
-      <Value>True</Value>
-    </SqlCmdVariable>
-  </ItemGroup>
+    <PropertyGroup>
+        <IncludeCompositeObjects>True</IncludeCompositeObjects>
+        <TargetDatabaseName>LinaDb</TargetDatabaseName>
+        <DeployScriptFileName>LinaDb.sql</DeployScriptFileName>
+        <!-- AAD auth, strong TLS -->
+        <TargetConnectionString>_</TargetConnectionString>
+        <ProfileVersionNumber>1</ProfileVersionNumber>
+        <!-- Azure SQL Database specific settings -->
+        <TargetDatabaseEdition>Standard</TargetDatabaseEdition>
+        <TargetDatabaseServiceObjective>S0</TargetDatabaseServiceObjective>
+        <AllowIncompatiblePlatform>True</AllowIncompatiblePlatform>
+        <BlockOnPossibleDataLoss>False</BlockOnPossibleDataLoss>
+        <!-- Never drop just because it's not in dacpac -->
+        <DropObjectsNotInSource>True</DropObjectsNotInSource>
+        <CreateNewDatabase>False</CreateNewDatabase>
+        <AllowTableRecreation>True</AllowTableRecreation>
+        <!-- Keep security intact -->
+        <DoNotDropApplicationRoles>True</DoNotDropApplicationRoles>
+        <DoNotDropCertificates>True</DoNotDropCertificates>
+        <DoNotDropCredentials>True</DoNotDropCredentials>
+        <DoNotDropDatabaseRoles>True</DoNotDropDatabaseRoles>
+        <DoNotDropDatabaseScopedCredentials>True</DoNotDropDatabaseScopedCredentials>
+        <DoNotDropPermissions>True</DoNotDropPermissions>
+        <DoNotDropRoleMembership>True</DoNotDropRoleMembership>
+        <DoNotDropServerRoles>True</DoNotDropServerRoles>
+        <DoNotDropLogins>True</DoNotDropLogins>
+        <DoNotDropUsers>True</DoNotDropUsers>
+        <DoNotDropServerRoleMembership>True</DoNotDropServerRoleMembership>
+        <DoNotDropSecurityPolicies>True</DoNotDropSecurityPolicies>
+        <!-- Extra guards -->
+        <DoNotAlterUsers>True</DoNotAlterUsers>
+        <IgnorePermissions>True</IgnorePermissions>
+        <IgnoreRoleMembership>True</IgnoreRoleMembership>
+        <IgnoreUserSettingsObjects>True</IgnoreUserSettingsObjects>
+        <!-- Avoid changing DB options/SKU on publish -->
+        <ScriptDatabaseOptions>False</ScriptDatabaseOptions>
+        <ExcludeUsers>True</ExcludeUsers>
+        <ExcludeServerRoles>True</ExcludeServerRoles>
+        <ExcludeSecurityPolicies>True</ExcludeSecurityPolicies>
+        <ExcludeDatabaseRoles>True</ExcludeDatabaseRoles>
+    </PropertyGroup>
 </Project>

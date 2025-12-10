@@ -48,11 +48,20 @@
                             <i class="bi bi-camera"></i> Cambiar Avatar
                         </button>
                         
-                        @if (User.IsInRole(LinaSys.Shared.Domain.Constants.Roles.Administrator) || 
+                        @if (User.IsInRole(LinaSys.Shared.Domain.Constants.Roles.Administrator) ||
                             User.IsInRole(LinaSys.Shared.Domain.Constants.Roles.GlobalAdministrator))
                         {
                             <a href="@Url.Action("ManageRoles", "UserManagement", new { area = "Coordination", userId = Model.UserId })" class="btn btn-outline-warning">
                                 <i class="bi bi-shield-check"></i> Gestionar Roles
+                            </a>
+                        }
+
+                        @if (User.IsInRole(LinaSys.Shared.Domain.Constants.Roles.Coordinator) ||
+                            User.IsInRole(LinaSys.Shared.Domain.Constants.Roles.Administrator) ||
+                            User.IsInRole(LinaSys.Shared.Domain.Constants.Roles.GlobalAdministrator))
+                        {
+                            <a href="@Url.Action("ManageProjects", "UserManagement", new { area = "Coordination", userId = Model.UserId })" class="btn btn-outline-info">
+                                <i class="fas fa-project-diagram"></i> Gestionar Proyectos
                             </a>
                         }
                         

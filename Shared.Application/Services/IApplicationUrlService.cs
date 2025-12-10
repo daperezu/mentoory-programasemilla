@@ -40,9 +40,10 @@ public interface IApplicationUrlService
     /// <summary>
     /// Gets the URL for resetting a password.
     /// </summary>
+    /// <param name="userId">The user ID.</param>
     /// <param name="resetToken">The password reset token.</param>
     /// <returns>The absolute URL for the password reset page.</returns>
-    string GetPasswordResetUrl(string resetToken);
+    string GetPasswordResetUrl(string userId, string resetToken);
 
     /// <summary>
     /// Gets the URL for verifying an email change.

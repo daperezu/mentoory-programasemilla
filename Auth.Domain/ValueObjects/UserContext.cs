@@ -1,4 +1,5 @@
-﻿using LinaSys.Shared.Domain.SeedWork;
+﻿using LinaSys.Shared.Domain.Constants;
+using LinaSys.Shared.Domain.SeedWork;
 
 namespace LinaSys.Auth.Domain.ValueObjects;
 
@@ -56,10 +57,17 @@ public class UserContext : ValueObject
     public bool IsGlobalAdministrator { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether the user is an Administrator (incubator level).
+    /// </summary>
+    public bool IsAdministrator => Role == Roles.Administrator;
+
+    /// <summary>
     /// Gets a value indicating whether the context is complete (all required selections made).
     /// </summary>
     public bool IsComplete => !string.IsNullOrEmpty(Role) &&
-                             (IsGlobalAdministrator || (IncubatorId.HasValue && ProjectId.HasValue));
+                             (IsGlobalAdministrator ||
+                              (IsAdministrator && IncubatorId.HasValue) ||
+                              (IncubatorId.HasValue && ProjectId.HasValue));
 
     /// <summary>
     /// Creates a new UserContext for a global administrator.
@@ -86,6 +94,41 @@ public class UserContext : ValueObject
         }
 
         return new UserContext(userId, role, incubatorId, projectId, true);
+    }
+
+    /// <summary>
+    /// Creates a new UserContext for an administrator (incubator level only).
+    /// </summary>
+    /// <param name="userId">The user identifier.</param>
+    /// <param name="role">The role identifier.</param>
+    /// <param name="incubatorId">The selected incubator (required).</param>
+    /// <returns>A new UserContext instance.</returns>
+    public static UserContext CreateForAdministrator(
+        string userId,
+        string role,
+        long incubatorId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
+
+        if (string.IsNullOrWhiteSpace(role))
+        {
+            throw new ArgumentException("Role cannot be empty.", nameof(role));
+        }
+
+        if (role != Roles.Administrator)
+        {
+            throw new ArgumentException("This method is only for Administrator role.", nameof(role));
+        }
+
+        if (incubatorId <= 0)
+        {
+            throw new ArgumentException("Incubator ID must be a positive value.", nameof(incubatorId));
+        }
+
+        return new UserContext(userId, role, incubatorId, null, false);
     }
 
     /// <summary>

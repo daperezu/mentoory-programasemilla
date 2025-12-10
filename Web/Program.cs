@@ -1,4 +1,4 @@
-﻿#region usings section
+#region usings section
 using System.Reflection;
 using LinaSys.Auth.Application;
 using LinaSys.Auth.Infrastructure;
@@ -34,7 +34,6 @@ using LinaSys.Web.Infrastructure.Services;
 using LinaSys.Web.Filters;
 using LinaSys.Web.ModelBinders;
 using LinaSys.Web.Services;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using OfficeOpenXml;
 #endregion
 
@@ -75,9 +74,6 @@ builder.Services.AddScoped<IAuthScopeProvider, AuthScopeProvider>();
 builder.Services.AddScoped<MediatorExecutor>();
 
 builder.Services.AddSingleton<IVersionProvider, VersionProvider>();
-
-// Register IActionContextAccessor for ApplicationUrlService
-builder.Services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
 // Register ApplicationUrlService for generating URLs in the application layer
 builder.Services.AddScoped<IApplicationUrlService, ApplicationUrlService>();

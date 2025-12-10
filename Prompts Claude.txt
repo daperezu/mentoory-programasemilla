@@ -7,7 +7,7 @@ Read CLAUDE.md first to understand the project rules, and read all the MD files 
 ------------------------ RIGHT AFTER EACH PHASE/TASK COMPLETED  ------------------------
 (save the prompt for later, after "AFTER COMPATING" section )
 
- think harder on what's the best prompt for the next task.
+Think harder on what's the best prompt for the next task.
 
 ------------------------ BEFORE COMPACTING ------------------------
 

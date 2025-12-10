@@ -130,7 +130,7 @@ public class FormReviewController(
 
         // Send notification about new feedback
         TryGetCurrentUserContext(out var contextResult);
-
+        // SignalR notification service removed
         return Ok(new { success = true, data = result.Value });
     }
 
@@ -162,6 +162,7 @@ public class FormReviewController(
         }
 
         // Get submission details for notification
+        // SignalR notification service removed
         return Ok(new
         {
             success = true,
@@ -392,6 +393,8 @@ public class FormReviewController(
         // Send notification about requested changes
         TryGetCurrentUserContext(out var contextResult);
         var projectId = contextResult!.ProjectId!.Value;
+        // SignalR notification service removed
+            // SignalR notification service removed
 
         return Ok(new
         {

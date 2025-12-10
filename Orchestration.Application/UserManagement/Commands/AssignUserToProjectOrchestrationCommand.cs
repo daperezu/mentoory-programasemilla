@@ -3,6 +3,7 @@ using LinaSys.Auth.Application.Commands;
 using LinaSys.Auth.Application.Queries;
 using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.Shared.Application;
+using LinaSys.Shared.Application.IntegrationEvents.Auth;
 using LinaSys.Shared.Application.MediatR;
 using LinaSys.Shared.Domain.Constants;
 using MediatR;
@@ -108,7 +109,28 @@ public class AssignUserToProjectOrchestrationCommandHandler(
                 project.Id,
                 request.Role);
 
-            // 5. Ensure user has the system role if not already assigned
+            // 5. Publish integration event for downstream handlers (form creation, etc.)
+            var user = userResult.Value!;
+            var integrationEvent = new UserAddedToProjectIntegrationEvent(
+                UserId: request.UserId,
+                UserEmail: user.Email,
+                UserName: user.FullName ?? user.UserName,
+                ProjectId: project.Id,
+                ProjectName: project.Name,
+                IncubatorId: project.IncubatorId,
+                Role: request.Role,
+                OccurredAt: DateTime.UtcNow);
+
+            await mediator.Publish(integrationEvent, cancellationToken);
+
+            logger.LogInformation(
+                "Published UserAddedToProjectIntegrationEvent for user {UserId} ({UserEmail}) to project {ProjectId} ({ProjectName})",
+                request.UserId,
+                user.Email,
+                project.Id,
+                project.Name);
+
+            // 6. Ensure user has the system role if not already assigned
             var rolesQuery = new GetUserRolesQuery(request.UserId);
             var rolesResult = await mediator.Send(rolesQuery, cancellationToken);
 

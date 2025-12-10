@@ -2,7 +2,9 @@
 using LinaSys.Auth.Application.Commands;
 using LinaSys.BusinessIncubator.Application.Project.Commands;
 using LinaSys.BusinessIncubator.Application.Project.Queries;
+using LinaSys.BusinessIncubator.Application.Queries;
 using LinaSys.Shared.Application;
+using LinaSys.Shared.Application.IntegrationEvents.Auth;
 using LinaSys.Shared.Application.MediatR;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -117,6 +119,42 @@ public class AcceptProjectInvitationOrchestrationCommandHandler(
                 "Invitation acceptance orchestration completed successfully for token {Token} and email {Email}",
                 request.InvitationToken,
                 invitation.Email);
+
+            // 4. Get project details for integration event
+            var projectQuery = new GetProjectByExternalIdQuery(invitation.ProjectExternalId);
+            var projectResult = await mediator.Send(projectQuery, cancellationToken);
+
+            if (!projectResult.IsSuccess || projectResult.Value is null)
+            {
+                logger.LogWarning(
+                    "Failed to retrieve project {ProjectExternalId} for integration event. Skipping event publication.",
+                    invitation.ProjectExternalId);
+                return Success(Result.Success()); // Accept invitation succeeded, event publication is optional
+            }
+
+            var project = projectResult.Value;
+
+            // 5. Publish integration event for user-project assignment
+            // This triggers Auth domain to create UserProjectAccess and BusinessIncubator domain to create form submissions
+            var user = createUserResult.Value!;
+            var integrationEvent = new UserAddedToProjectIntegrationEvent(
+                UserId: user.Id,
+                UserEmail: invitation.Email,
+                UserName: invitation.FullName,
+                ProjectId: project.Id,
+                ProjectName: invitation.ProjectName,
+                IncubatorId: project.IncubatorId,
+                Role: invitation.Role,
+                OccurredAt: DateTime.UtcNow);
+
+            await mediator.Publish(integrationEvent, cancellationToken);
+
+            logger.LogInformation(
+                "Published UserAddedToProjectIntegrationEvent for user {UserId} ({Email}) added to project {ProjectId} ({ProjectName}) via invitation acceptance",
+                user.Id,
+                invitation.Email,
+                project.Id,
+                invitation.ProjectName);
 
             return Success(Result.Success());
         }
